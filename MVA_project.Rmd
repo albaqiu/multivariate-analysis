@@ -4,26 +4,81 @@ output: html_document
 date: "2025-10-14"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+### Load data
+
+```{r}
+# Load
+wine <- read.csv("wine.data", header = FALSE)
+
+# Column names according to the UCI description
+colnames(wine) <- c("Class", "Alcohol", "Malic_Acid", "Ash", "Alcalinity_of_Ash",
+                    "Magnesium", "Total_Phenols", "Flavanoids", "Nonflav_Phenols",
+                    "Proanthocyanins", "Color_Intensity", "Hue", "OD280_OD315","Proline")
+
+# We convert Malic_Acid into categorical variable (low/medium/high)
+wine$Malic_Acid_cat <- cut(
+  wine$Malic_Acid,
+  breaks = quantile(wine$Malic_Acid, probs = seq(0, 1, 0.33), na.rm = TRUE),
+  include.lowest = TRUE,
+  labels = c("Low", "Medium", "High")
+)
+
+# We convert Alcalinity_of_Ash into categorical variable (low/medium/high)
+wine$Alcalinity_of_Ash_cat <- cut(
+  wine$Alcalinity_of_Ash,
+  breaks = quantile(wine$Alcalinity_of_Ash, probs = seq(0, 1, 0.33), na.rm = TRUE),
+  include.lowest = TRUE,
+  labels = c("Low", "Medium", "High")
+)
+
+# We remove the original numeric columns to avoid redundancy
+wine$Malic_Acid <- NULL
+wine$Alcalinity_of_Ash <- NULL
+
+# save to a .data file
+write.table(wine, file = "wine_cat.data", sep = ",", row.names = FALSE, quote = FALSE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### PCA
+```{r}
+# Check missing values
+anyNA(wine_num)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Check data correlation
+wine_num <- wine[, sapply(wine, is.numeric)] # Extract numeric data
+cor_matrix <- cor(wine_num) # correlation matrix
+library(corrplot)
+corrplot(
+  cor_matrix,
+  method = "color",      # Color shading
+  type = "upper",        # Show only upper triangle
+  addCoef.col = "black", # Add correlation values in black
+  tl.cex = 0.7,          # Text size for labels
+  number.cex = 0.6       # Size of the correlation numbers
+)
 
-```{r cars}
-summary(cars)
+# PCA
+wine_scaled <- scale(wine_num) # Scaling data
+pca <- prcomp(wine_scaled) # run PCA
+summary(pca)       # Variance explained by components
+pca$rotation       # Loadings
+pca$x              # New coordinates, scores in each component
+biplot(pca)
+
+# Scree plot
+plot(pca, main = "Scree Plot of Variance Explained")
+plot(pca, type = 'l', main = "Scree Plot of Variance Explained")
+
+explained_var <- pca$sdev^2 / sum(pca$sdev^2)
+cumulative_var <- cumsum(explained_var)
+cat('\nExplained variance: ', explained_var)
+cat('\nCumulative variance: ',cumulative_var)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+### Multidimensional scaling
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+### Correspondence Analysis
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Multiple Correspondence Analysis
