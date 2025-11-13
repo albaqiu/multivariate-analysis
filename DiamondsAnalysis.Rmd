@@ -8,7 +8,8 @@ output:
     latex_engine: xelatex
 geometry: margin=1in
 ---
-````{r setup, include=FALSE}
+
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   results = 'markup',
@@ -17,7 +18,7 @@ knitr::opts_chunk$set(
   fig.width = 7,
   fig.height = 5
 )
-````
+```
 
 ```{r}
 set.seed(12345)
@@ -36,9 +37,10 @@ library(psych)
 library(factoextra)
 ```
 
-## Part 1: Data preparation
+## 1. Data preparation
 
 The dataset has been imported with the \emph{read.csv()} function from the \emph{dplyr} library. The first variables named \emph{X} has been eliminated since it corresponds to an index column (it is not an explanatory variable). Moreover, the categorical variables \emph{cut}, \emph{color} and \emph{clarity} have properly been converted into factors.
+
 ```{r}
 diamonds <- read.csv('diamonds.csv')
 
@@ -50,7 +52,9 @@ diamonds$clarity <- as.factor(diamonds$clarity)
 
 summary(diamonds)
 ```
+
 Since there are too many observations (53940), it was convenient to perform a random selection ob 500 observations in order to conduct a more manageable and focused study. Note that the means of the numerical variables and the proportion of observations in each category did not variate very much.
+
 ```{r}
 n <- nrow(diamonds)
 indices <- sample(1:n, 500) # Take 500 random indices
@@ -60,10 +64,14 @@ summary(diamonds)
 ```
 
 ## Exploratory data analysis
-For each variable, we check: duplications, existence of zeros, existence of outliers, existence of missing values and we apply transformations if it is needed.
 
-### Carat variable (numeric)
-After analyzing the carat variable, we observe that it doesn't have missing values, zeros or outliers, but this variable is not normally distributed, and after applying the log transformation, it's still not normal. 
+For each variable, we check: duplicates, existence of zeros, existence of outliers, existence of missing values and we apply transformations if it is needed.
+
+## Numerical variables
+
+### Carat variable
+
+After analyzing the carat variable, we observe that it doesn't have missing values, zeros or outliers, but this variable is not normally distributed, and after applying the log transformation, it's still not normal.
 
 ```{r}
 # Check NA and zeros
@@ -96,45 +104,9 @@ curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 shapiro.test(diamonds$log_carat) #p-value < 0.05 -> log_carat is not normally distributed
 ```
 
-### Cut variable (factor)
-Since cut variable is a factor, we don't check its boxplot or its zeros, instead we observe its levels, the level with highest frequency is Ideal, while level Fair has only 9 observations, but this is possible, so it's not an outlier.
-
-```{r}
-# Check NA (we don't need to check 0s)
-cat("Missing values in cut:", sum(is.na(diamonds$cut)), "\n") #0
-
-# Distribution
-summary(diamonds$cut)
-barplot(summary(diamonds$cut), main="Diamond Cut Quality")
-```
-
-### Color variable (factor)
-Same as before, we analyse the different levels of color, the most frequent is G color grade and J color grade is the less frequent, meaning diamonds with a noticeable tint are less common in the dataset.
-It can be mapped to 1,2,3..??? (es una escala)
-
-```{r}
-# Check NA
-cat("Missing values in color:", sum(is.na(diamonds$color)), "\n") #0
-
-# Distribution
-summary(diamonds$color)
-barplot(summary(diamonds$color), main="Diamond Color")
-```
-
-### Clarity variable (factor)
-The diamond clarity distribution is more frequent for the SI1 and VS2 grades, so the sample is composed mostly of slightly-to-very slightly included stones. 
-It can be mapped to 1,2,3..??? (es una escala)
-
-```{r}
-# Check NA 
-cat("Missing values in clarity:", sum(is.na(diamonds$clarity)), "\n") #0
-
-# Distribution
-summary(diamonds$clarity)
-barplot(summary(diamonds$clarity), main="Diamond Clarity")
-```
 ### Depth variable
-The depth variable has no NA and no zeros, it has 2 extreme outliers, which we removed.
+
+The depth variable has no NA and no zeros, but it has 2 extreme outliers, which we removed.
 
 Analyzing the results of the shapiro test, data was not normally distributed, but we don't apply transformations because $\lambda=0.5$ is the lower bound of the confidence interval and the optimal transformation is $\lambda \approx 1.0$, which means applying no transformation.
 
@@ -166,9 +138,11 @@ shapiro.test(diamonds$depth) #p-value < 0.01 -> not normally distirbuted
 boxcox(diamonds$depth~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
 # no transformation is needed
 ```
+
+
 ### Table variable
-The variable table has no NA, zeros or outliers.
-Also it is not normally distributed but and since lambda = -1 we apply reciprocal transformation (1/table).
+
+The variable table has no NA, zeros or outliers. We won't apply any transformation!!??
 
 ```{r}
 # Check NA and zeros
@@ -176,7 +150,7 @@ cat("Missing values in table:", sum(is.na(diamonds$table)), "\n") #0
 cat("Number of zeros in table:", sum(diamonds$table == 0), "\n") #0
 
 # Outliers
-boxplot(diamonds$table, horizontal = T)
+boxplot(diamonds$table, horizontal = TRUE)
 varout <- summary(diamonds$table)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
@@ -185,37 +159,63 @@ sev_out <- which((diamonds$table > usout) | (diamonds$table < lsout))
 abline(v=usout,col='orange')
 abline(v=lsout,col='orange')
 sev_out #0
-diamonds <- diamonds[-sev_out,] # Remove extreme outliers (but there's not outliers)
 
 # Distribution
 hist(diamonds$table,freq=F)
 m = mean(diamonds$table)
 std = sd(diamonds$table)
 curve(dnorm(x,m,std),add=T, col="red")
-shapiro.test(diamonds$table) #p-value < 0.01 -> not normally distirbuted
+shapiro.test(diamonds$table) #p-value < 0.01 -> not normally distributed
 
 # Transformation
 boxcox(diamonds$table~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
-# Reciprocal transformation based on the Box-Cox suggestion (lambda = -1)
-diamonds$reci_table <- 1 / diamonds$table
-hist(diamonds$reci_table)
-m = mean(diamonds$reci_table)
-std = sd(diamonds$reci_table)
-curve(dnorm(x,m,std),add=T, col="red")
-shapiro.test(diamonds$reci_table) #p-value < 0.01 -> not normally distirbuted
+# Reciprocal transformation based on the Box-Cox suggestion (lambda = -1) --> jo no faria cap
+#diamonds$reci_table <- 1 / diamonds$table
+#hist(diamonds$reci_table)
+#m = mean(diamonds$reci_table)
+#std = sd(diamonds$reci_table)
+#curve(dnorm(x,m,std),add=T, col="red")
+#shapiro.test(diamonds$reci_table) #p-value < 0.01 -> not normally distirbuted
 ```
 
-
 ### Price variable
-```{r}
-boxplot(diamonds$price, horizontal = T)
 
+The `price` variable has no missing values and no outliers.
+
+Analyzing the results of the shapiro test, data was not normally distributed, and based on the boxcox, we apply a logarithmic transformations because $\lambda=0$.
+
+```{r}
+# Check NA and zeros
+cat("Missing values in price:", sum(is.na(diamonds$price)), "\n") #0
+cat("Number of zeros in price:", sum(diamonds$price == 0), "\n") #0
+
+# Outliers
+boxplot(diamonds$price, horizontal = T)
+varout <- summary(diamonds$price)
+iqr = varout[5]-varout[2]
+usout <- varout[5]+3*iqr
+lsout <- varout[2]-3*iqr
+sev_out <- which((diamonds$price > usout) | (diamonds$price < lsout))
+abline(v=usout,col='orange')
+abline(v=lsout,col='orange')
+sev_out #0
+
+# Distribution
 hist(diamonds$price, freq = F) # A log transformation could be applied to reduce skewness and stabilize variance
 
+# Logarithmic transformation
 boxcox(diamonds$price~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
 diamonds$log_price <- log(diamonds$price) # Since lambda = 0 -> logarithmic transformation
 
 boxplot(diamonds$log_price, horizontal = T) # No outliers
+varout <- summary(diamonds$log_price)
+iqr = varout[5]-varout[2]
+usout <- varout[5]+3*iqr
+lsout <- varout[2]-3*iqr
+sev_out <- which((diamonds$log_price > usout) | (diamonds$log_price < lsout))
+abline(v=usout,col='orange')
+abline(v=lsout,col='orange')
+sev_out #0
 
 hist(diamonds$log_price, freq = F) # Is log_price normally distributed?
 m = mean(diamonds$log_price)
@@ -225,8 +225,8 @@ curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 shapiro.test(diamonds$log_price) #p-value < 0.05 -> log price is not normally distributed
 ```
 
-
 ### x variable
+
 ```{r}
 boxplot(diamonds$x, horizontal = T) # No outliers
 
@@ -238,8 +238,8 @@ curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 shapiro.test(diamonds$x) #p-value < 0.05 -> x is not normally distributed
 ```
 
-
 ### y variable
+
 ```{r}
 boxplot(diamonds$y, horizontal = T) # No outliers
 
@@ -251,8 +251,8 @@ curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 shapiro.test(diamonds$y) #p-value < 0.05 -> y is not normally distributed
 ```
 
-
 ### z variable
+
 ```{r}
 boxplot(diamonds$z, horizontal = T) # No outliers
 
@@ -268,11 +268,51 @@ nrow(diamonds) # Only two outlier observations have been removed
 ```
 
 
+## Categorical variables
+
+### Cut variable 
+
+Since cut variable is a factor, we don't check its boxplot or its zeros, instead we observe its levels. The level with highest frequency is Ideal, while level Fair has only 9 observations, but this is possible, so it's not an outlier.
+
+```{r}
+# Check NA (we don't need to check 0s)
+cat("Missing values in cut:", sum(is.na(diamonds$cut)), "\n") #0
+
+# Distribution
+summary(diamonds$cut)
+barplot(summary(diamonds$cut), main="Diamond Cut Quality")
+```
+
+### Color variable
+
+Same as before, we analyse the different levels of color. The most frequent is G color grade and the less frequent is J color grade, meaning diamonds with a noticeable tint are less common in the dataset. It can be mapped to 1,2,3..??? (es una escala)
+
+```{r}
+# Check NA
+cat("Missing values in color:", sum(is.na(diamonds$color)), "\n") #0
+
+# Distribution
+summary(diamonds$color)
+barplot(summary(diamonds$color), main="Diamond Color")
+```
+
+### Clarity variable
+
+The diamond clarity distribution is more frequent for the SI1 and VS2 grades, so the sample is composed mostly of slightly-to-very slightly included stones. It can be mapped to 1,2,3..??? (es una escala)
+
+```{r}
+# Check NA 
+cat("Missing values in clarity:", sum(is.na(diamonds$clarity)), "\n") #0
+
+# Distribution
+summary(diamonds$clarity)
+barplot(summary(diamonds$clarity), main="Diamond Clarity")
+```
+
 ### VARAIBLE CREATION????
 
-
-
 ## Correaltions between numeric variables
+
 ```{r}
 numeric_vars <- diamonds[ , sapply(diamonds, is.numeric)] # Get numeric variables
 
@@ -318,6 +358,7 @@ kmo(numeric_vars) # Is higher than 0.5 -> data is factorable
 # Part 2: Multivariant analysis
 
 ## Principal components analysis
+
 ```{r}
 diamonds.pca <- PCA(numeric_vars, graph = T)
 
@@ -359,7 +400,3 @@ diamonds.pca$var$contrib
 ## Cluster analysis
 
 ### Profiling
-
-
-
-
