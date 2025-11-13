@@ -1,0 +1,313 @@
+---
+title: "Diamonds Data Frame Analysis"
+author: "Berta Torrents"
+date: "December 2025"
+output:
+  word_document: default
+  pdf_document:
+    latex_engine: xelatex
+geometry: margin=1in
+---
+````{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  results = 'markup',
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 7,
+  fig.height = 5
+)
+````
+
+```{r}
+set.seed(12345)
+
+# Clear plots
+if(!is.null(dev.list())) dev.off()
+
+# Clean workspace
+rm(list=ls())
+
+# Libraries
+library(dplyr)
+library(FactoMineR)
+library(MASS)
+library(psych)
+library(factoextra)
+```
+
+## Part 1: Data preparation
+
+The dataset has been imported with the \emph{read.csv()} function from the \emph{dplyr} library. The first variables named \emph{X} has been eliminated since it corresponds to an index column (it is not an explanatory variable). Moreover, the categorical variables \emph{cut}, \emph{color} and \emph{clarity} have properly been converted into factors.
+```{r}
+diamonds <- read.csv('diamonds.csv')
+
+diamonds <- diamonds[,-1]
+
+diamonds$cut <- as.factor(diamonds$cut)
+diamonds$color <- as.factor(diamonds$color)
+diamonds$clarity <- as.factor(diamonds$clarity)
+
+summary(diamonds)
+```
+Since there are too many observations (53940), it was convenient to perform a random selection ob 500 observations in order to conduct a more manageable and focused study. Note that the means of the numerical variables and the proportion of obserations in each category did not variate very much.
+```{r}
+n <- nrow(diamonds)
+indices <- sample(1:n, 500) # Take 500 random indices
+diamonds <- diamonds[indices,]
+
+summary(diamonds)
+```
+
+## Exploratory data analysis
+
+### Carat variable
+FALTA FER normal CURVE en les variables.
+Potser cal posar més net l'explanatory perque està fet bastant rapid.
+Potser cal redactar una mica els resultats de les variables perqeu ho estavem fent en un R script i se'ns estava liant una mica.
+```{r}
+boxplot(diamonds$carat, horizontal = T)
+
+hist(diamonds$carat, freq = F) # A log transformation could be applied to reduce skewness and stabilize variance
+
+##curve()
+
+boxcox(diamonds$carat~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+diamonds$log_carat <- log(diamonds$carat) # Since lambda = 0 -> logarithmic transformation
+
+boxplot(diamonds$log_carat, horizontal = T) # No outliers
+
+hist(diamonds$log_carat, freq = F) # Is log_carat normally distributed?
+m = mean(diamonds$log_carat)
+std = sd(diamonds$log_carat)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+
+shapiro.test(diamonds$log_carat) #p-value < 0.05 -> carat is not normally distributed
+```
+
+
+### Cut variable
+
+### Color variable
+
+### Clarity variable
+
+### Depth variable
+```{r}
+boxplot(diamonds$depth, horizontal = T) # There are outliers, so the IQR method will be applied
+
+hist(diamonds$depth, freq = F)
+
+Q1 <- quantile(diamonds$depth, 0.25)
+Q3 <- quantile(diamonds$depth, 0.75)
+IQR_value <- Q3 - Q1
+
+lower_mild <- Q1 - 1.5 * IQR_value # Mild outliers lower limit
+upper_mild <- Q3 + 1.5 * IQR_value # Mild outliers upper limit
+lower_extreme <- Q1 - 3 * IQR_value # Extreme outliers lower limit
+upper_extreme <- Q3 + 3 * IQR_value # Extreme outliers upper limit
+
+boxplot(diamonds$depth, horizontal = T)
+abline(v=lower_mild, col="orange")
+abline(v=upper_mild, col="orange")
+abline(v=lower_extreme, col="red")
+abline(v=upper_extreme, col="red")
+
+diamonds <- diamonds[diamonds$depth >= lower_extreme & diamonds$depth <= upper_extreme, ] # Remove extreme outliers
+
+hist(diamonds$depth, freq = F) # Is depth normally distributed?
+m = mean(diamonds$depth)
+std = sd(diamonds$depth)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+
+shapiro.test(diamonds$depth) #p-value < 0.05 -> depth is not normally distributed
+```
+
+
+### Table variable
+```{r}
+boxplot(diamonds$table, horizontal = T) # There are outliers, so the IQR method will be applied
+
+Q1 <- quantile(diamonds$table, 0.25)
+Q3 <- quantile(diamonds$table, 0.75)
+IQR_value <- Q3 - Q1
+
+lower_mild <- Q1 - 1.5 * IQR_value # Mild outliers lower limit
+upper_mild <- Q3 + 1.5 * IQR_value # Mild outliers upper limit
+lower_extreme <- Q1 - 3 * IQR_value # Extreme outliers lower limit
+upper_extreme <- Q3 + 3 * IQR_value # Extreme outliers upper limit
+
+boxplot(diamonds$table, horizontal = T)
+abline(v=lower_mild, col="orange")
+abline(v=upper_mild, col="orange")
+abline(v=lower_extreme, col="red")
+abline(v=upper_extreme, col="red")
+
+diamonds <- diamonds[diamonds$table >= lower_extreme & diamonds$table <= upper_extreme, ] # Remove extreme outliers
+
+hist(diamonds$table, freq = F) # Is table normally distributed?
+m = mean(diamonds$table)
+std = sd(diamonds$table)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+
+shapiro.test(diamonds$table) #p-value < 0.05 -> table is not normally distributed
+```
+
+
+### Price variable
+```{r}
+boxplot(diamonds$price, horizontal = T)
+
+hist(diamonds$price, freq = F) # A log transformation could be applied to reduce skewness and stabilize variance
+
+boxcox(diamonds$price~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+diamonds$log_price <- log(diamonds$price) # Since lambda = 0 -> logarithmic transformation
+
+boxplot(diamonds$log_price, horizontal = T) # No outliers
+
+hist(diamonds$log_price, freq = F) # Is log_price normally distributed?
+m = mean(diamonds$log_price)
+std = sd(diamonds$log_price)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T) 
+
+shapiro.test(diamonds$log_price) #p-value < 0.05 -> log price is not normally distributed
+```
+
+
+### x variable
+```{r}
+boxplot(diamonds$x, horizontal = T) # No outliers
+
+hist(diamonds$x, freq = F) # Is x normally distributed?
+m = mean(diamonds$x)
+std = sd(diamonds$x)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T) 
+
+shapiro.test(diamonds$x) #p-value < 0.05 -> x is not normally distributed
+```
+
+
+### y variable
+```{r}
+boxplot(diamonds$y, horizontal = T) # No outliers
+
+hist(diamonds$y, freq = F) # Is y normally distributed?
+m = mean(diamonds$y)
+std = sd(diamonds$y)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+
+shapiro.test(diamonds$y) #p-value < 0.05 -> y is not normally distributed
+```
+
+
+### z variable
+```{r}
+boxplot(diamonds$z, horizontal = T) # No outliers
+
+hist(diamonds$z, freq = F) # Is z normally distributed?
+m = mean(diamonds$z)
+std = sd(diamonds$z)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+
+shapiro.test(diamonds$z) #p-value < 0.05 -> z is not normally distributed
+
+
+nrow(diamonds) # Only two outlier observations have been removed
+```
+
+
+### VARAIBLE CREATION????
+
+
+
+## Correaltions between numeric variables
+```{r}
+numeric_vars <- diamonds[ , sapply(diamonds, is.numeric)] # Get numeric variables
+
+cor_matrix <- cor(numeric_vars)
+print(cor_matrix)
+
+library(corrplot)
+corrplot(cor_matrix, method = "color", addCoef.col = "black", title = "Correlation Plot of Numeric Variables") 
+
+# Variables seem to be higher correlated, 
+# but scatter plots must be performed to verify this correlation
+
+pairs(numeric_vars, main="Scatterplot Matrix of Numeric Variables")
+
+# Obs: Thanks to the log transformation of carat and price, now there is a higher correlation between this two transformed variables and the rest 
+
+numeric_vars <- numeric_vars[ , !colnames(numeric_vars) %in% c("price", "carat")] # We will work with the logarithmic transfroamtion of price and carat
+
+# Obs: Except from table and depth, the rest of the variables have a strong positive correlation
+
+cortest.bartlett(cor_matrix, nrow(diamonds)) # p-value < 0.05 -> reject H0 -> corr_matrix != Id
+
+# Apply KMO function to see if data is factorable (function written by Prof. Shigenobu Aok.)
+
+kmo <- function(x)
+{
+  x <- subset(x, complete.cases(x))       # Omit missing values
+  r <- cor(x)                             # Correlation matrix
+  r2 <- r^2                               # Squared correlation coefficients
+  i <- solve(r)                           # Inverse matrix of correlation matrix
+  d <- diag(i)                            # Diagonal elements of inverse matrix
+  p2 <- (-i/sqrt(outer(d, d)))^2          # Squared partial correlation coefficients
+  diag(r2) <- diag(p2) <- 0               # Delete diagonal elements
+  KMO <- sum(r2)/(sum(r2)+sum(p2))
+  MSA <- colSums(r2)/(colSums(r2)+colSums(p2))
+  return(list(KMO=KMO, MSA=MSA))
+}
+
+# KMO index
+kmo(numeric_vars) # Is higher than 0.5 -> data is factorable
+```
+
+# Part 2: Multivariant analysis
+
+## Principal components analysis
+```{r}
+diamonds.pca <- PCA(numeric_vars, graph = T)
+
+diamonds.pca$eig # Taking only two dimensions, 89% of the variability can be explain
+
+diamonds.pca$var$coord
+diamonds.pca$var$cos2
+diamonds.pca$var$contrib
+# Fist dimension is basically explained by "x", "y", "z", "log_carat", "log_price" variables,
+# and they are positively correlated with the dimension. 
+# In fact, each of the previous variables explains around 19% of dimension 1 variation.
+# In other words, first dimension is explained by the size–related and variables.
+# The bigger and more expensive the diamond is, the higher is the first dimension value.
+
+# Second dimension is basically explained by "depth" and "table" variables,
+# and it is positively correlated with depth but negatively correlated with table.
+# In fact, each of the previous variables explains around 44-53% of dimension 2 variation.
+# In other words, second dimension is explained by the proportional shape.
+# The deeper and narrower the diamond is, the higher is the second dimension value.
+
+
+
+# pca_hep<-PCA(heptathlon, quanti.sup = 8) #Get rid of score variable because is target
+
+
+
+# Since some variables are not very correlated with the rest, ç
+# and PCA results are affected by this variables,
+# let's repeat the PCA using only the correlated variables
+
+```
+
+## Multidimensional scaling
+
+## Correspondance analysis ??????
+
+## Multiple correspondance analysis
+
+## Cluster analysis
+
+### Profiling
+
+
+
+
