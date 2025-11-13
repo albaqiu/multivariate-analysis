@@ -50,7 +50,7 @@ diamonds$clarity <- as.factor(diamonds$clarity)
 
 summary(diamonds)
 ```
-Since there are too many observations (53940), it was convenient to perform a random selection ob 500 observations in order to conduct a more manageable and focused study. Note that the means of the numerical variables and the proportion of obserations in each category did not variate very much.
+Since there are too many observations (53940), it was convenient to perform a random selection ob 500 observations in order to conduct a more manageable and focused study. Note that the means of the numerical variables and the proportion of observations in each category did not variate very much.
 ```{r}
 n <- nrow(diamonds)
 indices <- sample(1:n, 500) # Take 500 random indices
@@ -60,21 +60,32 @@ summary(diamonds)
 ```
 
 ## Exploratory data analysis
+For each variable, we check: duplications, existence of zeros, existence of outliers, existence of missing values and we apply transformations if it is needed.
 
-### Carat variable
-FALTA FER normal CURVE en les variables.
-Potser cal posar més net l'explanatory perque està fet bastant rapid.
-Potser cal redactar una mica els resultats de les variables perqeu ho estavem fent en un R script i se'ns estava liant una mica.
+### Carat variable (numeric)
+After analyzing the carat variable, we observe that it doesn't have missing values, zeros or outliers, but this variable is not normally distributed, and after applying the log transformation, it's still not normal. 
+
 ```{r}
+# Check NA and zeros
+cat("Missing values in carat:", sum(is.na(diamonds$carat)), "\n") #0
+cat("Number of zeros in carat:", sum(diamonds$carat == 0), "\n") #0
+
+# Outliers
 boxplot(diamonds$carat, horizontal = T)
+varout <- summary(diamonds$carat)
+iqr = varout[5]-varout[2]
+usout <- varout[5]+3*iqr
+lsout <- varout[2]-3*iqr
+sev_out <- which((diamonds$carat > usout) | (diamonds$carat < lsout))
+sev_out #0
 
-hist(diamonds$carat, freq = F) # A log transformation could be applied to reduce skewness and stabilize variance
+# Distribution
+hist(diamonds$carat,freq=F)
+curve(dnorm(x),add=T, col="red") #It is obviously not normally distributed
 
-##curve()
-
+# Transformation
 boxcox(diamonds$carat~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
 diamonds$log_carat <- log(diamonds$carat) # Since lambda = 0 -> logarithmic transformation
-
 boxplot(diamonds$log_carat, horizontal = T) # No outliers
 
 hist(diamonds$log_carat, freq = F) # Is log_carat normally distributed?
@@ -82,75 +93,116 @@ m = mean(diamonds$log_carat)
 std = sd(diamonds$log_carat)
 curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 
-shapiro.test(diamonds$log_carat) #p-value < 0.05 -> carat is not normally distributed
+shapiro.test(diamonds$log_carat) #p-value < 0.05 -> log_carat is not normally distributed
 ```
 
+### Cut variable (factor)
+Since cut variable is a factor, we don't check its boxplot or its zeros, instead we observe its levels, the level with highest frequency is Ideal, while level Fair has only 9 observations, but this is possible, so it's not an outlier.
 
-### Cut variable
-
-### Color variable
-
-### Clarity variable
-
-### Depth variable
 ```{r}
-boxplot(diamonds$depth, horizontal = T) # There are outliers, so the IQR method will be applied
+# Check NA (we don't need to check 0s)
+cat("Missing values in cut:", sum(is.na(diamonds$cut)), "\n") #0
 
-hist(diamonds$depth, freq = F)
+# Distribution
+summary(diamonds$cut)
+barplot(summary(diamonds$cut), main="Diamond Cut Quality")
+```
 
-Q1 <- quantile(diamonds$depth, 0.25)
-Q3 <- quantile(diamonds$depth, 0.75)
-IQR_value <- Q3 - Q1
+### Color variable (factor)
+Same as before, we analyse the different levels of color, the most frequent is G color grade and J color grade is the less frequent, meaning diamonds with a noticeable tint are less common in the dataset.
+It can be mapped to 1,2,3..??? (es una escala)
 
-lower_mild <- Q1 - 1.5 * IQR_value # Mild outliers lower limit
-upper_mild <- Q3 + 1.5 * IQR_value # Mild outliers upper limit
-lower_extreme <- Q1 - 3 * IQR_value # Extreme outliers lower limit
-upper_extreme <- Q3 + 3 * IQR_value # Extreme outliers upper limit
+```{r}
+# Check NA
+cat("Missing values in color:", sum(is.na(diamonds$color)), "\n") #0
 
+# Distribution
+summary(diamonds$color)
+barplot(summary(diamonds$color), main="Diamond Color")
+```
+
+### Clarity variable (factor)
+The diamond clarity distribution is more frequent for the SI1 and VS2 grades, so the sample is composed mostly of slightly-to-very slightly included stones. 
+It can be mapped to 1,2,3..??? (es una escala)
+
+```{r}
+# Check NA 
+cat("Missing values in clarity:", sum(is.na(diamonds$clarity)), "\n") #0
+
+# Distribution
+summary(diamonds$clarity)
+barplot(summary(diamonds$clarity), main="Diamond Clarity")
+```
+### Depth variable
+The depth variable has no NA and no zeros, it has 2 extreme outliers, which we removed.
+
+Analyzing the results of the shapiro test, data was not normally distributed, but we don't apply transformations because $\lambda=0.5$ is the lower bound of the confidence interval and the optimal transformation is $\lambda \approx 1.0$, which means applying no transformation.
+
+```{r}
+# Check NA and zeros
+cat("Missing values in depth:", sum(is.na(diamonds$depth)), "\n") #0
+cat("Number of zeros in depth:", sum(diamonds$depth == 0), "\n") #0
+
+# Outliers
 boxplot(diamonds$depth, horizontal = T)
-abline(v=lower_mild, col="orange")
-abline(v=upper_mild, col="orange")
-abline(v=lower_extreme, col="red")
-abline(v=upper_extreme, col="red")
+varout <- summary(diamonds$depth)
+iqr = varout[5]-varout[2]
+usout <- varout[5]+3*iqr
+lsout <- varout[2]-3*iqr
+sev_out <- which((diamonds$depth > usout) | (diamonds$depth < lsout))
+abline(v=usout,col='orange')
+abline(v=lsout,col='orange')
+sev_out #[1] 462 467
+diamonds <- diamonds[-sev_out,] # Remove extreme outliers
 
-diamonds <- diamonds[diamonds$depth >= lower_extreme & diamonds$depth <= upper_extreme, ] # Remove extreme outliers
-
-hist(diamonds$depth, freq = F) # Is depth normally distributed?
+# Distribution
+hist(diamonds$depth,freq=F)
 m = mean(diamonds$depth)
 std = sd(diamonds$depth)
-curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+curve(dnorm(x,m,std),add=T, col="red")
+shapiro.test(diamonds$depth) #p-value < 0.01 -> not normally distirbuted
 
-shapiro.test(diamonds$depth) #p-value < 0.05 -> depth is not normally distributed
+# Transformation
+boxcox(diamonds$depth~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+# no transformation is needed
 ```
-
-
 ### Table variable
+The variable table has no NA, zeros or outliers.
+Also it is not normally distributed but and since lambda = -1 we apply reciprocal transformation (1/table).
+
 ```{r}
-boxplot(diamonds$table, horizontal = T) # There are outliers, so the IQR method will be applied
+# Check NA and zeros
+cat("Missing values in table:", sum(is.na(diamonds$table)), "\n") #0
+cat("Number of zeros in table:", sum(diamonds$table == 0), "\n") #0
 
-Q1 <- quantile(diamonds$table, 0.25)
-Q3 <- quantile(diamonds$table, 0.75)
-IQR_value <- Q3 - Q1
-
-lower_mild <- Q1 - 1.5 * IQR_value # Mild outliers lower limit
-upper_mild <- Q3 + 1.5 * IQR_value # Mild outliers upper limit
-lower_extreme <- Q1 - 3 * IQR_value # Extreme outliers lower limit
-upper_extreme <- Q3 + 3 * IQR_value # Extreme outliers upper limit
-
+# Outliers
 boxplot(diamonds$table, horizontal = T)
-abline(v=lower_mild, col="orange")
-abline(v=upper_mild, col="orange")
-abline(v=lower_extreme, col="red")
-abline(v=upper_extreme, col="red")
+varout <- summary(diamonds$table)
+iqr = varout[5]-varout[2]
+usout <- varout[5]+3*iqr
+lsout <- varout[2]-3*iqr
+sev_out <- which((diamonds$table > usout) | (diamonds$table < lsout))
+abline(v=usout,col='orange')
+abline(v=lsout,col='orange')
+sev_out #0
+diamonds <- diamonds[-sev_out,] # Remove extreme outliers (but there's not outliers)
 
-diamonds <- diamonds[diamonds$table >= lower_extreme & diamonds$table <= upper_extreme, ] # Remove extreme outliers
-
-hist(diamonds$table, freq = F) # Is table normally distributed?
+# Distribution
+hist(diamonds$table,freq=F)
 m = mean(diamonds$table)
 std = sd(diamonds$table)
-curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+curve(dnorm(x,m,std),add=T, col="red")
+shapiro.test(diamonds$table) #p-value < 0.01 -> not normally distirbuted
 
-shapiro.test(diamonds$table) #p-value < 0.05 -> table is not normally distributed
+# Transformation
+boxcox(diamonds$table~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+# Reciprocal transformation based on the Box-Cox suggestion (lambda = -1)
+diamonds$reci_table <- 1 / diamonds$table
+hist(diamonds$reci_table)
+m = mean(diamonds$reci_table)
+std = sd(diamonds$reci_table)
+curve(dnorm(x,m,std),add=T, col="red")
+shapiro.test(diamonds$reci_table) #p-value < 0.01 -> not normally distirbuted
 ```
 
 
