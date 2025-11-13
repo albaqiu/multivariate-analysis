@@ -160,6 +160,7 @@ abline(v=usout,col='orange')
 abline(v=lsout,col='orange')
 sev_out #0
 
+
 # Distribution
 hist(diamonds$table,freq=F)
 m = mean(diamonds$table)
