@@ -69,22 +69,36 @@ For each variable, we check: duplicates, existence of zeros, existence of outlie
 
 ## Numerical variables
 
-### Carat variable
-
-After analyzing the carat variable, we observe that it doesn't have missing values, zeros or outliers, but this variable is not normally distributed, and after applying the log transformation, it's still not normal.
+Helper function to evaluate missing values and zeros
 
 ```{r}
-# Check NA and zeros
-cat("Missing values in carat:", sum(is.na(diamonds$carat)), "\n") #0
-cat("Number of zeros in carat:", sum(diamonds$carat == 0), "\n") #0
+check_numeric <- function(x) {
+  list(na      = sum(is.na(x)),
+    zeros   = sum(x == 0))
+}
+```
 
+```{r}
+num_vars <- diamonds %>% select_if(is.numeric)
+
+results <- lapply(num_vars, check_numeric)
+#results
+```
+We observe that no numeric variable has NA or zeros
+
+### Carat variable
+
+After analyzing the carat variable, we observe that it doesn't have outliers, but this variable is clearly not normally distributed.
+The carat variable is right-skewed, with a long tail towards larger values. After using boxcos function, we see that a log transformation is appropriate to improve symmetry and stabilize variance.
+
+```{r}
 # Outliers
 boxplot(diamonds$carat, horizontal = T)
 varout <- summary(diamonds$carat)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$carat > usout) | (diamonds$carat < lsout))
+sev_out <- which((diamonds$carat >= usout) | (diamonds$carat <= lsout))
 sev_out #0
 
 # Distribution
@@ -100,28 +114,20 @@ hist(diamonds$log_carat, freq = F) # Is log_carat normally distributed?
 m = mean(diamonds$log_carat)
 std = sd(diamonds$log_carat)
 curve(dnorm(x,m,std),col="red",lwd=2,add=T)
-
-shapiro.test(diamonds$log_carat) #p-value < 0.05 -> log_carat is not normally distributed
 ```
 
 ### Depth variable
 
-The depth variable has no NA and no zeros, but it has 2 extreme outliers, which we removed.
-
-Analyzing the results of the shapiro test, data was not normally distributed, but we don't apply transformations because $\lambda=0.5$ is the lower bound of the confidence interval and the optimal transformation is $\lambda \approx 1.0$, which means applying no transformation.
+The depth variable has 2 extreme outliers, which we removed. Then, we observe that the depth variable has an approximately symmetric, bell-shaped distribution, so no transformation is needed.
 
 ```{r}
-# Check NA and zeros
-cat("Missing values in depth:", sum(is.na(diamonds$depth)), "\n") #0
-cat("Number of zeros in depth:", sum(diamonds$depth == 0), "\n") #0
-
 # Outliers
 boxplot(diamonds$depth, horizontal = T)
 varout <- summary(diamonds$depth)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$depth > usout) | (diamonds$depth < lsout))
+sev_out <- which((diamonds$depth >= usout) | (diamonds$depth <= lsout))
 abline(v=usout,col='orange')
 abline(v=lsout,col='orange')
 sev_out #[1] 462 467
@@ -132,64 +138,42 @@ hist(diamonds$depth,freq=F)
 m = mean(diamonds$depth)
 std = sd(diamonds$depth)
 curve(dnorm(x,m,std),add=T, col="red")
-shapiro.test(diamonds$depth) #p-value < 0.01 -> not normally distirbuted
-
-# Transformation
-boxcox(diamonds$depth~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
-# no transformation is needed
 ```
 
 
 ### Table variable
 
-The variable table has no NA, zeros or outliers. We won't apply any transformation!!??
+The variable table has 1 outlier, after removing it we see the distribution of this variable: it's almost symmetric with mild right skewness. Since its shape is already close to normal and a transformation would not provide meaningful improvement, no transformation is applied.
 
 ```{r}
-# Check NA and zeros
-cat("Missing values in table:", sum(is.na(diamonds$table)), "\n") #0
-cat("Number of zeros in table:", sum(diamonds$table == 0), "\n") #0
-
 # Outliers
 boxplot(diamonds$table, horizontal = TRUE)
 varout <- summary(diamonds$table)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$table > usout) | (diamonds$table < lsout))
+sev_out <- which((diamonds$table >= usout) | (diamonds$table <= lsout))
 abline(v=usout,col='orange')
 abline(v=lsout,col='orange')
-sev_out #0
-
+sev_out #206
+diamonds <- diamonds[-sev_out,] # Remove extreme outliers
 
 # Distribution
 hist(diamonds$table,freq=F)
 m = mean(diamonds$table)
 std = sd(diamonds$table)
 curve(dnorm(x,m,std),add=T, col="red")
-shapiro.test(diamonds$table) #p-value < 0.01 -> not normally distributed
-
-# Transformation
-boxcox(diamonds$table~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
-# Reciprocal transformation based on the Box-Cox suggestion (lambda = -1) --> jo no faria cap
-#diamonds$reci_table <- 1 / diamonds$table
-#hist(diamonds$reci_table)
-#m = mean(diamonds$reci_table)
-#std = sd(diamonds$reci_table)
-#curve(dnorm(x,m,std),add=T, col="red")
-#shapiro.test(diamonds$reci_table) #p-value < 0.01 -> not normally distirbuted
 ```
 
 ### Price variable
 
-The `price` variable has no missing values and no outliers.
+The variable price doesn't have severe outliers, but we can observe a long tail at the right of the boxplot indicating potential mild outliers.
 
-Analyzing the results of the shapiro test, data was not normally distributed, and based on the boxcox, we apply a logarithmic transformations because $\lambda=0$.
+Using the histogram, it has a right skewed distribution, which can be improved by a log transformation to reduce its skewness and stabilize variance, and based on the boxcox, we apply a this transformation because $\lambda=0$.
+
+After applying the log transformation, the distribution becomes more symmetric and closer to a bell-shaped form.
 
 ```{r}
-# Check NA and zeros
-cat("Missing values in price:", sum(is.na(diamonds$price)), "\n") #0
-cat("Number of zeros in price:", sum(diamonds$price == 0), "\n") #0
-
 # Outliers
 boxplot(diamonds$price, horizontal = T)
 varout <- summary(diamonds$price)
@@ -203,71 +187,113 @@ sev_out #0
 
 # Distribution
 hist(diamonds$price, freq = F) # A log transformation could be applied to reduce skewness and stabilize variance
+m = mean(diamonds$price)
+std = sd(diamonds$price)
+curve(dnorm(x,m,std),add=T, col="red")
 
 # Logarithmic transformation
 boxcox(diamonds$price~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
 diamonds$log_price <- log(diamonds$price) # Since lambda = 0 -> logarithmic transformation
-
 boxplot(diamonds$log_price, horizontal = T) # No outliers
-varout <- summary(diamonds$log_price)
-iqr = varout[5]-varout[2]
-usout <- varout[5]+3*iqr
-lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$log_price > usout) | (diamonds$log_price < lsout))
-abline(v=usout,col='orange')
-abline(v=lsout,col='orange')
-sev_out #0
-
 hist(diamonds$log_price, freq = F) # Is log_price normally distributed?
 m = mean(diamonds$log_price)
 std = sd(diamonds$log_price)
 curve(dnorm(x,m,std),col="red",lwd=2,add=T) 
-
-shapiro.test(diamonds$log_price) #p-value < 0.05 -> log price is not normally distributed
 ```
 
 ### x variable
+The variable x is right-skewed, applying a logarithmic transformation reduces this skewness and produces a more symmetric distribution, as shown in the histogram of log_x. Although the original variable does not show severe outliers and can be used in its raw form for descriptive analysis, the log transformation improves distributional symmetry and is beneficial for subsequent statistical modeling. Therefore, the logarithmic version is retained for later analysis.
 
 ```{r}
-boxplot(diamonds$x, horizontal = T) # No outliers
+# Outliers
+boxplot(diamonds$x, horizontal = T)
+varout <- summary(diamonds$x)
+iqr = varout[5]-varout[2]
+usout <- varout[5]+3*iqr
+lsout <- varout[2]-3*iqr
+sev_out <- which((diamonds$x > usout) | (diamonds$x < lsout))
+abline(v=usout,col='orange')
+abline(v=lsout,col='orange')
+sev_out #0
 
-hist(diamonds$x, freq = F) # Is x normally distributed?
+# Distribution
+hist(diamonds$x, freq = F)
 m = mean(diamonds$x)
 std = sd(diamonds$x)
-curve(dnorm(x,m,std),col="red",lwd=2,add=T) 
+curve(dnorm(x,m,std),add=T, col="red")
 
-shapiro.test(diamonds$x) #p-value < 0.05 -> x is not normally distributed
+# Logarithmic transformation
+boxcox(diamonds$x~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+diamonds$log_x <- log(diamonds$x) # Since lambda = 0 -> logarithmic transformation
+boxplot(diamonds$log_x, horizontal = T) # No outliers
+hist(diamonds$log_x, freq = F) # Is log_x normally distributed?
+m = mean(diamonds$log_x)
+std = sd(diamonds$log_x)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T) 
 ```
 
 ### y variable
+The variable y, is also right-skewed, although the distribution does not show severe outliers, the skewness indicates that the variable is not symmetric. Box–Cox analysis suggests a transformation close to λ = 0, a logarithmic transformation is appropriate. The transformed variable (log_y) shows a much more symmetric, bell-shaped distribution.
 
 ```{r}
-boxplot(diamonds$y, horizontal = T) # No outliers
+# Outliers
+boxplot(diamonds$y, horizontal = T)
+varout <- summary(diamonds$y)
+iqr = varout[5]-varout[2]
+usout <- varout[5]+3*iqr
+lsout <- varout[2]-3*iqr
+sev_out <- which((diamonds$y > usout) | (diamonds$y < lsout))
+abline(v=usout,col='orange')
+abline(v=lsout,col='orange')
+sev_out #0
 
-hist(diamonds$y, freq = F) # Is y normally distributed?
+# Distribution
+hist(diamonds$y, freq = F)
 m = mean(diamonds$y)
 std = sd(diamonds$y)
-curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+curve(dnorm(x,m,std),add=T, col="red")
 
-shapiro.test(diamonds$y) #p-value < 0.05 -> y is not normally distributed
+# Logarithmic transformation
+boxcox(diamonds$y~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+diamonds$log_y <- log(diamonds$y) # Since lambda is near 0 -> logarithmic transformation
+boxplot(diamonds$log_y, horizontal = T) # No outliers
+hist(diamonds$log_y, freq = F) # Is log_y normally distributed?
+m = mean(diamonds$log_y)
+std = sd(diamonds$log_y)
+curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 ```
 
 ### z variable
 
-```{r}
-boxplot(diamonds$z, horizontal = T) # No outliers
+Similar as x and y, the variable z is also right-skewed, although the distribution does not show severe outliers, the skewness indicates deviation from symmetry. Box–Cox analysis suggests a transformation close to λ = 0. After applying the log transformation, the distribution is more symmetric and bell-shaped.
 
-hist(diamonds$z, freq = F) # Is z normally distributed?
+```{r}
+# Outliers
+boxplot(diamonds$z, horizontal = T)
+varout <- summary(diamonds$z)
+iqr = varout[5]-varout[2]
+usout <- varout[5]+3*iqr
+lsout <- varout[2]-3*iqr
+sev_out <- which((diamonds$z > usout) | (diamonds$z < lsout))
+abline(v=usout,col='orange')
+abline(v=lsout,col='orange')
+sev_out #0
+
+# Distribution
+hist(diamonds$z, freq = F) # A log transformation could be applied to reduce skewness and stabilize variance
 m = mean(diamonds$z)
 std = sd(diamonds$z)
+curve(dnorm(x,m,std),add=T, col="red")
+
+# Logarithmic transformation
+boxcox(diamonds$z~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+diamonds$log_z <- log(diamonds$z) # Since lambda is near 0 -> logarithmic transformation
+boxplot(diamonds$log_z, horizontal = T) # No outliers
+hist(diamonds$log_z, freq = F) # Is log_z normally distributed?
+m = mean(diamonds$log_z)
+std = sd(diamonds$log_z)
 curve(dnorm(x,m,std),col="red",lwd=2,add=T)
-
-shapiro.test(diamonds$z) #p-value < 0.05 -> z is not normally distributed
-
-
-nrow(diamonds) # Only two outlier observations have been removed
 ```
-
 
 ## Categorical variables
 
@@ -286,7 +312,7 @@ barplot(summary(diamonds$cut), main="Diamond Cut Quality")
 
 ### Color variable
 
-Same as before, we analyse the different levels of color. The most frequent is G color grade and the less frequent is J color grade, meaning diamonds with a noticeable tint are less common in the dataset. It can be mapped to 1,2,3..??? (es una escala)
+Same as before, we analyse the different levels of color. The most frequent is G color grade and the less frequent is J color grade, meaning diamonds with a noticeable tint are less common in the dataset.
 
 ```{r}
 # Check NA
@@ -299,7 +325,7 @@ barplot(summary(diamonds$color), main="Diamond Color")
 
 ### Clarity variable
 
-The diamond clarity distribution is more frequent for the SI1 and VS2 grades, so the sample is composed mostly of slightly-to-very slightly included stones. It can be mapped to 1,2,3..??? (es una escala)
+The diamond clarity distribution is more frequent for the SI1 and VS2 grades, so the sample is composed mostly of slightly-to-very slightly included stones.
 
 ```{r}
 # Check NA 
@@ -310,9 +336,15 @@ summary(diamonds$clarity)
 barplot(summary(diamonds$clarity), main="Diamond Clarity")
 ```
 
+In conclusion, we have removed 3 observations and transformed the variables carat, price, x, y, z with logarithmic tranformation, and we'll work with this dataframe:
+
+```{r}
+#diamonds <- diamonds[,c(2:6,11:15)]
+```
+
 ### VARAIBLE CREATION????
 
-## Correaltions between numeric variables
+## Correlations between numeric variables
 
 ```{r}
 numeric_vars <- diamonds[ , sapply(diamonds, is.numeric)] # Get numeric variables
