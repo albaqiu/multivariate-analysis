@@ -35,11 +35,12 @@ library(FactoMineR)
 library(MASS)
 library(psych)
 library(factoextra)
+library(corrplot)
 ```
 
 ## 1. Data preparation
 
-The dataset has been imported with the \emph{read.csv()} function from the \emph{dplyr} library. The first variables named \emph{X} has been eliminated since it corresponds to an index column (it is not an explanatory variable). Moreover, the categorical variables \emph{cut}, \emph{color} and \emph{clarity} have properly been converted into factors.
+The dataset have been imported using the \emph{read.csv()} function from the \emph{dplyr} library. The variable named X have been removed, as it corresponds to an index column rather than an explanatory variable. Additionally, the categorical variables cut, color, and clarity have been correctly converted into factors.
 
 ```{r}
 diamonds <- read.csv('diamonds.csv')
@@ -53,7 +54,7 @@ diamonds$clarity <- as.factor(diamonds$clarity)
 summary(diamonds)
 ```
 
-Since there are too many observations (53940), it was convenient to perform a random selection ob 500 observations in order to conduct a more manageable and focused study. Note that the means of the numerical variables and the proportion of observations in each category did not variate very much.
+Since the dataset contained a large number of observations $(53940)$, a random sample of $500$ observations has been selected to allow for a more manageable and focused analysis. It is worth noting that the means of the numerical variables and the proportions of observations in each category do not vary significantly.
 
 ```{r}
 n <- nrow(diamonds)
@@ -98,8 +99,8 @@ usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
 
 boxplot(diamonds$carat, horizontal = T)
-abline(v=usout,col='orange')
-abline(v=lsout,col='orange')
+abline(v=usout,col='orange', add = T)
+abline(v=lsout,col='orange', add = T)
 sev_out <- which((diamonds$carat >= usout) | (diamonds$carat <= lsout))
 sev_out # 0
 
@@ -109,12 +110,12 @@ curve(dnorm(x),add=T, col="red") #It is obviously not normally distributed
 
 # Transformation
 boxcox(diamonds$carat~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
-diamonds$log_carat <- log(diamonds$carat) # Since lambda ~ 0 -> logarithmic transformation
-boxplot(diamonds$log_carat, horizontal = T) # No outliers
+diamonds$logCarat <- log(diamonds$carat) # Since lambda ~ 0 -> logarithmic transformation
+boxplot(diamonds$logCarat, horizontal = T) # No outliers
 
-hist(diamonds$log_carat, freq = F) # Is log_carat normally distributed?
-m = mean(diamonds$log_carat)
-std = sd(diamonds$log_carat)
+hist(diamonds$logCarat, freq = F) # Is logCarat normally distributed?
+m = mean(diamonds$logCarat)
+std = sd(diamonds$logCarat)
 curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 ```
 
@@ -132,8 +133,8 @@ lsout <- varout[2]-3*iqr
 sev_out <- which((diamonds$depth >= usout) | (diamonds$depth <= lsout))
 
 boxplot(diamonds$depth, horizontal = T)
-abline(v=usout,col='orange')
-abline(v=lsout,col='orange')
+abline(v=usout,col='orange', add = T)
+abline(v=lsout,col='orange', add = T)
 sev_out #[1] 462 467
 diamonds <- diamonds[-sev_out,] # Remove extreme outliers
 
@@ -161,8 +162,8 @@ lsout <- varout[2]-3*iqr
 sev_out <- which((diamonds$table >= usout) | (diamonds$table <= lsout))
 
 boxplot(diamonds$table, horizontal = TRUE)
-abline(v=usout,col='orange')
-abline(v=lsout,col='orange')
+abline(v=usout,col='orange', add = T)
+abline(v=lsout,col='orange', add = T)
 sev_out #206
 diamonds <- diamonds[-sev_out,] # Remove extreme outliers
 
@@ -193,8 +194,8 @@ lsout <- varout[2]-3*iqr
 sev_out <- which((diamonds$price > usout) | (diamonds$price < lsout))
 
 boxplot(diamonds$price, horizontal = T)
-abline(v=usout,col='orange')
-abline(v=lsout,col='orange')
+abline(v=usout,col='orange', add = T)
+abline(v=lsout,col='orange', add = T)
 sev_out #0
 
 # Distribution
@@ -205,16 +206,16 @@ curve(dnorm(x,m,std),add=T, col="red")
 
 # Logarithmic transformation
 boxcox(diamonds$price~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
-diamonds$log_price <- log(diamonds$price) # Since lambda ~ 0 -> logarithmic transformation
-boxplot(diamonds$log_price, horizontal = T) # No outliers
-hist(diamonds$log_price, freq = F) # Is log_price normally distributed?
-m = mean(diamonds$log_price)
-std = sd(diamonds$log_price)
+diamonds$logPrice <- log(diamonds$price) # Since lambda ~ 0 -> logarithmic transformation
+boxplot(diamonds$logPrice, horizontal = T) # No outliers
+hist(diamonds$logPrice, freq = F) # Is logPrice normally distributed?
+m = mean(diamonds$logPrice)
+std = sd(diamonds$logPrice)
 curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 ```
 
 ### x variable
-The variable x is right-skewed, applying a logarithmic transformation reduces this skewness and produces a more symmetric distribution, as shown in the histogram of log_x. Although the original variable does not show severe outliers and can be used in its raw form for descriptive analysis, the log transformation improves distributional symmetry and is beneficial for subsequent statistical modeling. Therefore, the logarithmic version is retained for later analysis.
+The x variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
 
 ```{r}
 # Outliers
@@ -226,8 +227,8 @@ lsout <- varout[2]-3*iqr
 sev_out <- which((diamonds$x > usout) | (diamonds$x < lsout))
 
 boxplot(diamonds$x, horizontal = T)
-abline(v=usout,col='orange')
-abline(v=lsout,col='orange')
+abline(v=usout,col='orange', add = T)
+abline(v=lsout,col='orange', add = T)
 sev_out #0
 
 # Distribution
@@ -235,19 +236,10 @@ hist(diamonds$x, freq = F)
 m = mean(diamonds$x)
 std = sd(diamonds$x)
 curve(dnorm(x,m,std),add=T, col="red")
-
-# Logarithmic transformation
-boxcox(diamonds$x~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
-diamonds$log_x <- log(diamonds$x) # Since lambda ~ 0 -> logarithmic transformation
-boxplot(diamonds$log_x, horizontal = T) # No outliers
-hist(diamonds$log_x, freq = F) # Is log_x normally distributed?
-m = mean(diamonds$log_x)
-std = sd(diamonds$log_x)
-curve(dnorm(x,m,std),col="red",lwd=2,add=T) 
 ```
 
 ### y variable
-The variable y, is also right-skewed, although the distribution does not show severe outliers, the skewness indicates that the variable is not symmetric. Box–Cox analysis suggests a transformation close to λ = 0, a logarithmic transformation is appropriate. The transformed variable (log_y) shows a much more symmetric, bell-shaped distribution.
+The y variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
 
 ```{r}
 # Outliers
@@ -257,8 +249,10 @@ iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
 sev_out <- which((diamonds$y > usout) | (diamonds$y < lsout))
-abline(v=usout,col='orange')
-abline(v=lsout,col='orange')
+
+boxplot(diamonds$y, horizontal = T)
+abline(v=usout,col='orange', add = T)
+abline(v=lsout,col='orange', add = T)
 sev_out #0
 
 # Distribution
@@ -266,20 +260,10 @@ hist(diamonds$y, freq = F)
 m = mean(diamonds$y)
 std = sd(diamonds$y)
 curve(dnorm(x,m,std),add=T, col="red")
-
-# Logarithmic transformation
-boxcox(diamonds$y~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
-diamonds$log_y <- log(diamonds$y) # Since lambda is near 0 -> logarithmic transformation
-boxplot(diamonds$log_y, horizontal = T) # No outliers
-hist(diamonds$log_y, freq = F) # Is log_y normally distributed?
-m = mean(diamonds$log_y)
-std = sd(diamonds$log_y)
-curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 ```
 
 ### z variable
-
-Similar as x and y, the variable z is also right-skewed, although the distribution does not show severe outliers, the skewness indicates deviation from symmetry. Box–Cox analysis suggests a transformation close to λ = 0. After applying the log transformation, the distribution is more symmetric and bell-shaped.
+The y variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
 
 ```{r}
 # Outliers
@@ -289,8 +273,10 @@ iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
 sev_out <- which((diamonds$z > usout) | (diamonds$z < lsout))
-abline(v=usout,col='orange')
-abline(v=lsout,col='orange')
+
+boxplot(diamonds$z, horizontal = T)
+abline(v=usout,col='orange', add = T)
+abline(v=lsout,col='orange', add = T)
 sev_out #0
 
 # Distribution
@@ -298,15 +284,6 @@ hist(diamonds$z, freq = F) # A log transformation could be applied to reduce ske
 m = mean(diamonds$z)
 std = sd(diamonds$z)
 curve(dnorm(x,m,std),add=T, col="red")
-
-# Logarithmic transformation
-boxcox(diamonds$z~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
-diamonds$log_z <- log(diamonds$z) # Since lambda is near 0 -> logarithmic transformation
-boxplot(diamonds$log_z, horizontal = T) # No outliers
-hist(diamonds$log_z, freq = F) # Is log_z normally distributed?
-m = mean(diamonds$log_z)
-std = sd(diamonds$log_z)
-curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 ```
 
 ## Categorical variables
@@ -356,39 +333,37 @@ barplot(summary(diamonds$clarity), main="Diamond Clarity")
 prop.table(table(diamonds$clarity))
 ```
 
-In conclusion, we have removed 3 observations and transformed the variables carat, price, x, y, z with logarithmic tranformation. Hence, the dataframe we will work with is:
+In conclusion, we have removed 3 observations and transformed the variables carat and price with a logarithmic transformation for a better interpretation. Hence, the dataframe we will work with is:
 
 ```{r}
-#diamonds <- diamonds[,c(2:6,11:15)]
+diamonds <- diamonds[,c(2:6,8:12)]
 ```
 
 ### VARAIBLE CREATION????
 
 ## Correlations between numeric variables
 
+The numeric variables are generally highly correlated. The x, y, z, logPrice, and logCarat variables exhibit nearly perfect positive correlations, and their scatter plots form almost straight lines. In fact, the logarithmic transformations of price and carat further increase these correlations.
+
+In contrast, the depth and table variables show weak correlations with the other variables, with depth being the only variable negatively correlated with all the others. Their scatter plots display a cloud of points without a clear pattern, although table and depth appear slightly negatively correlated.
+
+As expected, the Bartlett test returns a very low p-value, rejecting the null hypothesis that the correlation matrix is equal to the identity matrix.
+
 ```{r}
-numeric_vars <- diamonds[ , sapply(diamonds, is.numeric)] # Get numeric variables
+numeric_vars <- diamonds[ , sapply(diamonds, is.numeric)]
 
 cor_matrix <- cor(numeric_vars)
-print(cor_matrix)
 
-library(corrplot)
-corrplot(cor_matrix, method = "color", addCoef.col = "black", title = "Correlation Plot of Numeric Variables") 
-
-# Variables seem to be higher correlated, 
-# but scatter plots must be performed to verify this correlation
+corrplot(cor_matrix, method = "color", addCoef.col = "black", title = "Correlation Plot of Numeric Variables")
 
 pairs(numeric_vars, main="Scatterplot Matrix of Numeric Variables")
 
-# Obs: Thanks to the log transformation of carat and price, now there is a higher correlation between this two transformed variables and the rest 
+cortest.bartlett(cor_matrix, nrow(diamonds))
+```
+Taking into account the KMO index, since it is higher than 0.5, the data are factorable. In other words, the variables are sufficiently correlated with each other so that meaningful factors can be extracted.
 
-numeric_vars <- numeric_vars[ , !colnames(numeric_vars) %in% c("price", "carat")] # We will work with the logarithmic transfroamtion of price and carat
-
-# Obs: Except from table and depth, the rest of the variables have a strong positive correlation
-
-cortest.bartlett(cor_matrix, nrow(diamonds)) # p-value < 0.05 -> reject H0 -> corr_matrix != Id
-
-# Apply KMO function to see if data is factorable (function written by Prof. Shigenobu Aok.)
+```{r}
+# (function written by Prof. Shigenobu Aok.)
 
 kmo <- function(x)
 {
@@ -405,44 +380,41 @@ kmo <- function(x)
 }
 
 # KMO index
-kmo(numeric_vars) # Is higher than 0.5 -> data is factorable
+kmo(numeric_vars)
 ```
 
 # Part 2: Multivariant analysis
 
 ## Principal components analysis
+The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
+
+In order to determine the number of components to extract, taking into account that the data is standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted by that dimension. In this case, the first two components (with eigenvalues $4.99$ and $1.2$) are the ones that meet the Kaiser's requirement. Moreover, the cumulative percentage of variance shows that these two components explain $89.46\%$ of the total variance, which indicates that they capture most of the information in the data frame. In addition, the scree plot shows a noticeable elbow after the first component, indicating that retaining two components captures most of the variance while keeping the solution interpretable.
 
 ```{r}
 diamonds.pca <- PCA(numeric_vars, graph = T)
 
-diamonds.pca$eig # Taking only two dimensions, 89% of the variability can be explain
+barplot(diamonds.pca$eig[,1], names.arg = 1:7, main = "Scree Plot", xlab = "Dimension", ylab = "Eigenvalue", col = "blue")
+lines(diamonds.pca$eig[,1], type = "o", col = "red", pch = 19, add=T)
+```
 
-diamonds.pca$var$coord
+It is important to determine which variables contribute most to each of the relevant components in order to reduce the number of variables. Hence, considering the coordinates of the variables, it is possible to see which variable is associated with each component. On the other hand, examining the $cos^2$ values shows which variables are more strongly related to a given component.
+
+- Dimension $1$: Physical Magnitude and Price Component
+Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat, as well as for logPrice. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
+
+- Dimension $2$: Geometric Balance
+Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+```{r}
+corrplot(diamonds.pca$var$coord)
 diamonds.pca$var$cos2
 diamonds.pca$var$contrib
-# Fist dimension is basically explained by "x", "y", "z", "log_carat", "log_price" variables,
-# and they are positively correlated with the dimension. 
-# In fact, each of the previous variables explains around 19% of dimension 1 variation.
-# In other words, first dimension is explained by the size–related and variables.
-# The bigger and more expensive the diamond is, the higher is the first dimension value.
 
-# Second dimension is basically explained by "depth" and "table" variables,
-# and it is positively correlated with depth but negatively correlated with table.
-# In fact, each of the previous variables explains around 44-53% of dimension 2 variation.
-# In other words, second dimension is explained by the proportional shape.
-# The deeper and narrower the diamond is, the higher is the second dimension value.
+diamonds.pca$var$coord
 
-
-
-# pca_hep<-PCA(heptathlon, quanti.sup = 8) #Get rid of score variable because is target
-
-
-
-# Since some variables are not very correlated with the rest, ç
-# and PCA results are affected by this variables,
-# let's repeat the PCA using only the correlated variables
-
+plot.PCA(diamonds.pca, choix = "var", axes = c(1, 2))
 ```
+
+## PCA SUPLEMENTARY??
 
 ## Multidimensional scaling
 
