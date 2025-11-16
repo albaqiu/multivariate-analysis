@@ -480,7 +480,6 @@ The analysis will be done using Indicator Matrix. That way we will be able to st
 Regarding the logPrice variable, the approach followed will be the same as in PCA: it will be included as a supplementary variable, to help further the interpretation without being included in the calculations.
 
 ```{r}
-
 ## Indicator Matrix
 library(FactoMineR)
 tab.disjonctif(dfmca)
@@ -602,10 +601,36 @@ res.mca$quali.sup
 # Graphs of the variables
 plot(res.mca,choix="var",title="Graph of the variables")
 plot(res.mca,invisible=c("ind","var"),hab="quali", title="Graph of the supplementary categories")
-
 ```
 
 
-## Cluster analysis
+## Clustering and profiling
+
+### Cluster analysis
+
+
+```{r}
+res <- FAMD(diamonds)
+summary(res)
+```
+
+```{r}
+hc_famd <- HCPC(res,-1) 
+```
+```{r}
+# Dendrogram with optimal number of clusters
+library(factoextra)
+fviz_dend(hc_famd, rect = TRUE, rect_fill = TRUE)
+
+# Visualization of Clusters
+fviz_cluster(hc_famd, repel = TRUE, show.clust.cent = TRUE, main = "Factor map")
+```
+
+
 
 ### Profiling
+
+```{r}
+hc_famd$desc.var
+```
+
