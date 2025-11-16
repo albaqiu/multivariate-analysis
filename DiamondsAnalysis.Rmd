@@ -60,6 +60,7 @@ Since the dataset contained a large number of observations $(53940)$, a random s
 n <- nrow(diamonds)
 indices <- sample(1:n, 500) # Take 500 random indices
 diamonds <- diamonds[indices,]
+# rownames(diamonds) <- seq_len(nrow(diamonds))
 
 summary(diamonds)
 ```
@@ -150,7 +151,7 @@ shapiro.test(diamonds$depth)
 
 ### Table variable
 
-The variable table has severe 1 outlier. After removing it, we see that the distribution of this variable is almost symmetric with mild right skewness. Since its shape is already close to normal and a transformation would not provide meaningful improvement, no transformation is applied. However, the shapiro test returned a low p-value, leading to the rejection of the normality hypothesis.
+The variable table has 1 severe outlier. After removing it, we see that the distribution of this variable is almost symmetric with mild right skewness. Since its shape is already close to normal and a transformation would not provide meaningful improvement, no transformation is applied. However, the shapiro test returned a low p-value, leading to the rejection of the normality hypothesis.
 
 ```{r}
 # Outliers
@@ -290,7 +291,7 @@ curve(dnorm(x,m,std),add=T, col="red")
 
 ### Cut variable 
 
-Cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for 37.4% of observations, while the Fair level comprising only 1.8% of the observations. These strage categories could be grouped further depending on the results of the multivariate analysis.
+Cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for 37.4% of observations, while the Fair level comprising only 1.8% of the observations. These strange categories could be grouped further depending on the results of the multivariate analysis.
 
 ```{r}
 # Check NA (we don't need to check 0s)
@@ -395,6 +396,8 @@ diamonds.pca <- PCA(numeric_vars, graph = T)
 
 barplot(diamonds.pca$eig[,1], names.arg = 1:7, main = "Scree Plot", xlab = "Dimension", ylab = "Eigenvalue", col = "blue")
 lines(diamonds.pca$eig[,1], type = "o", col = "red", pch = 19, add=T)
+
+diamonds.pca$eig
 ```
 
 It is important to determine which variables contribute most to each of the relevant components in order to reduce the number of variables. Hence, considering the coordinates of the variables, it is possible to see which variable is associated with each component. On the other hand, examining the $cos^2$ values shows which variables are more strongly related to a given component.
@@ -415,12 +418,193 @@ plot.PCA(diamonds.pca, choix = "var", axes = c(1, 2))
 ```
 
 ## PCA SUPLEMENTARY??
+The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
+
+The logPrice numeric variable has been considered as a supplementary variable, since it is not a descriptive variable but a result of characteristics given by the numeric and categorical variables.
+
+Including price as an active variable could distort the PCA structure, given its high variance and strong correlations with the physical dimensions of the diamond, and it would make the interpretation of the components less meaningful.
+
+By treating price as a supplementary variable, it is excluded from the calculation of the principal components and only projected onto the factorial space afterwards. This makes it possible to study how price aligns with the main axes without altering their structure. This approach results in a clearer interpretation of the extracted components, focused on the physical properties of the diamonds, while still indicating how these characteristics relate to the final price.
+
+In order to determine the number of components to extract, taking into account that the data is standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted by that dimension. In this case, the first two components (with eigenvalues $4.06$ and $1.26$) are the ones that meet the Kaiser's requirement. Moreover, the cumulative percentage of variance shows that these two components explain $88.65\%$ of the total variance, which indicates that they capture most of the information in the data frame. In addition, the scree plot shows a noticeable elbow after the first component, indicating that retaining two components captures most of the variance while keeping the solution interpretable.
+
+```{r}
+diamonds.pca.sup <- PCA(numeric_vars, quanti.sup = 7, graph = T)
+
+barplot(diamonds.pca.sup$eig[,1], names.arg = 1:6, main = "Scree Plot", xlab = "Dimension", ylab = "Eigenvalue", col = "blue")
+lines(diamonds.pca.sup$eig[,1], type = "o", col = "red", pch = 19, add=T)
+
+diamonds.pca.sup$eig
+```
+
+It is important to determine which variables contribute most to each of the relevant components in order to reduce the number of variables. Hence, considering the coordinates of the variables, it is possible to see which variable is associated with each component. On the other hand, examining the $cos^2$ values shows which variables are more strongly related to a given component.
+
+- Dimension $1$: Physical Magnitude (and Price Component)
+Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
+
+- Dimension $2$: Geometric Balance
+Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+```{r}
+corrplot(diamonds.pca.sup$var$coord)
+diamonds.pca.sup$var$cos2
+diamonds.pca.sup$var$contrib
+
+diamonds.pca.sup$var$coord
+
+plot.PCA(diamonds.pca.sup, choix = "var", axes = c(1, 2))
+```
 
 ## Multidimensional scaling
 
 ## Correspondance analysis ??????
 
 ## Multiple correspondance analysis
+
+In order to do Multiple Corresponance Analysis using also the numerical variables, these will be converted to binary variables with two categories as “over average” and “below average” for each of them, which will also help with its interpretability. 
+
+Factor level 'over average' will be defined as 'o', and 'below average' as 'b'.
+
+```{r}
+dfmca <- diamonds
+nums = names(numeric_vars)
+
+for (var in nums){
+  meanvar = mean(dfmca[[var]])
+  dfmca[[var]] <- ifelse(dfmca[[var]] >= meanvar, "o", "b") 
+  dfmca[[var]] <- as.factor(dfmca[[var]])
+}
+summary(dfmca)
+```
+The analysis will be done using Indicator Matrix. That way we will be able to study both the categories of the variables and the individuals.
+
+Regarding the logPrice variable, the approach followed will be the same as in PCA: it will be included as a supplementary variable, to help further the interpretation without being included in the calculations.
+
+```{r}
+
+## Indicator Matrix
+library(FactoMineR)
+tab.disjonctif(dfmca)
+
+## MCA Application on Data using Indicator Matrix
+# logPrice used as a supplementary variable
+res.mca <- MCA(dfmca,quali.sup=10)
+summary(res.mca)
+```
+
+In order to choose which dimensions we will work with, we apply the rule of choosing the dimensions with eigenvalues greater than the average inertia of the indicator matrix per dimension.
+
+In this case, as there are 10 variables, J = 10, and the total number of values is K=5+7+8+(7x2)=34, number of dimensions is K-J=24. Therefore, the average inertia is 1/24 (0.04166667), and the dimensions selected are until Dim.20????
+
+The summary shows all of the analysis, but the description will be done separately.
+```{r}
+# K=15x2=30, J=15
+# no of dimension: K-J=15
+# average inertia per dimension: 1/(K-J)=1/15
+
+# Choose the dimensions with eigenvalues > 1/15 --> Until Dim.4
+summary(res.mca, ncp=4)
+res.mca
+```
+
+As can be seen in the description of Dimensions, the most significant variables in each dimension, which are those represented with the highest value of R2, are:
+  - For *dimension 1*, the Efficiency `EFF`, as it's value of R2 is 0.8414.
+  - For *dimension 2*, it is number of 2pt Field Goal `2PT FG`, with a value of R2 of 0.6864.
+  - For *dimension 3*, there isn't such a significant variable, but the one with the highest R2 value is 3pt Field Goal `3PT FG`, with a value of R2 of 0.3615.
+  
+Also, it is relevant to observe the link between variable and categories to see which are the most significant categories in each dimension, which are those represented with the highest absolute value of Estimate.
+
+They follow the same pattern for all three dimensions: the categories most positively correlated are the most significant variables mentioned above, for the 'over average' category, and the most negatively correlated is the 'under average' value of the same variable. 
+
+This can also be corroborated with the coordinate analysis. They are the values that are more extreme, in the negative and positive side of the axis.
+
+That means that observations will be easily separated between those over average and under, and interpreted according to each dimension.
+
+* Note: The results for dimension 4 are not shown by R, as it has an eigenvalue that is technically lower than the threshold (0.066 < 0.067).
+
+
+```{r}
+### Eigenvalues
+res.mca$eig
+barplot(res.mca$eig[,2],main="Eigenvalues", names.arg=1:nrow(res.mca$eig))
+
+## Coordinates of categories
+res.mca$var$coord
+
+## Description of Dimensions
+dimdesc(res.mca)
+```
+For the plots, we will interpret them in the 1st and 2nd dimension, since they are the most significative.
+
+Firstly, we will interpret the *cloud of individuals*. The plot shows both the individuals and the categories represented by the 1st and 2nd dimension.
+
+  - It is worth noting that there are almost no points in the center of the graph, they are all placed away from the origin.
+  
+  - For the categories, this pattern is due to the transformation of the numerical variables into binary ones, dividing them into “over average” and “below average” categories. Since both categories have similar frequencies, none of them represents a “dominant” or “average” profile. Therefore, both are located in opposite directions.
+  
+  - For the individuals, since each player belongs to either the “over” or “under” group for each variable, the overall profile of individuals is more polarized. 
+  
+  - As a conclusion, binarizing continuous variables helps to highlight contrasts between players’ performances, but at the same time reduces the amount of information in the variables.
+```{r}
+### Clouds ###
+## Cloud of Individuals
+plot.MCA(res.mca,choix="ind",label="none")
+```
+
+Then, we will interpret the *cloud of individuals grouped by most significant categories per dimension*. This is done by selecting the variable in the 'habillage' parameter.
+
+  - For *dimension 1*, the Efficiency `EFF`.
+  The map clearly shows this distinction: in the negative side of the Dim 1 axis, we can see the individuals with an efficiency below average, and in the positive side, those over average.
+  
+  - For *dimension 2*, it is number of 2pt Field Goal `2PT FG`
+  Although there are a few exceptions, the map also shows this distinction: in the negative side of the Dim 2 axis, we can see the individuals with a value of `2PT FG` below average, and in the positive side, those over average.
+
+```{r}
+## Cloud of Individuals
+plot.MCA(res.mca,choix="ind",label="none",invisible="var",habillage = "logCarat")
+plot.MCA(res.mca,choix="ind",label="none",invisible="var",habillage = "cut")
+plot.MCA(res.mca,choix="ind",label="none",invisible="var",habillage = "table")
+```
+
+The graph of the active categories is very relevant: the categories of values 'over average' are represented on the positive side of Dim 1, and the ones 'below average' are on the negative side.
+
+Considering the total information obtained from the cloud of categories, and also the cloud of variables, the conclusions we draw of the information obtained by the dimensions is the following:
+
+  - *Dimension 1* mainly represents the overall performance level, separating players with “over average” results  on the positive side, from those “below average” on the negative side. 
+  
+  - *Dimension 2* is more related to the shooting style of the players. Players with above-average values in 2-point field goals (2PT FG) are positioned on the upper side of the axis, together with offensive rebounds (OREB), which makes sense since players who frequently capture offensive rebounds often score from close range, leading to more 2-point shots.
+These players also tend to have below-average 3-point field goals (3PT FG), which fits with the usual profile of inside players.
+Conversely, the lower part of the axis shows the opposite pattern — players with higher 3-point shooting and fewer offensive rebounds, typically corresponding to perimeter players.
+
+```{r}
+## Cloud of Categories
+plot(res.mca,invisible=c("ind"),title="Graph of the active categories")
+plot(res.mca,invisible=c("ind"),col.var=rep(c("black","red"),15),title="Graph of the active categories")
+
+## Cloud of variables
+plot(res.mca,choix="var",title="Cloud of variables")
+```
+
+Additional analysis: Using `position` as a supplementary variable.
+
+This is done in order to check if this variable gives any extra information to the analysis.
+
+As we can see in the analysis, this supplementary variable is mainly focused on the second dimension.
+Center and forward are on the positive side, while guard is on the negative. The behaviour of these positions corresponds to the interpretation of dimension 2 done previously: players who score more on 2 PT shots and with more offensive rebounds are Center and Forward, and those with more 3 PT shots are the Guards.
+
+```{r}
+
+# Position used as a supplementary variable
+res.mca <- MCA(dfmca,quali.sup=1)
+
+# Result summaries of MCA
+res.mca$quali.sup
+
+# Graphs of the variables
+plot(res.mca,choix="var",title="Graph of the variables")
+plot(res.mca,invisible=c("ind","var"),hab="quali", title="Graph of the supplementary categories")
+
+```
+
 
 ## Cluster analysis
 
