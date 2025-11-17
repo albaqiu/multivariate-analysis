@@ -86,7 +86,7 @@ results <- lapply(num_vars, check_numeric)
 results
 ```
 
-We observe that no numeric variable has NA or zeros
+We observe that no numeric variable has NA or zeros.
 
 ### Carat variable
 
@@ -308,14 +308,13 @@ prop.table(table(diamonds$cut))
 
 # We can group Fair and Good in one group because Fair has little observations and the variable is unbalanced
 
-diamonds$cut <- ifelse(diamonds$cut %in% c("Fair", "Good"), "Fair/Good", as.character(diamonds$cut))
+#diamonds$cut <- ifelse(diamonds$cut %in% c("Fair", "Good"), "Fair/Good", as.character(diamonds$cut))
 
-diamonds$cut <- factor(
-  diamonds$cut,
-  levels = c("Fair/Good", "Ideal", "Premium", "Very Good")
-)
+#diamonds$cut <- factor(
+#  diamonds$cut,
+#  levels = c("Fair/Good", "Ideal", "Premium", "Very Good"))
 
-barplot(table(diamonds$cut), main="Diamond Cut Quality")
+#barplot(table(diamonds$cut), main="Diamond Cut Quality")
 ```
 
 ### Color variable
@@ -334,15 +333,15 @@ prop.table(table(diamonds$color))
 
 # We can group I and J in one group because J has little observations and the variable is unbalanced
 
-diamonds$color <- ifelse(diamonds$color %in% c("I", "J"), "I/J", as.character(diamonds$color))
-summary(diamonds$color)
-
-diamonds$color <- factor(
-  diamonds$color,
-  levels = c("D", "E", "F", "G","H","I/J")
-)
-
-barplot(table(diamonds$color), main="Diamond Color")
+# diamonds$color <- ifelse(diamonds$color %in% c("I", "J"), "I/J", as.character(diamonds$color))
+# summary(diamonds$color)
+# 
+# diamonds$color <- factor(
+#   diamonds$color,
+#   levels = c("D", "E", "F", "G","H","I/J")
+# )
+# 
+# barplot(table(diamonds$color), main="Diamond Color")
 ```
 
 ### Clarity variable
@@ -361,16 +360,15 @@ prop.table(table(diamonds$clarity))
 
 # We can group I1 and IF in one group because I1 has little observations and the variable is unbalanced
 
-diamonds$clarity <- ifelse(diamonds$clarity %in% c("I1", "IF"), "I1/IF", as.character(diamonds$clarity))
-summary(diamonds$clarity)
-
-diamonds$clarity <- factor(
-  diamonds$clarity,
-  levels = c("I1/IF", "SI1", "SI2", "VS1","VS2","VVS1","VVS2")
-)
-
-barplot(table(diamonds$clarity), main="Diamond Clarity")
-
+# diamonds$clarity <- ifelse(diamonds$clarity %in% c("I1", "IF"), "I1/IF", as.character(diamonds$clarity))
+# summary(diamonds$clarity)
+# 
+# diamonds$clarity <- factor(
+#   diamonds$clarity,
+#   levels = c("I1/IF", "SI1", "SI2", "VS1","VS2","VVS1","VVS2")
+# )
+# 
+# barplot(table(diamonds$clarity), main="Diamond Clarity")
 ```
 
 In conclusion, we have removed 3 observations and transformed the variables carat and price with a logarithmic transformation for a better interpretation. Hence, the dataframe we will work with is:
@@ -626,7 +624,6 @@ This is done in order to check if this variable gives any extra information to t
 As we can see in the analysis, this supplementary variable is mainly focused on the second dimension. Center and forward are on the positive side, while guard is on the negative. The behaviour of these positions corresponds to the interpretation of dimension 2 done previously: players who score more on 2 PT shots and with more offensive rebounds are Center and Forward, and those with more 3 PT shots are the Guards.
 
 ```{r}
-
 # Position used as a supplementary variable
 res.mca <- MCA(dfmca,quali.sup=1)
 
@@ -642,8 +639,7 @@ plot(res.mca,invisible=c("ind","var"),hab="quali", title="Graph of the supplemen
 
 In this section, a clustering analysis is performed with the objective of identifying meaningful groups within the dataset. The analysis is carried out under two different settings.
 
-First, clustering is applied using only the numerical variables, combining hierarchical and non-hierarchical methods, as well as clustering based on the principal component scores.
-Second, clustering of numerical and categorical variables is conducted to obtain a more comprehensive segmentation of the data.
+First, clustering is applied using only the numerical variables, combining hierarchical and non-hierarchical methods, as well as clustering based on the principal component scores. Second, clustering of numerical and categorical variables is conducted to obtain a more comprehensive segmentation of the data.
 
 ### A) Cluster analysis: numerical variables
 
@@ -702,9 +698,9 @@ A non-hierarchical clustering analysis is performed using several criteria to de
 
 The Total Within-Cluster Sum of Squares (TWSS) has been computed for different values of k using the **k-means algorithm**, in order to identify an appropriate number of clusters through the **Elbow method**.
 
-As shown in the figure, the TWSS decreases sharply between $k=2$ and $k=4$, and then continues to decrease more gradually. A noticeable bend appears around $k=4$. 
+As shown in the figure, the TWSS decreases sharply between $k=2$ and $k=4$, and then continues to decrease more gradually. A noticeable bend appears around $k=4$.
 
-The ratio between the between-cluster sum of squares and the total sum of squares is computed. For $k=4$, this ratio is equal to $0.694$, indicating a fair degree of separation between clusters. For $k=6$, the ratio increases to $0.768$, suggesting a better-defined cluster structure.
+The ratio between the between-cluster sum of squares and the total sum of squares is computed. For $k=4$, this ratio is equal to $0.694$, indicating a fair degree of separation between clusters.
 
 ```{r}
 ## Applying k-means algorithm for different number of clusters 
@@ -714,7 +710,7 @@ for (i in 2:7){
   aux[i-1] <- k$tot.withinss 
 }
 plot(2:7, aux, xlab="Number of Clusters", ylab="TWSS", type="l", main="TWSS vs. number of clusters")
-# Optimum point: k=6 (minimization of TWSS)
+# Optimum point: k=4
 
 # k=4
 k4 <- kmeans(dfscaled, centers = 4, nstart = 25) # 4 number of clusters 
@@ -724,18 +720,18 @@ k4$withinss
 k4$totss 
 k4$tot.withinss # total deviation
 k4$betweenss + k4$tot.withinss # total variation of the dataset
-k4$betweenss/k4$totss # as it gets closer to 1 better --> better separation of clusters
+k4$betweenss/k4$totss 
 # 0.694 fair separation between clusters
 
 # k=6
-k6 <- kmeans(dfscaled, centers = 6, nstart = 25) # 6 number of clusters 
+k6 <- kmeans(dfscaled, centers = 6, nstart = 25) # 6 number of clusters
 
-## Sum of Squares 
-k6$withinss 
-k6$totss 
+## Sum of Squares
+k6$withinss
+k6$totss
 k6$tot.withinss # total deviation
 k6$betweenss + k6$tot.withinss # total variation of the dataset
-k6$betweenss/k6$totss # as it gets closer to 1 better --> better separation of clusters
+k6$betweenss/k6$totss
 # 0.768 greater separation between clusters
 ```
 
@@ -753,15 +749,14 @@ for (i in 2:20){
   aux[i-1] <- ((k$betweenss)*(nrow(dfscaled)-i))/((k$tot.withinss)*(i-1))
 }
 plot(2:20, aux, xlab="Number of Clusters", ylab="Pseudo-F", type="l", main="Pseudo F Index")
-which.max(aux)
-# max Pseudo F --> 2
+# max Pseudo F --> 2 clusters
 ```
 
 ##### 3. Silhoutte Index
 
 Finally, the **Silhouette Index** is computed. For each observation, this value compares the average distance to points within its own cluster with the average distance to points in the nearest alternative cluster.
 
-Using the \emph{silhouette()} function from the \emph{cluster} package, the average silhouette widths obtained for $k=4$ and $k=6$ are $0.36$ and $0.28$, respectively. The four-cluster solution shows higher overall cohesion, with two clusters (notably cluster 2) presenting silhouette values above 0.40, whereas the six-cluster solution contains multiple clusters with silhouette widths below 0.25, indicating weaker separation.
+Using the \emph{silhouette()} function from the \emph{cluster} package, the average silhouette widths obtained for $k=4$ and $k=6$ are $0.36$ and $0.28$, respectively. The four-cluster solution shows higher overall cohesion, with two clusters (notably cluster 2) presenting silhouette values above $0.40$, whereas the six-cluster solution contains multiple clusters with silhouette widths below $0.25$, indicating weaker separation.
 
 The silhouette index is also computed using the \emph{fastkmed()} function from the \emph{kmed} package. This approach confirms the same trend: for a range of cluster solutions, the highest silhouette values are obtained for three or four clusters, whereas the performance decreases for higher values of k. The four-cluster solution achieves a good balance between separation and stability.
 
@@ -777,7 +772,7 @@ plot(si)
 # k=6
 si <- silhouette(k6$cluster, d)
 plot(si)
-# 497 obs, we divide them to 6 clusters, we look for the max silhouette index: 1st cluster
+# 497 obs, we divide them to 6 clusters, we look for the max silhouette index: 5th cluster
 
 
 ## B) Silhouette function from kmed library
@@ -794,12 +789,19 @@ silhouette$plot
 res <- fastkmed(d, 6) # iterative algorithm, 6 clusters
 silhouette <- sil(d, res$medoid, res$cluster)
 silhouette$result
-silhouette$plot 
+silhouette$plot
 # k=4 higher silhouette value
 ```
 
-#### Clustering based on Principal Components 
+**Conclusion:** Overall, the three criteria do not point to the same value of k, but they do suggest a consistent tendency. The Elbow method shows a clear bend around four clusters, the Pseudo-F index does not provide useful guidance, and the Silhouette index indicates that three or four clusters offer the best structure. Thus, **four clusters** appear to be the most balanced and interpretable solution, and this value will be used for the next steps of the analysis.
 
+#### Clustering based on Principal Components
+
+The Hierarchical Clustering on Principal Components (HCPC) method is applied to the scores obtained from the previously computed PCA. This approach combines dimensionality reduction and clustering by performing Ward’s hierarchical clustering on the principal component scores, which reduces the influence of noise and correlation between variables.
+
+The \emph{HCPC()} function is used with an automatic selection of the number of clusters, which results in a partition into 3 clusters.
+
+From the factor map, the 3 clusters are projected onto the first two principal components, which together explain more than 80% of the total variance. Cluster 1 is mainly located on the left side of the first dimension, which is associated with smaller physical measurements of the diamonds. Cluster 2 occupies an intermediate region, while Cluster 3 is positioned towards the positive side of the first component, corresponding to larger diamond sizes.
 
 ```{r}
 # HCPC applied to the previously computed PCA
@@ -812,10 +814,16 @@ fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE)
 # Cluster visualization on the PCA factor map
 fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE,
              main = "Clusters on PCA Factor Map")
-
-# Cluster assignments
-head(res.hcpc$data.clust)
 ```
+
+Although the automatic HCPC cut suggests a 3-cluster partition, the factor map and the dendrogram reveal that a 4-cluster solution is more balanced and substantially more interpretable. The three-cluster solution produces one dominant group, whereas splitting the structure into four clusters yields groups of comparable size and a clearer separation in the PCA space.
+
+Based on the cluster distribution on the PCA factor map and the interpretation of the principal dimensions, the characteristics of each group can be summarised as follows:
+
+-   **Cluster 1** (black) is situated on the negative side of Dimension 1, indicating that it consists of the smallest and least expensive diamonds in the dataset. Its spread along Dimension 2 suggests a variety of geometric profiles without a dominant shape.
+-   **Cluster 2** (red) is positioned around moderately positive values of Dimension 1 and clearly positive values of Dimension 2, suggesting medium-sized diamonds that tend to be deeper and more vertically proportioned.
+-   **Cluster 3** (green) occupies the region of moderately positive Dimension 1 but negative Dimension 2, indicating diamonds that are also medium-to-large in size but display flatter geometric shapes.
+-   **Cluster 4** (blue) appears on the far positive side of Dimension 1, representing the largest and most valuable diamonds, with shapes that are generally balanced or slightly deep.
 
 ```{r}
 # HCPC applied to the previously computed PCA
@@ -827,23 +835,72 @@ fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE)
 # Cluster visualization on the PCA factor map
 fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE,
              main = "Clusters on PCA Factor Map")
-
-# Cluster assignments
-head(res.hcpc$data.clust)
 ```
 
 
 ### B) Cluster analysis: numerical and categorical variables
 
+Before performing the clustering analysis that incorporates both numerical and categorical variables, it is important to consider the distribution of the categorical levels. Initially, the clustering is applied using the original categories; however, several levels contain very few observations, which may introduce instability and lead to clusters driven by marginal or unrepresentative cases. For this reason, grouping levels with similar qualitative meaning and low frequency can be a useful strategy to obtain more balanced and consistent clusters.
+
 ```{r}
-res <- FAMD(diamonds)
+dfclust <- diamonds
+
+# Cut variable: group Fair and Good in one group 
+dfclust$cut <- ifelse(dfclust$cut %in% c("Fair", "Good"), "Fair/Good", as.character(dfclust$cut))
+
+dfclust$cut <- factor(
+  dfclust$cut,
+  levels = c("Fair/Good", "Ideal", "Premium", "Very Good"))
+
+barplot(table(dfclust$cut), main="Diamond Cut Quality")
+
+# Color variable: group I and J in one group 
+dfclust$color <- ifelse(dfclust$color %in% c("I", "J"), "I/J", as.character(dfclust$color))
+
+dfclust$color <- factor(
+  dfclust$color,
+  levels = c("D", "E", "F", "G", "H", "I/J"))
+
+barplot(table(dfclust$color), main="Diamond Color")
+
+# Clarity variable: group I1 and IF in one group
+dfclust$clarity <- ifelse(dfclust$clarity %in% c("I1", "IF"), "I1/IF", as.character(dfclust$clarity))
+
+dfclust$clarity <- factor(
+  dfclust$clarity,
+  levels = c("I1/IF", "SI1", "SI2", "VS1", "VS2", "VVS1", "VVS2"))
+
+barplot(table(dfclust$clarity), main="Diamond Clarity")
+```
+#### Factor Analysis for Mixed Data
+The clustering analysis that includes both numerical and categorical variables is performed through a Factor Analysis of Mixed Data (FAMD), which provides a joint low-dimensional space where continuous and categorical variables contribute simultaneously to the definition of the principal axes.
+
+!!!!!! Relacionar amb PCA i MCA (quan s'acabi mirar bé)
+
+The interpretation of the continuous variables in the FAMD closely mirrors the results previously obtained with the PCA. Dimension 1, which explains 25.29% of the total variability, is dominated by the physical measurements of the diamonds (x, y, z, logCarat, logPrice), all of which show extremely high squared correlations with this axis. As in the PCA, this dimension represents a size–value gradient, separating small and inexpensive diamonds from those that are larger and more valuable.
+
+The categorical variables reinforce this interpretation. Premium cut diamonds and colour categories such as H and especially I/J have positive coordinates on Dimension 1, confirming their association with larger stones. Conversely, better colour grades (D, E) and the Ideal cut are positioned at the negative side of this axis, in line with smaller diamonds.
+
+Dimension 2 (7.91% of explained variance) reflects geometric proportions, reproducing the same contrast identified in the PCA between diamonds with greater depth (positive coordinates) and those with larger table (negative coordinates). The categorical variable cut aligns with this structure: Ideal cut appears at the positive end, whereas Premium is strongly negative.
+
+Dimension 3 (6.15% of variance) is mainly driven by categorical variables, especially cut categories (Very Good, Fair/Good) and colour categories such as E and H, which show strong positive contributions. Other categories play a smaller role in shaping this axis.
+
+```{r}
+# Factor Analysis for Mixed Data
+res <- FAMD(dfclust)
 summary(res)
 ```
 
+#### Hierarchical Clustering on FAMD scores
+
+
 ```{r}
+# Hierarchical Clustering on FAMD scores
 hc_famd <- HCPC(res, -1) # automatic cut: 3 clusters
 ```
+
 ```{r}
+# Hierarchical Clustering on FAMD scores
 hc_famd <- HCPC(res, nb.clust = 4) # 4 clusters 
 ```
 
@@ -857,6 +914,11 @@ fviz_cluster(hc_famd, repel = TRUE, show.clust.cent = TRUE, main = "Factor map")
 ```
 
 ### Profiling
+
+#### Profiling based on Principal Components??
+
+
+#### Profiling based on FAMD scores
 
 ```{r}
 hc_famd$desc.var
