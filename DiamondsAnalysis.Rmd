@@ -85,6 +85,7 @@ num_vars <- diamonds %>% select_if(is.numeric)
 results <- lapply(num_vars, check_numeric)
 results
 ```
+
 We observe that no numeric variable has NA or zeros
 
 ### Carat variable
@@ -147,7 +148,6 @@ curve(dnorm(x,m,std),add=T, col="red")
 
 shapiro.test(diamonds$depth)
 ```
-
 
 ### Table variable
 
@@ -216,6 +216,7 @@ curve(dnorm(x,m,std),col="red",lwd=2,add=T)
 ```
 
 ### x variable
+
 The x variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
 
 ```{r}
@@ -240,6 +241,7 @@ curve(dnorm(x,m,std),add=T, col="red")
 ```
 
 ### y variable
+
 The y variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
 
 ```{r}
@@ -264,6 +266,7 @@ curve(dnorm(x,m,std),add=T, col="red")
 ```
 
 ### z variable
+
 The y variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
 
 ```{r}
@@ -289,7 +292,7 @@ curve(dnorm(x,m,std),add=T, col="red")
 
 ## Categorical variables
 
-### Cut variable 
+### Cut variable
 
 Cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for 37.4% of observations, while the Fair level comprising only 1.8% of the observations. These strange categories could be grouped further depending on the results of the multivariate analysis.
 
@@ -361,6 +364,7 @@ pairs(numeric_vars, main="Scatterplot Matrix of Numeric Variables")
 
 cortest.bartlett(cor_matrix, nrow(diamonds))
 ```
+
 Taking into account the KMO index, since it is higher than 0.5, the data are factorable. In other words, the variables are sufficiently correlated with each other so that meaningful factors can be extracted.
 
 ```{r}
@@ -386,7 +390,8 @@ kmo(numeric_vars)
 
 # Part 2: Multivariant analysis
 
-## Principal components analysis
+## 2.1. Principal components analysis
+
 The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
 
 In order to determine the number of components to extract, taking into account that the data is standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted by that dimension. In this case, the first two components (with eigenvalues $4.99$ and $1.2$) are the ones that meet the Kaiser's requirement. Moreover, the cumulative percentage of variance shows that these two components explain $89.46\%$ of the total variance, which indicates that they capture most of the information in the data frame. In addition, the scree plot shows a noticeable elbow after the first component, indicating that retaining two components captures most of the variance while keeping the solution interpretable.
@@ -402,11 +407,10 @@ diamonds.pca$eig
 
 It is important to determine which variables contribute most to each of the relevant components in order to reduce the number of variables. Hence, considering the coordinates of the variables, it is possible to see which variable is associated with each component. On the other hand, examining the $cos^2$ values shows which variables are more strongly related to a given component.
 
-- Dimension $1$: Physical Magnitude and Price Component
-Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat, as well as for logPrice. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
+-   Dimension $1$: Physical Magnitude and Price Component Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat, as well as for logPrice. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
 
-- Dimension $2$: Geometric Balance
-Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+-   Dimension $2$: Geometric Balance Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+
 ```{r}
 corrplot(diamonds.pca$var$coord)
 diamonds.pca$var$cos2
@@ -418,6 +422,7 @@ plot.PCA(diamonds.pca, choix = "var", axes = c(1, 2))
 ```
 
 ## PCA SUPLEMENTARY??
+
 The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
 
 The logPrice numeric variable has been considered as a supplementary variable, since it is not a descriptive variable but a result of characteristics given by the numeric and categorical variables.
@@ -439,11 +444,10 @@ diamonds.pca.sup$eig
 
 It is important to determine which variables contribute most to each of the relevant components in order to reduce the number of variables. Hence, considering the coordinates of the variables, it is possible to see which variable is associated with each component. On the other hand, examining the $cos^2$ values shows which variables are more strongly related to a given component.
 
-- Dimension $1$: Physical Magnitude (and Price Component)
-Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
+-   Dimension $1$: Physical Magnitude (and Price Component) Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
 
-- Dimension $2$: Geometric Balance
-Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+-   Dimension $2$: Geometric Balance Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+
 ```{r}
 corrplot(diamonds.pca.sup$var$coord)
 diamonds.pca.sup$var$cos2
@@ -454,13 +458,13 @@ diamonds.pca.sup$var$coord
 plot.PCA(diamonds.pca.sup, choix = "var", axes = c(1, 2))
 ```
 
-## Multidimensional scaling
+## 2.2. Multidimensional scaling
 
-## Correspondance analysis ??????
+## 2.3. Correspondance analysis ??????
 
-## Multiple correspondance analysis
+## 2.4. Multiple correspondance analysis
 
-In order to do Multiple Corresponance Analysis using also the numerical variables, these will be converted to binary variables with two categories as “over average” and “below average” for each of them, which will also help with its interpretability. 
+In order to do Multiple Corresponance Analysis using also the numerical variables, these will be converted to binary variables with two categories as “over average” and “below average” for each of them, which will also help with its interpretability.
 
 Factor level 'over average' will be defined as 'o', and 'below average' as 'b'.
 
@@ -475,6 +479,7 @@ for (var in nums){
 }
 summary(dfmca)
 ```
+
 The analysis will be done using Indicator Matrix. That way we will be able to study both the categories of the variables and the individuals.
 
 Regarding the logPrice variable, the approach followed will be the same as in PCA: it will be included as a supplementary variable, to help further the interpretation without being included in the calculations.
@@ -495,6 +500,7 @@ In order to choose which dimensions we will work with, we apply the rule of choo
 In this case, as there are 10 variables, J = 10, and the total number of values is K=5+7+8+(7x2)=34, number of dimensions is K-J=24. Therefore, the average inertia is 1/24 (0.04166667), and the dimensions selected are until Dim.20????
 
 The summary shows all of the analysis, but the description will be done separately.
+
 ```{r}
 # K=15x2=30, J=15
 # no of dimension: K-J=15
@@ -505,21 +511,17 @@ summary(res.mca, ncp=4)
 res.mca
 ```
 
-As can be seen in the description of Dimensions, the most significant variables in each dimension, which are those represented with the highest value of R2, are:
-  - For *dimension 1*, the Efficiency `EFF`, as it's value of R2 is 0.8414.
-  - For *dimension 2*, it is number of 2pt Field Goal `2PT FG`, with a value of R2 of 0.6864.
-  - For *dimension 3*, there isn't such a significant variable, but the one with the highest R2 value is 3pt Field Goal `3PT FG`, with a value of R2 of 0.3615.
-  
+As can be seen in the description of Dimensions, the most significant variables in each dimension, which are those represented with the highest value of R2, are: - For *dimension 1*, the Efficiency `EFF`, as it's value of R2 is 0.8414. - For *dimension 2*, it is number of 2pt Field Goal `2PT FG`, with a value of R2 of 0.6864. - For *dimension 3*, there isn't such a significant variable, but the one with the highest R2 value is 3pt Field Goal `3PT FG`, with a value of R2 of 0.3615.
+
 Also, it is relevant to observe the link between variable and categories to see which are the most significant categories in each dimension, which are those represented with the highest absolute value of Estimate.
 
-They follow the same pattern for all three dimensions: the categories most positively correlated are the most significant variables mentioned above, for the 'over average' category, and the most negatively correlated is the 'under average' value of the same variable. 
+They follow the same pattern for all three dimensions: the categories most positively correlated are the most significant variables mentioned above, for the 'over average' category, and the most negatively correlated is the 'under average' value of the same variable.
 
 This can also be corroborated with the coordinate analysis. They are the values that are more extreme, in the negative and positive side of the axis.
 
 That means that observations will be easily separated between those over average and under, and interpreted according to each dimension.
 
-* Note: The results for dimension 4 are not shown by R, as it has an eigenvalue that is technically lower than the threshold (0.066 < 0.067).
-
+-   Note: The results for dimension 4 are not shown by R, as it has an eigenvalue that is technically lower than the threshold (0.066 \< 0.067).
 
 ```{r}
 ### Eigenvalues
@@ -532,17 +534,19 @@ res.mca$var$coord
 ## Description of Dimensions
 dimdesc(res.mca)
 ```
+
 For the plots, we will interpret them in the 1st and 2nd dimension, since they are the most significative.
 
 Firstly, we will interpret the *cloud of individuals*. The plot shows both the individuals and the categories represented by the 1st and 2nd dimension.
 
-  - It is worth noting that there are almost no points in the center of the graph, they are all placed away from the origin.
-  
-  - For the categories, this pattern is due to the transformation of the numerical variables into binary ones, dividing them into “over average” and “below average” categories. Since both categories have similar frequencies, none of them represents a “dominant” or “average” profile. Therefore, both are located in opposite directions.
-  
-  - For the individuals, since each player belongs to either the “over” or “under” group for each variable, the overall profile of individuals is more polarized. 
-  
-  - As a conclusion, binarizing continuous variables helps to highlight contrasts between players’ performances, but at the same time reduces the amount of information in the variables.
+-   It is worth noting that there are almost no points in the center of the graph, they are all placed away from the origin.
+
+-   For the categories, this pattern is due to the transformation of the numerical variables into binary ones, dividing them into “over average” and “below average” categories. Since both categories have similar frequencies, none of them represents a “dominant” or “average” profile. Therefore, both are located in opposite directions.
+
+-   For the individuals, since each player belongs to either the “over” or “under” group for each variable, the overall profile of individuals is more polarized.
+
+-   As a conclusion, binarizing continuous variables helps to highlight contrasts between players’ performances, but at the same time reduces the amount of information in the variables.
+
 ```{r}
 ### Clouds ###
 ## Cloud of Individuals
@@ -551,11 +555,9 @@ plot.MCA(res.mca,choix="ind",label="none")
 
 Then, we will interpret the *cloud of individuals grouped by most significant categories per dimension*. This is done by selecting the variable in the 'habillage' parameter.
 
-  - For *dimension 1*, the Efficiency `EFF`.
-  The map clearly shows this distinction: in the negative side of the Dim 1 axis, we can see the individuals with an efficiency below average, and in the positive side, those over average.
-  
-  - For *dimension 2*, it is number of 2pt Field Goal `2PT FG`
-  Although there are a few exceptions, the map also shows this distinction: in the negative side of the Dim 2 axis, we can see the individuals with a value of `2PT FG` below average, and in the positive side, those over average.
+-   For *dimension 1*, the Efficiency `EFF`. The map clearly shows this distinction: in the negative side of the Dim 1 axis, we can see the individuals with an efficiency below average, and in the positive side, those over average.
+
+-   For *dimension 2*, it is number of 2pt Field Goal `2PT FG` Although there are a few exceptions, the map also shows this distinction: in the negative side of the Dim 2 axis, we can see the individuals with a value of `2PT FG` below average, and in the positive side, those over average.
 
 ```{r}
 ## Cloud of Individuals
@@ -568,11 +570,9 @@ The graph of the active categories is very relevant: the categories of values 'o
 
 Considering the total information obtained from the cloud of categories, and also the cloud of variables, the conclusions we draw of the information obtained by the dimensions is the following:
 
-  - *Dimension 1* mainly represents the overall performance level, separating players with “over average” results  on the positive side, from those “below average” on the negative side. 
-  
-  - *Dimension 2* is more related to the shooting style of the players. Players with above-average values in 2-point field goals (2PT FG) are positioned on the upper side of the axis, together with offensive rebounds (OREB), which makes sense since players who frequently capture offensive rebounds often score from close range, leading to more 2-point shots.
-These players also tend to have below-average 3-point field goals (3PT FG), which fits with the usual profile of inside players.
-Conversely, the lower part of the axis shows the opposite pattern — players with higher 3-point shooting and fewer offensive rebounds, typically corresponding to perimeter players.
+-   *Dimension 1* mainly represents the overall performance level, separating players with “over average” results on the positive side, from those “below average” on the negative side.
+
+-   *Dimension 2* is more related to the shooting style of the players. Players with above-average values in 2-point field goals (2PT FG) are positioned on the upper side of the axis, together with offensive rebounds (OREB), which makes sense since players who frequently capture offensive rebounds often score from close range, leading to more 2-point shots. These players also tend to have below-average 3-point field goals (3PT FG), which fits with the usual profile of inside players. Conversely, the lower part of the axis shows the opposite pattern — players with higher 3-point shooting and fewer offensive rebounds, typically corresponding to perimeter players.
 
 ```{r}
 ## Cloud of Categories
@@ -587,8 +587,7 @@ Additional analysis: Using `position` as a supplementary variable.
 
 This is done in order to check if this variable gives any extra information to the analysis.
 
-As we can see in the analysis, this supplementary variable is mainly focused on the second dimension.
-Center and forward are on the positive side, while guard is on the negative. The behaviour of these positions corresponds to the interpretation of dimension 2 done previously: players who score more on 2 PT shots and with more offensive rebounds are Center and Forward, and those with more 3 PT shots are the Guards.
+As we can see in the analysis, this supplementary variable is mainly focused on the second dimension. Center and forward are on the positive side, while guard is on the negative. The behaviour of these positions corresponds to the interpretation of dimension 2 done previously: players who score more on 2 PT shots and with more offensive rebounds are Center and Forward, and those with more 3 PT shots are the Guards.
 
 ```{r}
 
@@ -603,11 +602,202 @@ plot(res.mca,choix="var",title="Graph of the variables")
 plot(res.mca,invisible=c("ind","var"),hab="quali", title="Graph of the supplementary categories")
 ```
 
+## 2.5. Clustering and profiling
 
-## Clustering and profiling
+In this section, a clustering analysis is performed with the objective of identifying meaningful groups within the dataset. The analysis is carried out under two different settings.
 
-### Cluster analysis
+First, clustering is applied using only the numerical variables, combining hierarchical and non-hierarchical methods, as well as clustering based on the principal component scores.
+Second, clustering of numerical and categorical variables is conducted to obtain a more comprehensive segmentation of the data.
 
+### A) Cluster analysis: numerical variables
+
+#### Hierarchical clustering
+
+The hierarchical clustering analysis is performed on the numerical variables after standardising them with the \emph{scale()} function. This ensures that all variables contribute equally to the computation of distances. An Euclidean distance matrix is then obtained using the \emph{dist()} function applied to the scaled dataset.
+
+The clustering structure is produced with the \emph{hclust()} function, and two linkage criteria are considered in order to compare their performance. First, the **complete linkage method** is computed, which defines the distance between clusters based on the maximum distance between their observations. Second, the **Ward’s method** is used, which is based on minimising the within-cluster sum of squared errors (SSE).
+
+The resulting dendrograms allow a first inspection of the potential number of clusters. Using the \emph{rect.hclust()} function, possible partitions into 4, 5 and 6 clusters are highlighted. As observed in the figures, the Ward method provides a clearer and more compact separation between groups than the complete linkage method, suggesting that it offers a more interpretable clustering solution.
+
+```{r}
+## Scale numerical data
+dfscaled <- scale(numeric_vars)
+dfscaled <- as.data.frame(dfscaled) # convert the scaled data to a dataframe
+d <- dist(dfscaled, method = "euclidean") # apply distance matrix on the scaled dataframe
+
+## Complete linkage method
+fit1 <- hclust(d, method="complete") 
+plot(fit1, main="Dendrogram of complete Linkage") 
+# 4 clusters/6 clusters
+
+rect.hclust(fit1, k=4, border="blue") # 4 clusters
+rect.hclust(fit1, k=5, border="cyan") # 5 clusters
+rect.hclust(fit1, k=6, border="red")  # 6 clusters
+
+legend("topright",
+       legend = c("4 clusters", "5 clusters", "6 clusters"),
+       col = c("blue", "cyan", "red"),
+       lwd = 2,
+       cex = 0.8,
+       bg = "white")
+
+## Ward method
+fit2 <- hclust(d, method="ward.D2") 
+plot(fit2, main="Dendrogram of Ward Method") 
+# 4 clusters/5 clusters
+
+rect.hclust(fit2, k=4, border="green")  # 4 clusters
+rect.hclust(fit2, k=5, border="purple") # 5 clusters
+rect.hclust(fit2, k=6, border="orange") # 6 clusters
+
+legend("topright",
+       legend = c("4 clusters", "5 clusters", "6 clusters"),
+       col = c("green", "purple", "orange"),
+       lwd = 2,
+       cex = 0.8,
+       bg = "white")
+```
+
+#### Non-hierarchical clustering
+
+A non-hierarchical clustering analysis is performed using several criteria to determine an appropriate number of clusters. Three different methods are considered: the **TWSS Elbow Graph**, the **Pseudo F Index**, and the **Silhouette Index**.
+
+##### 1. TWSS Elbow Graph
+
+The Total Within-Cluster Sum of Squares (TWSS) has been computed for different values of k using the **k-means algorithm**, in order to identify an appropriate number of clusters through the **Elbow method**.
+
+As shown in the figure, the TWSS decreases sharply between $k=2$ and $k=4$, and then continues to decrease more gradually. A noticeable bend appears around $k=4$. 
+
+The ratio between the between-cluster sum of squares and the total sum of squares is computed. For $k=4$, this ratio is equal to $0.694$, indicating a fair degree of separation between clusters. For $k=6$, the ratio increases to $0.768$, suggesting a better-defined cluster structure.
+
+```{r}
+## Applying k-means algorithm for different number of clusters 
+aux <- c()
+for (i in 2:7){
+  k <- kmeans(dfscaled, centers=i, nstart=25)
+  aux[i-1] <- k$tot.withinss 
+}
+plot(2:7, aux, xlab="Number of Clusters", ylab="TWSS", type="l", main="TWSS vs. number of clusters")
+# Optimum point: k=6 (minimization of TWSS)
+
+# k=4
+k4 <- kmeans(dfscaled, centers = 4, nstart = 25) # 4 number of clusters 
+
+## Sum of Squares 
+k4$withinss 
+k4$totss 
+k4$tot.withinss # total deviation
+k4$betweenss + k4$tot.withinss # total variation of the dataset
+k4$betweenss/k4$totss # as it gets closer to 1 better --> better separation of clusters
+# 0.694 fair separation between clusters
+
+# k=6
+k6 <- kmeans(dfscaled, centers = 6, nstart = 25) # 6 number of clusters 
+
+## Sum of Squares 
+k6$withinss 
+k6$totss 
+k6$tot.withinss # total deviation
+k6$betweenss + k6$tot.withinss # total variation of the dataset
+k6$betweenss/k6$totss # as it gets closer to 1 better --> better separation of clusters
+# 0.768 greater separation between clusters
+```
+
+##### 2. Pseudo F Index
+
+The **Pseudo-F Index** has been computed for different values of k in order to evaluate the separation between clusters obtained with k-means. This index is based on the ratio between the between-cluster sum of squares (BSS) and the within-cluster sum of squares (WSS).
+
+In this case the index decreases steadily as k increases, with the highest value appearing at $k=2$. Nevertheless, selecting two clusters does not provide a meaningful segmentation of the dataset, and it contradicts the structure suggested by the dendrogram and the TWSS Elbow method.
+
+```{r}
+# Pseudo F index = BSS*(n-k)/WSS*(k-1)
+aux <- c()
+for (i in 2:20){
+  k <- kmeans(dfscaled, centers=i, nstart=25)
+  aux[i-1] <- ((k$betweenss)*(nrow(dfscaled)-i))/((k$tot.withinss)*(i-1))
+}
+plot(2:20, aux, xlab="Number of Clusters", ylab="Pseudo-F", type="l", main="Pseudo F Index")
+which.max(aux)
+# max Pseudo F --> 2
+```
+
+##### 3. Silhoutte Index
+
+Finally, the **Silhouette Index** is computed. For each observation, this value compares the average distance to points within its own cluster with the average distance to points in the nearest alternative cluster.
+
+Using the \emph{silhouette()} function from the \emph{cluster} package, the average silhouette widths obtained for $k=4$ and $k=6$ are $0.36$ and $0.28$, respectively. The four-cluster solution shows higher overall cohesion, with two clusters (notably cluster 2) presenting silhouette values above 0.40, whereas the six-cluster solution contains multiple clusters with silhouette widths below 0.25, indicating weaker separation.
+
+The silhouette index is also computed using the \emph{fastkmed()} function from the \emph{kmed} package. This approach confirms the same trend: for a range of cluster solutions, the highest silhouette values are obtained for three or four clusters, whereas the performance decreases for higher values of k. The four-cluster solution achieves a good balance between separation and stability.
+
+```{r}
+## A) Silhouette function from cluster library
+library(cluster)
+
+# k=4
+si <- silhouette(k4$cluster, d)
+plot(si)
+# 497 obs, we divide them to 4 clusters, we look for the max silhouette index: 2nd cluster
+
+# k=6
+si <- silhouette(k6$cluster, d)
+plot(si)
+# 497 obs, we divide them to 6 clusters, we look for the max silhouette index: 1st cluster
+
+
+## B) Silhouette function from kmed library
+library(kmed)
+
+# k=4
+res <- fastkmed(d, 4) # iterative algorithm, 4 clusters
+silhouette <- sil(d, res$medoid, res$cluster)
+silhouette$result
+silhouette$plot 
+# k=3 higher silhouette value
+
+# k=6
+res <- fastkmed(d, 6) # iterative algorithm, 6 clusters
+silhouette <- sil(d, res$medoid, res$cluster)
+silhouette$result
+silhouette$plot 
+# k=4 higher silhouette value
+```
+
+#### Clustering based on Principal Components 
+
+
+```{r}
+# HCPC applied to the previously computed PCA
+res.hcpc <- HCPC(diamonds.pca, -1) # automatic cut: 3 clusters
+
+# Dendrogram visualization
+library(factoextra)
+fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE)
+
+# Cluster visualization on the PCA factor map
+fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE,
+             main = "Clusters on PCA Factor Map")
+
+# Cluster assignments
+head(res.hcpc$data.clust)
+```
+
+```{r}
+# HCPC applied to the previously computed PCA
+res.hcpc <- HCPC(diamonds.pca, nb.clust = 4) # 4 clusters
+
+# Dendrogram visualization
+fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE)
+
+# Cluster visualization on the PCA factor map
+fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE,
+             main = "Clusters on PCA Factor Map")
+
+# Cluster assignments
+head(res.hcpc$data.clust)
+```
+
+
+### B) Cluster analysis: numerical and categorical variables
 
 ```{r}
 res <- FAMD(diamonds)
@@ -615,8 +805,12 @@ summary(res)
 ```
 
 ```{r}
-hc_famd <- HCPC(res,-1) 
+hc_famd <- HCPC(res, -1) # automatic cut: 3 clusters
 ```
+```{r}
+hc_famd <- HCPC(res, nb.clust = 4) # 4 clusters 
+```
+
 ```{r}
 # Dendrogram with optimal number of clusters
 library(factoextra)
@@ -626,11 +820,8 @@ fviz_dend(hc_famd, rect = TRUE, rect_fill = TRUE)
 fviz_cluster(hc_famd, repel = TRUE, show.clust.cent = TRUE, main = "Factor map")
 ```
 
-
-
 ### Profiling
 
 ```{r}
 hc_famd$desc.var
 ```
-
