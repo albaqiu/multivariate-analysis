@@ -305,6 +305,17 @@ summary(diamonds$cut)
 barplot(summary(diamonds$cut), main="Diamond Cut Quality")
 
 prop.table(table(diamonds$cut))
+
+# We can group Fair and Good in one group because Fair has little observations and the variable is unbalanced
+
+diamonds$cut <- ifelse(diamonds$cut %in% c("Fair", "Good"), "Fair/Good", as.character(diamonds$cut))
+
+diamonds$cut <- factor(
+  diamonds$cut,
+  levels = c("Fair/Good", "Ideal", "Premium", "Very Good")
+)
+
+barplot(table(diamonds$cut), main="Diamond Cut Quality")
 ```
 
 ### Color variable
@@ -320,6 +331,18 @@ summary(diamonds$color)
 barplot(summary(diamonds$color), main="Diamond Color")
 
 prop.table(table(diamonds$color))
+
+# We can group I and J in one group because J has little observations and the variable is unbalanced
+
+diamonds$color <- ifelse(diamonds$color %in% c("I", "J"), "I/J", as.character(diamonds$color))
+summary(diamonds$color)
+
+diamonds$color <- factor(
+  diamonds$color,
+  levels = c("D", "E", "F", "G","H","I/J")
+)
+
+barplot(table(diamonds$color), main="Diamond Color")
 ```
 
 ### Clarity variable
@@ -335,6 +358,19 @@ summary(diamonds$clarity)
 barplot(summary(diamonds$clarity), main="Diamond Clarity")
 
 prop.table(table(diamonds$clarity))
+
+# We can group I1 and IF in one group because I1 has little observations and the variable is unbalanced
+
+diamonds$clarity <- ifelse(diamonds$clarity %in% c("I1", "IF"), "I1/IF", as.character(diamonds$clarity))
+summary(diamonds$clarity)
+
+diamonds$clarity <- factor(
+  diamonds$clarity,
+  levels = c("I1/IF", "SI1", "SI2", "VS1","VS2","VVS1","VVS2")
+)
+
+barplot(table(diamonds$clarity), main="Diamond Clarity")
+
 ```
 
 In conclusion, we have removed 3 observations and transformed the variables carat and price with a logarithmic transformation for a better interpretation. Hence, the dataframe we will work with is:
