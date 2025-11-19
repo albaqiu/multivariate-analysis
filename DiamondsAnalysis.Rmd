@@ -635,6 +635,7 @@ plot(res.mca,choix="var",title="Graph of the variables")
 plot(res.mca,invisible=c("ind","var"),hab="quali", title="Graph of the supplementary categories")
 ```
 
+
 ## 2.5. Clustering and profiling
 
 In this section, a clustering analysis is performed with the objective of identifying meaningful groups within the dataset. The analysis is carried out under two different settings.
@@ -816,14 +817,14 @@ fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE,
              main = "Clusters on PCA Factor Map")
 ```
 
-Although the automatic HCPC cut suggests a 3-cluster partition, the factor map and the dendrogram reveal that a 4-cluster solution is more balanced and substantially more interpretable. The three-cluster solution produces one dominant group, whereas splitting the structure into four clusters yields groups of comparable size and a clearer separation in the PCA space.
+Although the automatic HCPC cut suggests a 3-cluster partition, the factor map and the dendrogram reveal that a 4-cluster solution is more balanced and more interpretable. The 3-cluster solution produces one dominant group, whereas splitting the structure into 4 clusters yields groups of comparable size and a clearer separation in the PCA space.
 
 Based on the cluster distribution on the PCA factor map and the interpretation of the principal dimensions, the characteristics of each group can be summarised as follows:
 
 -   **Cluster 1** (black) is situated on the negative side of Dimension 1, indicating that it consists of the smallest and least expensive diamonds in the dataset. Its spread along Dimension 2 suggests a variety of geometric profiles without a dominant shape.
 -   **Cluster 2** (red) is positioned around moderately positive values of Dimension 1 and clearly positive values of Dimension 2, suggesting medium-sized diamonds that tend to be deeper and more vertically proportioned.
 -   **Cluster 3** (green) occupies the region of moderately positive Dimension 1 but negative Dimension 2, indicating diamonds that are also medium-to-large in size but display flatter geometric shapes.
--   **Cluster 4** (blue) appears on the far positive side of Dimension 1, representing the largest and most valuable diamonds, with shapes that are generally balanced or slightly deep.
+-   **Cluster 4** (blue) appears on the positive side of Dimension 1, representing the largest and most valuable diamonds, with shapes that are generally balanced or slightly deep.
 
 ```{r}
 # HCPC applied to the previously computed PCA
@@ -873,7 +874,7 @@ dfclust$clarity <- factor(
 barplot(table(dfclust$clarity), main="Diamond Clarity")
 ```
 #### Factor Analysis for Mixed Data
-The clustering analysis that includes both numerical and categorical variables is performed through a Factor Analysis of Mixed Data (FAMD), which provides a joint low-dimensional space where continuous and categorical variables contribute simultaneously to the definition of the principal axes.
+The clustering analysis that includes both numerical and categorical variables is performed through a Factor Analysis of Mixed Data (FAMD), which provides a joint low-dimensional space where continuous and categorical variables contribute to the definition of the principal axes.
 
 !!!!!! Relacionar amb PCA i MCA (quan s'acabi mirar bé)
 
@@ -893,11 +894,16 @@ summary(res)
 
 #### Hierarchical Clustering on FAMD scores
 
+The hierarchical clustering is applied to the individual scores obtained from the FAMD. Using the \emph{HCPC()} function with the automatic cut, the algorithm has selected a three-cluster solution. The separation observed in the factor map is primarily driven by Dimension 1:
+-   **Cluster 1** (black) groups observations with negative coordinates on this dimension, corresponding to smaller diamonds and categories associated with higher quality grades (Ideal cut, better colour). 
+-   **Cluster 2** (red) occupies an intermediate position and presents internal heterogeneity, both in terms of size and categorical composition, which makes the partition less balanced.
+-   **Cluster 3** (green) lies on the positive side of Dimension 1 and gathers larger diamonds, consistently aligned with levels such as Premium cut and lower-quality colours (H, I/J). 
 
 ```{r}
 # Hierarchical Clustering on FAMD scores
 hc_famd <- HCPC(res, -1) # automatic cut: 3 clusters
 ```
+To obtain a more homogeneous segmentation, the HCPC has been recomputed by imposing a **four-cluster solution**. In the factor map, the two central clusters separate mainly along Dimension 2, which reflects contrasting geometric proportions and the behaviour of the cut variable: the cluster scoring positively is associated with deeper diamonds and categories such as Ideal, whereas the negatively scoring cluster corresponds to flatter diamonds and Premium cuts. Together with the cluster of small diamonds and the cluster of large diamonds, the four groups provide a clearer interpretation that integrates both numerical and categorical patterns. For this reason, the four-cluster solution is retained for the profiling stage.
 
 ```{r}
 # Hierarchical Clustering on FAMD scores
@@ -905,7 +911,7 @@ hc_famd <- HCPC(res, nb.clust = 4) # 4 clusters
 ```
 
 ```{r}
-# Dendrogram with optimal number of clusters
+# Dendrogram with 4 number of clusters
 library(factoextra)
 fviz_dend(hc_famd, rect = TRUE, rect_fill = TRUE)
 
@@ -915,10 +921,50 @@ fviz_cluster(hc_famd, repel = TRUE, show.clust.cent = TRUE, main = "Factor map")
 
 ### Profiling
 
-#### Profiling based on Principal Components??
+#### Profiling of the HCPC clysters on PCA scores
 
+The HCPC performed on the PCA scores allows us to characterise the clusters according to the structure captured by the two principal components. Since Dimension 1 reflects the overall physical magnitude–price axis, and Dimension 2 captures the geometric balance between deep and flat diamonds, the clusters can be interpreted in terms of size, price and shape.
+
+- **Cluster 1:** Smallest and least expensive diamonds
+Cluster 1 presents the lowest means for x, y, z, logCarat and logPrice, with extremely negative v-tests. These diamonds are small, light and low-priced, fully aligned with the negative side of Dimension 1. They also show slightly smaller table values.
+
+- **Cluster 2:** Diamonds with higher depth and smaller tables
+Cluster 2 is defined by geometric proportions, as shown by the strong positive v-test for depth and negative v-test for table. These diamonds tend to be deeper and more vertically elongated, even though their physical magnitude remains below the global average. They represent diamonds with pronounced depth and flat top surfaces, matching the positive side of Dimension 2.
+
+- **Cluster 3:** Moderately large diamonds with high table and low depth
+Cluster 3 shows significantly higher table values and lower depth, the opposite pattern of Cluster 2. Its size-related variables are slightly above the mean, especially x, y, z and logPrice, indicating medium-to-large diamonds. Therefore, these stones correspond to flatter, larger diamonds.
+
+- **Cluster 4:** Largest and most expensive diamonds
+Cluster 4 is characterised by extremely high values of x, y, z, logCarat and logPrice, with very large positive v-tests. This cluster clearly gathers the largest, heaviest and most expensive diamonds in the dataset, representing the upper end of Dimension 1.
+
+```{r}
+res.hcpc$desc.var
+```
 
 #### Profiling based on FAMD scores
+
+The profiling of the clusters obtained from the FAMD scores can be interpreted as follows:
+
+- **Cluster 1:** Small, high-quality diamonds
+Shows strong overrepresentation of the Ideal cut, as well as premium clarity levels such as VVS1, VVS2 and I1/IF, together with an excess of colour D diamonds. Conversely, low-quality colours (I/J) and intermediate clarity levels (VS2, SI2) are significantly underrepresented.
+
+This behaviour is consistent with the quantitative profile: Cluster 1 contains the smallest diamonds in the dataset, with the lowest means for x, y, z and logCarat, and with the lowest logPrice. The diamonds in this group also tend to have smaller tables and slightly higher depth.
+
+- **Cluster 2:** Medium-sized diamonds with premium/proportioned cuts
+This cluster is dominated by the Premium cut, which accounts for almost two-thirds of its observations. It also shows overrepresentation of clarity levels VS1, VS2 and colours E and G, indicating that this group contains well-proportioned diamonds of medium quality. The Ideal cut, however, is strongly underrepresented.
+
+Quantitatively, the diamonds in this cluster remain smaller than the overall mean but are larger than those in Cluster 1. They present the highest table values, confirming that this cluster groups diamonds that are relatively flat in shape, whereas their depth values are slightly lower than the global mean. Price and size metrics are moderately below the overall mean.
+
+- **Cluster 3:** Medium-to-large diamonds with high prices and deeper shapes
+It combines a strong presence of the Ideal cut with an overrepresentation of clarity SI1. The categorical composition indicates a group of medium-quality but well-cut diamonds.
+
+The quantitative variables show that this cluster consists of larger diamonds: the means for x, y, z and logCarat are above the overall mean. This group also exhibits the highest average logPrice, consistent with the size increase. In terms of geometry, these diamonds tend to be deeper.
+
+- **Cluster 4:** Largest, most expensive diamonds with lower colour/clarity grades
+Cluster 4 gathers the largest diamonds in the dataset, with extremely high values for x, y, z, logCarat and logPrice, all showing the highest positive v-tests
+
+Categorically, it shows strong overrepresentation of colour I/J and colour H, and of clarity SI2. Premium cut is also heavily overrepresented, while the Ideal cut appears far below expectations. In geometric terms, these diamonds have large table values and slightly lower depth than average, suggesting flatter shapes.
+
 
 ```{r}
 hc_famd$desc.var
