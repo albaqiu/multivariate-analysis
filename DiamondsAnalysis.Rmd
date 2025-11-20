@@ -9,6 +9,8 @@ output:
 geometry: margin=1in
 ---
 
+-- MIRAR NO OUTLIER PERO SI QUE NO ESTA MASSA BEN POSADA OBSERVATION EN LA LOGPRICE, X,Y,Z I MIRAR SI ALESHORES PODRIEM APLICAR UN LOG
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -92,6 +94,8 @@ We observe that no numeric variable has NA or zeros.
 
 After analyzing the carat variable, we observe that it doesn't have severe outliers. The carat variable is right-skewed, with a long tail towards larger values, so is clearly not normally distributed. After using boxcox function, we see that a log transformation is appropriate to improve symmetry and stabilize variance.
 
+Notice that the log transformation does not follow a normal distribution neither. The histogram is clearly not bell-shaped and the QQ-plot has a lot of deviations. As it is expected both the shapiro and kolmogorov test have rejected the normality hypothesis.
+
 ```{r}
 # Outliers
 boxplot(diamonds$carat, horizontal = T)
@@ -115,15 +119,22 @@ boxcox(diamonds$carat~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
 diamonds$logCarat <- log(diamonds$carat) # Since lambda ~ 0 -> logarithmic transformation
 boxplot(diamonds$logCarat, horizontal = T) # No outliers
 
-hist(diamonds$logCarat, freq = F) # Is logCarat normally distributed?
+# Is logCarat normally distributed?
+hist(diamonds$logCarat, freq = F)
 m = mean(diamonds$logCarat)
 std = sd(diamonds$logCarat)
 curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+
+qqnorm(diamonds$logCarat, main = "logCarat Q-plot")
+qqline(diamonds$logCarat)
+
+shapiro.test(diamonds$logCarat)
+ks.test(diamonds$logCarat, "pnorm", mean=mean(diamonds$logCarat), sd=sd(diamonds$logCarat))
 ```
 
 ### Depth variable
 
-The depth variable has 2 severe outliers, which we removed. The histogram of the variable shows that the depth variable has an approximately symmetric, bell-shaped distribution, so no transformation is needed. Nonetheless, the normality test shapiro shows a low p-value, rejecting the normality distribution hypothesis of the variable.
+The depth variable has 2 severe outliers, which we removed. The histogram of the variable shows that the depth variable. Moreover, the QQ-plot almost shows a straight line without major deviations, which suggests that this variable could be considered approximately normal. Nonetheless, the shapiro and the kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
 
 ```{r}
 # Outliers
@@ -140,18 +151,22 @@ abline(v=lsout,col='orange', add = T)
 sev_out #[1] 462 467
 diamonds <- diamonds[-sev_out,] # Remove extreme outliers
 
-# Distribution
+# Is depth normally distributed?
 hist(diamonds$depth,freq=F)
 m = mean(diamonds$depth)
 std = sd(diamonds$depth)
 curve(dnorm(x,m,std),add=T, col="red")
 
+qqnorm(diamonds$depth, main = "depth Q-plot")
+qqline(diamonds$depth)
+
 shapiro.test(diamonds$depth)
+ks.test(diamonds$depth, "pnorm", mean=mean(diamonds$depth), sd=sd(diamonds$depth))
 ```
 
 ### Table variable
 
-The variable table has 1 severe outlier. After removing it, we see that the distribution of this variable is almost symmetric with mild right skewness. Since its shape is already close to normal and a transformation would not provide meaningful improvement, no transformation is applied. However, the shapiro test returned a low p-value, leading to the rejection of the normality hypothesis.
+The variable table contains one severe outlier. After removing it, the distribution becomes almost symmetric with a mild right skewness. Since its shape is already close to normal and a transformation would not provide meaningful improvement, no transformation is applied. The QQ-plot also shows points lying close to a straight line, without major deviations, which further suggests approximate normality. Although the variable is discrete, its wide range of values and its bell-shaped histogram support the assumption that normality may reasonably hold. However, the shapiro kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
 
 ```{r}
 # Outliers
@@ -168,22 +183,22 @@ abline(v=lsout,col='orange', add = T)
 sev_out #206
 diamonds <- diamonds[-sev_out,] # Remove extreme outliers
 
-# Distribution
+# Is table normally distributed?
 hist(diamonds$table,freq=F)
 m = mean(diamonds$table)
 std = sd(diamonds$table)
 curve(dnorm(x,m,std),add=T, col="red")
 
+qqnorm(diamonds$table, main = "table Q-plot")
+qqline(diamonds$table)
+
 shapiro.test(diamonds$table)
+ks.test(diamonds$table, "pnorm", mean=mean(diamonds$table), sd=sd(diamonds$table))
 ```
 
 ### Price variable
 
-The variable price doesn't have severe outliers, but we can observe a long tail at the right of the boxplot, indicating potential mild outliers.
-
-The histogram shows a right skewed distribution, which can be improved by a transformation to reduce its skewness and stabilize variance. Based on the boxcox, it seems like a logarithmic transformation would be suitable.
-
-After applying the log transformation, the distribution becomes more symmetric and closer to a bell-shaped form, without being still normal distributed.
+The variable price doesn't have severe outliers, but we can observe a long tail at the right of the boxplot, indicating potential mild outliers. The histogram shows a right skewed distribution, which can be improved by a transformation to reduce its skewness and stabilize variance. Based on the boxcox, it seems like a logarithmic transformation would be suitable. After applying the log transformation, the distribution becomes more symmetric and closer to a bell-shaped form, without being still normal distributed. The QQ-plot suggests that the logarithmic variable is still not normally distributed since many deviations are shown. Morover, the shapiro kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
 
 ```{r}
 # Outliers
@@ -205,14 +220,21 @@ m = mean(diamonds$price)
 std = sd(diamonds$price)
 curve(dnorm(x,m,std),add=T, col="red")
 
-# Logarithmic transformation
 boxcox(diamonds$price~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
 diamonds$logPrice <- log(diamonds$price) # Since lambda ~ 0 -> logarithmic transformation
 boxplot(diamonds$logPrice, horizontal = T) # No outliers
-hist(diamonds$logPrice, freq = F) # Is logPrice normally distributed?
+
+# Is logPrice normally distributed?
+hist(diamonds$logPrice, freq = F)
 m = mean(diamonds$logPrice)
 std = sd(diamonds$logPrice)
 curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+
+qqnorm(diamonds$logPrice, main = "logPrice Q-plot")
+qqline(diamonds$logPrice)
+
+shapiro.test(diamonds$logPrice)
+ks.test(diamonds$logPrice, "pnorm", mean=mean(diamonds$logPrice), sd=sd(diamonds$logPrice))
 ```
 
 ### x variable
@@ -238,6 +260,12 @@ hist(diamonds$x, freq = F)
 m = mean(diamonds$x)
 std = sd(diamonds$x)
 curve(dnorm(x,m,std),add=T, col="red")
+
+qqnorm(diamonds$x, main = "x Q-plot")
+qqline(diamonds$x)
+
+shapiro.test(diamonds$x)
+ks.test(diamonds$x, "pnorm", mean=mean(diamonds$x), sd=sd(diamonds$x))
 ```
 
 ### y variable
@@ -263,11 +291,20 @@ hist(diamonds$y, freq = F)
 m = mean(diamonds$y)
 std = sd(diamonds$y)
 curve(dnorm(x,m,std),add=T, col="red")
+
+qqnorm(diamonds$y, main = "y Q-plot")
+qqline(diamonds$y)
+
+shapiro.test(diamonds$y)
+ks.test(diamonds$y, "pnorm", mean=mean(diamonds$y), sd=sd(diamonds$y))
 ```
 
 ### z variable
 
 The y variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
+
+
+violations of normality at the tails!!!!
 
 ```{r}
 # Outliers
@@ -284,10 +321,16 @@ abline(v=lsout,col='orange', add = T)
 sev_out #0
 
 # Distribution
-hist(diamonds$z, freq = F) # A log transformation could be applied to reduce skewness and stabilize variance
+hist(diamonds$z, freq = F)
 m = mean(diamonds$z)
 std = sd(diamonds$z)
 curve(dnorm(x,m,std),add=T, col="red")
+
+qqnorm(diamonds$z, main = "z Q-plot")
+qqline(diamonds$z)
+
+shapiro.test(diamonds$z)
+ks.test(diamonds$z, "pnorm", mean=mean(diamonds$z), sd=sd(diamonds$z))
 ```
 
 ## Categorical variables
