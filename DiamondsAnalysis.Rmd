@@ -103,19 +103,28 @@ varout <- summary(diamonds$carat)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
+umout <- varout[5]+1.5*iqr
+lmout <- varout[2]-1.5*iqr
 
 boxplot(diamonds$carat, horizontal = T)
-abline(v=usout,col='orange', add = T)
-abline(v=lsout,col='orange', add = T)
+abline(v=usout,col='red', add = T)
+abline(v=lsout,col='red', add = T)
+abline(v=umout,col='orange', add = T)
+abline(v=lmout,col='orange', add = T)
 sev_out <- which((diamonds$carat >= usout) | (diamonds$carat <= lsout))
+mild_out <- which((diamonds$carat >= umout) | (diamonds$carat <= lmout))
 sev_out # 0
+mild_out #22
 
 # Distribution
 hist(diamonds$carat,freq=F)
 curve(dnorm(x),add=T, col="red") #It is obviously not normally distributed
 
 # Transformation
-boxcox(diamonds$carat~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+b <- boxcox(lm(diamonds$carat~1)) # Box-Cox Transformation
+# lambda <- b$x[which.max(b$y)]
+# diamonds$new_carat <- (diamonds$carat^1-1)/lambda
+
 diamonds$logCarat <- log(diamonds$carat) # Since lambda ~ 0 -> logarithmic transformation
 boxplot(diamonds$logCarat, horizontal = T) # No outliers
 
@@ -134,7 +143,12 @@ ks.test(diamonds$logCarat, "pnorm", mean=mean(diamonds$logCarat), sd=sd(diamonds
 
 ### Depth variable
 
-The depth variable has 2 severe outliers, which we removed. The histogram of the variable shows that the depth variable. Moreover, the QQ-plot almost shows a straight line without major deviations, which suggests that this variable could be considered approximately normal. Nonetheless, the shapiro and the kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
+The depth variable has 2 severe outliers, which we removed. The histogram of the variable shows that the depth variable. Moreover, the QQ-plot almost shows a straight line without major deviations, which suggests that this variable could be considered approximately normal. 
+
+** We observe a long right tail in the histogram, and assessing with the boxplot and the outlier detection, we confirm that they are outliers. We remove them to make the distribution closer to normality.** 
+
+Nonetheless, the shapiro and the kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
+
 
 ```{r}
 # Outliers
@@ -143,12 +157,18 @@ varout <- summary(diamonds$depth)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$depth >= usout) | (diamonds$depth <= lsout))
+umout <- varout[5]+1.5*iqr
+lmout <- varout[2]-1.5*iqr
 
 boxplot(diamonds$depth, horizontal = T)
-abline(v=usout,col='orange', add = T)
-abline(v=lsout,col='orange', add = T)
+abline(v=usout,col='red', add = T)
+abline(v=lsout,col='red', add = T)
+abline(v=umout,col='orange', add = T)
+abline(v=lmout,col='orange', add = T)
+sev_out <- which((diamonds$depth >= usout) | (diamonds$depth <= lsout))
+mild_out <- which((diamonds$depth >= umout) | (diamonds$depth <= lmout))
 sev_out #[1] 462 467
+mild_out #21
 diamonds <- diamonds[-sev_out,] # Remove extreme outliers
 
 # Is depth normally distributed?
@@ -175,12 +195,18 @@ varout <- summary(diamonds$table)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$table >= usout) | (diamonds$table <= lsout))
+umout <- varout[5]+1.5*iqr
+lmout <- varout[2]-1.5*iqr
 
-boxplot(diamonds$table, horizontal = TRUE)
-abline(v=usout,col='orange', add = T)
-abline(v=lsout,col='orange', add = T)
-sev_out #206
+boxplot(diamonds$table, horizontal = T)
+abline(v=usout,col='red', add = T)
+abline(v=lsout,col='red', add = T)
+abline(v=umout,col='orange', add = T)
+abline(v=lmout,col='orange', add = T)
+sev_out <- which((diamonds$table >= usout) | (diamonds$table <= lsout))
+mild_out <- which((diamonds$table >= umout) | (diamonds$table <= lmout))
+sev_out #[1] 206
+mild_out #[1] 206 445
 diamonds <- diamonds[-sev_out,] # Remove extreme outliers
 
 # Is table normally distributed?
@@ -207,12 +233,18 @@ varout <- summary(diamonds$price)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$price > usout) | (diamonds$price < lsout))
+umout <- varout[5]+1.5*iqr
+lmout <- varout[2]-1.5*iqr
 
 boxplot(diamonds$price, horizontal = T)
-abline(v=usout,col='orange', add = T)
-abline(v=lsout,col='orange', add = T)
+abline(v=usout,col='red', add = T)
+abline(v=lsout,col='red', add = T)
+abline(v=umout,col='orange', add = T)
+abline(v=lmout,col='orange', add = T)
+sev_out <- which((diamonds$price >= usout) | (diamonds$price <= lsout))
+mild_out <- which((diamonds$price >= umout) | (diamonds$price <= lmout))
 sev_out #0
+mild_out #28
 
 # Distribution
 hist(diamonds$price, freq = F) # A log transformation could be applied to reduce skewness and stabilize variance
@@ -220,7 +252,7 @@ m = mean(diamonds$price)
 std = sd(diamonds$price)
 curve(dnorm(x,m,std),add=T, col="red")
 
-boxcox(diamonds$price~1,lambda=seq(-1,1,by=0.1)) # Box-Cox Transformation
+b <- boxcox(lm(diamonds$price~1)) # Box-Cox Transformation
 diamonds$logPrice <- log(diamonds$price) # Since lambda ~ 0 -> logarithmic transformation
 boxplot(diamonds$logPrice, horizontal = T) # No outliers
 
@@ -248,12 +280,18 @@ varout <- summary(diamonds$x)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$x > usout) | (diamonds$x < lsout))
+umout <- varout[5]+1.5*iqr
+lmout <- varout[2]-1.5*iqr
 
 boxplot(diamonds$x, horizontal = T)
-abline(v=usout,col='orange', add = T)
-abline(v=lsout,col='orange', add = T)
+abline(v=usout,col='red', add = T)
+abline(v=lsout,col='red', add = T)
+abline(v=umout,col='orange', add = T)
+abline(v=lmout,col='orange', add = T)
+sev_out <- which((diamonds$x >= usout) | (diamonds$x <= lsout))
+mild_out <- which((diamonds$x >= umout) | (diamonds$x <= lmout))
 sev_out #0
+mild_out #0
 
 # Distribution
 hist(diamonds$x, freq = F)
@@ -279,12 +317,18 @@ varout <- summary(diamonds$y)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$y > usout) | (diamonds$y < lsout))
+umout <- varout[5]+1.5*iqr
+lmout <- varout[2]-1.5*iqr
 
 boxplot(diamonds$y, horizontal = T)
-abline(v=usout,col='orange', add = T)
-abline(v=lsout,col='orange', add = T)
+abline(v=usout,col='red', add = T)
+abline(v=lsout,col='red', add = T)
+abline(v=umout,col='orange', add = T)
+abline(v=lmout,col='orange', add = T)
+sev_out <- which((diamonds$y >= usout) | (diamonds$y <= lsout))
+mild_out <- which((diamonds$y >= umout) | (diamonds$y <= lmout))
 sev_out #0
+mild_out #0
 
 # Distribution
 hist(diamonds$y, freq = F)
@@ -313,12 +357,18 @@ varout <- summary(diamonds$z)
 iqr = varout[5]-varout[2]
 usout <- varout[5]+3*iqr
 lsout <- varout[2]-3*iqr
-sev_out <- which((diamonds$z > usout) | (diamonds$z < lsout))
+umout <- varout[5]+1.5*iqr
+lmout <- varout[2]-1.5*iqr
 
 boxplot(diamonds$z, horizontal = T)
-abline(v=usout,col='orange', add = T)
-abline(v=lsout,col='orange', add = T)
+abline(v=usout,col='red', add = T)
+abline(v=lsout,col='red', add = T)
+abline(v=umout,col='orange', add = T)
+abline(v=lmout,col='orange', add = T)
+sev_out <- which((diamonds$z >= usout) | (diamonds$z <= lsout))
+mild_out <- which((diamonds$z >= umout) | (diamonds$z <= lmout))
 sev_out #0
+mild_out #0
 
 # Distribution
 hist(diamonds$z, freq = F)
@@ -537,7 +587,12 @@ plot.PCA(diamonds.pca.sup, choix = "var", axes = c(1, 2))
 
 ## 2.2. Multidimensional scaling
 
-## 2.3. Correspondance analysis ??????
+## 2.3. Correspondance analysis
+
+```{r}
+
+```
+
 
 ## 2.4. Multiple correspondance analysis
 
