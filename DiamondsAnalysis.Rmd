@@ -588,15 +588,88 @@ plot.PCA(diamonds.pca.sup, choix = "var", axes = c(1, 2))
 ## 2.2. Multidimensional scaling
 
 ## 2.3. Correspondance analysis
+We apply CA only to the original categorical variables (cut, color, clarity), we will analyze this pairwisely: cut x color, cut x clarity, color x clarity.
+
+In MCA, we include the numerical variables by binarizing them, but we do not run CA on these binary variables because MCA already captures their relationships and CA would not add useful information.
+
+### Cut x color
+There's 4 dimensions because dim = min(5−1, 7−1)
 
 ```{r}
+tab_cut_color <- table(diamonds$cut, diamonds$color)
+res.ca_cut_color <- CA(tab_cut_color)
 
+# Eigenvalues
+res.ca_cut_color$eig
+barplot(res.ca_cut_color$eig[,2], main="Eigenvalues")
+
+# Row profiles
+res.ca_cut_color$row$coord
+res.ca_cut_color$row$contrib
+res.ca_cut_color$row$cos2
+
+# Column profiles
+res.ca_cut_color$col$coord
+res.ca_cut_color$col$contrib
+res.ca_cut_color$col$cos2
+
+# Plot
+plot.CA(res.ca_cut_color)
+```
+### Cut x clarity
+There's 4 dimensions because dim = min(5−1, 8−1)
+
+```{r}
+tab_cut_clarity <- table(diamonds$cut, diamonds$clarity)
+res.ca_cut_clarity <- CA(tab_cut_clarity)
+
+# Eigenvalues
+res.ca_cut_clarity$eig
+barplot(res.ca_cut_clarity$eig[,2], main="Eigenvalues")
+
+# Row profiles
+res.ca_cut_clarity$row$coord
+res.ca_cut_clarity$row$contrib
+res.ca_cut_clarity$row$cos2
+
+# Column profiles
+res.ca_cut_clarity$col$coord
+res.ca_cut_clarity$col$contrib
+res.ca_cut_clarity$col$cos2
+
+# Plot
+plot.CA(res.ca_cut_clarity)
+```
+
+### Color x clarity
+There's 6 dimensions because dim = min(7−1, 8−1)
+
+```{r}
+tab_color_clarity <- table(diamonds$color, diamonds$clarity)
+res.ca_color_clarity <- CA(tab_color_clarity)
+
+# Eigenvalues
+res.ca_color_clarity$eig
+barplot(res.ca_color_clarity$eig[,2], main="Eigenvalues")
+
+# Row profiles
+res.ca_color_clarity$row$coord
+res.ca_color_clarity$row$contrib
+res.ca_color_clarity$row$cos2
+
+# Column profiles
+res.ca_color_clarity$col$coord
+res.ca_color_clarity$col$contrib
+res.ca_color_clarity$col$cos2
+
+# Plot
+plot.CA(res.ca_color_clarity)
 ```
 
 
 ## 2.4. Multiple correspondance analysis
 
-In order to do Multiple Corresponance Analysis using also the numerical variables, these will be converted to binary variables with two categories as “over average” and “below average” for each of them, which will also help with its interpretability.
+In order to do Multiple Correspondance Analysis using also the numerical variables, these will be converted to binary variables with two categories as “over average” and “below average” for each of them, which will also help with its interpretability.
 
 Factor level 'over average' will be defined as 'o', and 'below average' as 'b'.
 
