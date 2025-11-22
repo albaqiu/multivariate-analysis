@@ -3,9 +3,9 @@ title: "Diamonds Data Frame Analysis"
 author: "Berta Torrents"
 date: "December 2025"
 output:
-  word_document: default
   pdf_document:
     latex_engine: xelatex
+  word_document: default
 geometry: margin=1in
 ---
 
@@ -62,7 +62,7 @@ Since the dataset contained a large number of observations $(53940)$, a random s
 n <- nrow(diamonds)
 indices <- sample(1:n, 500) # Take 500 random indices
 diamonds <- diamonds[indices,]
-# rownames(diamonds) <- seq_len(nrow(diamonds))
+rownames(diamonds) <- seq_len(nrow(diamonds))
 
 summary(diamonds)
 ```
@@ -305,6 +305,32 @@ qqline(diamonds$x)
 shapiro.test(diamonds$x)
 ks.test(diamonds$x, "pnorm", mean=mean(diamonds$x), sd=sd(diamonds$x))
 ```
+ESTA TOT COMENTAT PQ ESPERARE A PREGUNTAR-LI A LA NIHAN SI VAL LA PENA O NO
+
+Although it isn't an outlier, the distribution shows a very low value at the low values of x, which could be the reason why a log transformation isn't considered. We will analize whether removing this observation proves to be benefitial.
+```{r}
+# lowobs <- which(diamonds$x < 4)
+# length(lowobs) # 3/496 observations is less than 1% - we can remove
+# diamonds <- diamonds[-lowobs,] # Remove observation with low value
+# summary(diamonds$x)
+# 
+# b <- boxcox(lm(diamonds$x~1)) # Box-Cox Transformation
+# lambda <- b$x[which.max(b$y)]
+# diamonds$newx <- (diamonds$x ^ lambda - 1) / lambda # lambda = -0.38 (transformation)
+# 
+# # Is newx normally distributed?
+# hist(diamonds$newx, freq = F)
+# m = mean(diamonds$newx)
+# std = sd(diamonds$newx)
+# curve(dnorm(x,m,std),col="red",lwd=2,add=T)
+# 
+# qqnorm(diamonds$newx, main = "newx Q-plot")
+# qqline(diamonds$newx)
+# 
+# shapiro.test(diamonds$newx)
+# ks.test(diamonds$newx, "pnorm", mean=mean(diamonds$newx), sd=sd(diamonds$newx))
+
+```
 
 ### y variable
 
@@ -401,13 +427,13 @@ prop.table(table(diamonds$cut))
 
 # We can group Fair and Good in one group because Fair has little observations and the variable is unbalanced
 
-#diamonds$cut <- ifelse(diamonds$cut %in% c("Fair", "Good"), "Fair/Good", as.character(diamonds$cut))
+diamonds$cut <- ifelse(diamonds$cut %in% c("Fair", "Good"), "Fair/Good", as.character(diamonds$cut))
 
-#diamonds$cut <- factor(
-#  diamonds$cut,
-#  levels = c("Fair/Good", "Ideal", "Premium", "Very Good"))
+diamonds$cut <- factor(
+ diamonds$cut,
+ levels = c("Fair/Good", "Ideal", "Premium", "Very Good"))
 
-#barplot(table(diamonds$cut), main="Diamond Cut Quality")
+barplot(table(diamonds$cut), main="Diamond Cut Quality")
 ```
 
 ### Color variable
@@ -426,15 +452,15 @@ prop.table(table(diamonds$color))
 
 # We can group I and J in one group because J has little observations and the variable is unbalanced
 
-# diamonds$color <- ifelse(diamonds$color %in% c("I", "J"), "I/J", as.character(diamonds$color))
-# summary(diamonds$color)
-# 
-# diamonds$color <- factor(
-#   diamonds$color,
-#   levels = c("D", "E", "F", "G","H","I/J")
-# )
-# 
-# barplot(table(diamonds$color), main="Diamond Color")
+diamonds$color <- ifelse(diamonds$color %in% c("I", "J"), "I/J", as.character(diamonds$color))
+summary(diamonds$color)
+
+diamonds$color <- factor(
+  diamonds$color,
+  levels = c("D", "E", "F", "G","H","I/J")
+)
+
+barplot(table(diamonds$color), main="Diamond Color")
 ```
 
 ### Clarity variable
@@ -453,15 +479,15 @@ prop.table(table(diamonds$clarity))
 
 # We can group I1 and IF in one group because I1 has little observations and the variable is unbalanced
 
-# diamonds$clarity <- ifelse(diamonds$clarity %in% c("I1", "IF"), "I1/IF", as.character(diamonds$clarity))
-# summary(diamonds$clarity)
-# 
-# diamonds$clarity <- factor(
-#   diamonds$clarity,
-#   levels = c("I1/IF", "SI1", "SI2", "VS1","VS2","VVS1","VVS2")
-# )
-# 
-# barplot(table(diamonds$clarity), main="Diamond Clarity")
+diamonds$clarity <- ifelse(diamonds$clarity %in% c("I1", "IF"), "I1/IF", as.character(diamonds$clarity))
+summary(diamonds$clarity)
+
+diamonds$clarity <- factor(
+  diamonds$clarity,
+  levels = c("I1/IF", "SI1", "SI2", "VS1","VS2","VVS1","VVS2")
+)
+
+barplot(table(diamonds$clarity), main="Diamond Clarity")
 ```
 
 In conclusion, we have removed 3 observations and transformed the variables carat and price with a logarithmic transformation for a better interpretation. Hence, the dataframe we will work with is:
@@ -678,8 +704,8 @@ dfmca <- diamonds
 nums = names(numeric_vars)
 
 for (var in nums){
-  meanvar = mean(dfmca[[var]])
-  dfmca[[var]] <- ifelse(dfmca[[var]] >= meanvar, "o", "b") 
+  medianvar = median(dfmca[[var]])
+  dfmca[[var]] <- ifelse(dfmca[[var]] >= medianvar, "o", "b") 
   dfmca[[var]] <- as.factor(dfmca[[var]])
 }
 summary(dfmca)
@@ -700,38 +726,47 @@ res.mca <- MCA(dfmca,quali.sup=10)
 summary(res.mca)
 ```
 
-In order to choose which dimensions we will work with, we apply the rule of choosing the dimensions with eigenvalues greater than the average inertia of the indicator matrix per dimension.
+In order to choose which dimensions we will work with, one option is to apply the rule of choosing the dimensions with eigenvalues greater than the average inertia of the indicator matrix per dimension.
 
-In this case, as there are 10 variables, J = 10, and the total number of values is K=5+7+8+(7x2)=34, number of dimensions is K-J=24. Therefore, the average inertia is 1/24 (0.04166667), and the dimensions selected are until Dim.20????
+In this case, as there are 10 variables, J = 10, and the total number of values is K=5+7+8+(7x2)=34, number of dimensions is K-J=24. Therefore, the average inertia is 1/24 (0.04166667), and the dimensions selected would theoretically be until Dim.20.
 
-The summary shows all of the analysis, but the description will be done separately.
+Howerver, using the scree plot, we observe a clear elbow around Dimension 2.
+
+After the second dimension, the eigenvalues decrease smoothly and almost linearly, with no additional major drops. This indicates that most of the structure is captured by the first few dimensions, while the remaining ones mainly represent smaller, less interpretable variations.
+
+Therefore, although the theoretical criterion based on average inertia would suggest retaining many more dimensions, the scree plot indicates that the first 2 dimensions concentrate the meaningful information, and the interpretation will be limited to these.
 
 ```{r}
-# K=15x2=30, J=15
-# no of dimension: K-J=15
-# average inertia per dimension: 1/(K-J)=1/15
-
-# Choose the dimensions with eigenvalues > 1/15 --> Until Dim.4
+# K=5+7+8+(7x2)=34
+# no of dimension: K-J=24
+# average inertia per dimension: 1/(K-J)=1/24
 summary(res.mca, ncp=4)
-res.mca
+# Choose the dimensions with eigenvalues > 1/24 --> Until Dim.20
+
+### Eigenvalues (scree plot)
+res.mca$eig
+barplot(res.mca$eig[,1],main="Eigenvalues", names.arg=1:nrow(res.mca$eig))
+lines(res.mca$eig[,1], type = "o", col = "red", pch = 19, add=T)
+
+# Choose the dimensions that explain the most variability --> Until Dim.2
 ```
 
-As can be seen in the description of Dimensions, the most significant variables in each dimension, which are those represented with the highest value of R2, are: - For *dimension 1*, the Efficiency `EFF`, as it's value of R2 is 0.8414. - For *dimension 2*, it is number of 2pt Field Goal `2PT FG`, with a value of R2 of 0.6864. - For *dimension 3*, there isn't such a significant variable, but the one with the highest R2 value is 3pt Field Goal `3PT FG`, with a value of R2 of 0.3615.
+As can be seen in the description of Dimensions, the *most significant variables in each dimension*, which are those represented with the highest value of R2, are: 
 
-Also, it is relevant to observe the link between variable and categories to see which are the most significant categories in each dimension, which are those represented with the highest absolute value of Estimate.
+- For Dimension 1, the variables are `x`, `y`, `z` and `logCarat` as their value of R2 is around 0.9.
+  It is also relevant to note that the supplementary variable `logPrice` is also very significant in this dimension, with a value of R2 of 0.78.
+- For Dimension 2, the variables are `cut` and `table`, as their value of R2 is around 0.69. 
 
-They follow the same pattern for all three dimensions: the categories most positively correlated are the most significant variables mentioned above, for the 'over average' category, and the most negatively correlated is the 'under average' value of the same variable.
+Also, it is relevant to observe the link between variable and categories to see which are the *most significant categories in each dimension*, which are those represented with the highest absolute value of Estimate.
 
-This can also be corroborated with the coordinate analysis. They are the values that are more extreme, in the negative and positive side of the axis.
+- Dimension 1: At the category level, the most positively correlated modalities are the “over average” categories of the most significant variables (`x`, `y`, `z` and `logCarat`), which display the highest absolute positive estimates. Conversely, the corresponding “under average” modalities appear on the negative side with the same magnitude but opposite sign. This symmetric structure indicates a clear separation of the observations according to whether their size-related measurements are above or below the average.
 
-That means that observations will be easily separated between those over average and under, and interpreted according to each dimension.
+- Dimension 2: Among the categories, the “table_o” modality and the Premium cut level show the strongest positive correlation with this dimension. On the opposite side, the “table_b” category and the Ideal cut have large negative estimates, marking the strongest negative associations.
 
--   Note: The results for dimension 4 are not shown by R, as it has an eigenvalue that is technically lower than the threshold (0.066 \< 0.067).
+Although it may initially seem counter-intuitive that Premium and Ideal cuts, both generally considered high-quality categories, appear on opposite sides of Dimension 2, this separation does not reflect differences directly in cut quality. This indicates that Premium is more frequently associated with over-average table values, whereas Ideal is more often linked to under-average table values in the dataset. As a result, these two high-quality cuts are positioned far apart—not due to opposite quality levels, but due to contrasting geometric characteristics captured by Dimension 2.
+
 
 ```{r}
-### Eigenvalues
-res.mca$eig
-barplot(res.mca$eig[,2],main="Eigenvalues", names.arg=1:nrow(res.mca$eig))
 
 ## Coordinates of categories
 res.mca$var$coord
@@ -774,6 +809,11 @@ plot.MCA(res.mca,choix="ind",label="none",invisible="var",habillage = "table")
 The graph of the active categories is very relevant: the categories of values 'over average' are represented on the positive side of Dim 1, and the ones 'below average' are on the negative side.
 
 Considering the total information obtained from the cloud of categories, and also the cloud of variables, the conclusions we draw of the information obtained by the dimensions is the following:
+
+-   Dimension $1$: Physical Magnitude (and Price Component) Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
+
+-   Dimension $2$: Geometric Balance Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+
 
 -   *Dimension 1* mainly represents the overall performance level, separating players with “over average” results on the positive side, from those “below average” on the negative side.
 
