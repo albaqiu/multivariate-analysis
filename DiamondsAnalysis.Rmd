@@ -38,6 +38,9 @@ library(MASS)
 library(psych)
 library(factoextra)
 library(corrplot)
+library(cluster)
+library(ggplot2)
+library(ggrepel)
 ```
 
 ## 1. Data preparation
@@ -545,9 +548,7 @@ kmo(numeric_vars)
 
 ## 2.1. Principal components analysis
 
-The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
-
-In order to determine the number of components to extract, taking into account that the data is standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted by that dimension. In this case, the first two components (with eigenvalues $4.99$ and $1.2$) are the ones that meet the Kaiser's requirement. Moreover, the cumulative percentage of variance shows that these two components explain $89.46\%$ of the total variance, which indicates that they capture most of the information in the data frame. In addition, the scree plot shows a noticeable elbow after the first component, indicating that retaining two components captures most of the variance while keeping the solution interpretable.
+We have decided to take price as a suplementary variable since the results are more interpretable. However, the initial PCA is included.
 
 ```{r}
 diamonds.pca <- PCA(numeric_vars, graph = T)
@@ -558,11 +559,6 @@ lines(diamonds.pca$eig[,1], type = "o", col = "red", pch = 19, add=T)
 diamonds.pca$eig
 ```
 
-It is important to determine which variables contribute most to each of the relevant components in order to reduce the number of variables. Hence, considering the coordinates of the variables, it is possible to see which variable is associated with each component. On the other hand, examining the $cos^2$ values shows which variables are more strongly related to a given component.
-
--   Dimension $1$: Physical Magnitude and Price Component Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat, as well as for logPrice. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
-
--   Dimension $2$: Geometric Balance Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
 
 ```{r}
 corrplot(diamonds.pca$var$coord)
@@ -578,11 +574,7 @@ plot.PCA(diamonds.pca, choix = "var", axes = c(1, 2))
 
 The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
 
-The logPrice numeric variable has been considered as a supplementary variable, since it is not a descriptive variable but a result of characteristics given by the numeric and categorical variables.
-
-Including price as an active variable could distort the PCA structure, given its high variance and strong correlations with the physical dimensions of the diamond, and it would make the interpretation of the components less meaningful.
-
-By treating price as a supplementary variable, it is excluded from the calculation of the principal components and only projected onto the factorial space afterwards. This makes it possible to study how price aligns with the main axes without altering their structure. This approach results in a clearer interpretation of the extracted components, focused on the physical properties of the diamonds, while still indicating how these characteristics relate to the final price.
+The logPrice variable has been treated as a supplementary variable. After performing the initial PCA using all numeric variables, we have found that including price as an active variable could dominate the principal components due to its high variance and strong correlations with the diamond’s physical dimensions. By treating price as supplementary, we can examine how price relates to the main components without affecting their structure. As a result, the extracted components are easier to interpret and focus on the physical properties of the diamonds, while still reflecting their relationship with price.
 
 In order to determine the number of components to extract, taking into account that the data is standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted by that dimension. In this case, the first two components (with eigenvalues $4.06$ and $1.26$) are the ones that meet the Kaiser's requirement. Moreover, the cumulative percentage of variance shows that these two components explain $88.65\%$ of the total variance, which indicates that they capture most of the information in the data frame. In addition, the scree plot shows a noticeable elbow after the first component, indicating that retaining two components captures most of the variance while keeping the solution interpretable.
 
@@ -597,7 +589,7 @@ diamonds.pca.sup$eig
 
 It is important to determine which variables contribute most to each of the relevant components in order to reduce the number of variables. Hence, considering the coordinates of the variables, it is possible to see which variable is associated with each component. On the other hand, examining the $cos^2$ values shows which variables are more strongly related to a given component.
 
--   Dimension $1$: Physical Magnitude (and Price Component) Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
+-   Dimension $1$: Physical Magnitude (and Price Component): Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
 
 -   Dimension $2$: Geometric Balance Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
 
@@ -611,7 +603,102 @@ diamonds.pca.sup$var$coord
 plot.PCA(diamonds.pca.sup, choix = "var", axes = c(1, 2))
 ```
 
+Although an individual assessment of the dataset has not provided much additional information, it is important to note that some observations fall far from the main cloud of points. For instance, the diamonds labeled 270 and 380 are clear outliers in dimension two, corresponding to a shallow or flattened diamond and a pointed diamond, respectively. Conversely, the diamond labeled 365 is a clear outlier in dimension one, suggesting that it is larger, heavier, and more valuable.
+
+```{r}
+
+plot.PCA(diamonds.pca.sup, choix = "ind", axes = c(1, 2))
+```
 ## 2.2. Multidimensional scaling
+
+The Euclidean distance matrix, based on the scaled numerical variables, has been computed using the \emph{dist()} function. Using this matrix, the \emph{cmdscale()} function has been applied. 
+
+The number of dimensions selected has been $k=2$. Taking into account the scree plot, it shows a noticeable elbow after the first component, indicating that retaining two dimensions captures most of the variance while keeping the solution interpretable. Moreover, the GOF obtained for the two-dimensional solution is $0.89\%$, indicating that the map preserves a substantial proportion of the original distance information and provides a reasonably good representation of the relationships among the observations.
+
+The MDS individual plot shows relationships similar to those observed in the PCA results. The diamonds labeled $270$, $365$, and $308$ are clearly outstanding observations, standing apart from the main cloud. In fact, since they occupy the same positions as in the PCA, it can be concluded that the first and second MDS coordinates correspond closely to the first and second PCA components. One notable difference between the two methods is that MDS distributes the individuals more evenly across the space, rather than concentrating them as in the PCA plot.
+
+```{r}
+ds_eu <- dist(scale(numeric_vars), method = "euclidean")
+
+dimaonds.mds.eu <- cmdscale(ds_eu, eig = TRUE, k = 2)
+
+dimaonds.mds.eu$GOF
+
+plot(1:length(dimaonds.mds.eu$eig), dimaonds.mds.eu$eig, 
+     type = "b",
+     xlab = "Dimension", 
+     ylab = "Eigenvalue",
+     main = "Scree Plot")
+
+x <- dimaonds.mds.eu$points[,1]
+y <- dimaonds.mds.eu$points[,2]
+
+plot(x, y, xlab="Coordinate 1", ylab="Coordinate 2",
+     main="Individual plot using the first two coordinates with Euclidian distance", type="n")
+
+text(x, y, labels = row.names(diamonds), cex=.7)
+```
+
+On the other hand, we have also performed the MDS analysis using the Gower distance, computed with the \emph{daisy} function from the \emph{cluster} library, allowing us to include all categorical variables. 
+
+The scree plot also suggests that using two dimensions captures most of the variance while keeping the solution interpretable. In the case of Euclidean distance, both GOF values are identical. However, when using the Gower distance, the two GOF components differ slightly. The first value $(0.26)$ measures the proportion of total variance explained by the two dimensions, considering both positive and negative eigenvalues, whereas the second value $(0.36)$ only accounts for the positive eigenvalues. This difference arises because the Gower distance combines mixed variable types.
+
+Although the GOF measure is lower when including the categorical variables, it is important to note that the individual plot clearly separates the diamonds into four distinct groups, which should be analyzed further. Nonetheless, observations $365$ is still an outstanding observation.
+
+```{r}
+ds_gw <- daisy(diamonds, metric = "gower")
+
+diamonds.mds.gw <- cmdscale(ds_gw, eig = TRUE, k = 2)
+
+diamonds.mds.gw$GOF
+
+plot(1:length(diamonds.mds.gw$eig), diamonds.mds.gw$eig, 
+     type = "b",
+     xlab = "Dimension", 
+     ylab = "Eigenvalue",
+     main = "Scree Plot")
+
+x <- diamonds.mds.gw$points[,1]
+y <- diamonds.mds.gw$points[,2]
+
+
+plot(x, y, xlab="Coordinate 1", ylab="Coordinate 2",
+     main="Individual plot using the first two coordinates with Gower distance", 
+     type="n")
+
+draw.ellipse <- function(x0, y0, a, b, col, lwd=2, alpha=0.3, angle=0) {
+  theta <- seq(0, 2*pi, length.out=200)
+  x_ellipse <- a*cos(theta)
+  y_ellipse <- b*sin(theta)
+  
+  angle_rad <- angle * pi/180
+  x_rot <- x_ellipse * cos(angle_rad) - y_ellipse * sin(angle_rad)
+  y_rot <- x_ellipse * sin(angle_rad) + y_ellipse * cos(angle_rad)
+  
+  x_ellipse <- x0 + x_rot
+  y_ellipse <- y0 + y_rot
+  
+  polygon(x_ellipse, y_ellipse, 
+          col=adjustcolor(col, alpha.f=alpha), 
+          border=NA)
+  lines(x_ellipse, y_ellipse, col=col, lwd=lwd)
+}
+
+draw.ellipse(x0=-0.15, y0=0.18, a=0.2, b=0.05, angle=-20, col="red", lwd=2.5)
+draw.ellipse(x0=-0.2, y0=-0.05, a=0.23, b=0.15, col="blue", lwd=2.5)
+draw.ellipse(x0=0.2, y0=0.12, a=0.12, b=0.08, col="green", lwd=2.5)
+draw.ellipse(x0=0.20, y0=-0.12, a=0.18, b=0.12, col="orange", lwd=2.5)
+
+text(x, y, labels = row.names(diamonds), cex=.7)
+
+legend("bottomleft", 
+       legend=c("Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4"),
+       col=c("red", "blue", "green", "orange"),
+       lwd=2.5, 
+       bty="n",
+       cex=0.8)
+```
+
 
 ## 2.3. Correspondance analysis
 We apply CA only to the original categorical variables (cut, color, clarity), we will analyze this pairwisely: cut x color, cut x clarity, color x clarity.
