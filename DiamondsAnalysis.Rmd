@@ -621,26 +621,39 @@ In MCA, we include the numerical variables by binarizing them, but we do not run
 ### Cut x color
 There's 4 dimensions because dim = min(5−1, 7−1)
 
+Analysis:
+Dimension 1 (58.7%) represents a color quality axis:
+- Premium cut diamonds are associated with poorer colors (G, I/J).
+- Fair/Good diamonds associate with the best colors (D).
+The categories that contribute more to this dimension are: 
+- Premium cut and G color (negative)
+- Fair/Good cut and D color (positive)
+
+Dimension 2 (38.0%) captures differences between Ideal and Very Good:
+- Ideal diamonds are more associated with D, F, and I/J colors.
+- Very Good diamonds tend to be linked with H and E colors.
+The categories that contribute more to this dimension are:
+- Ideal and D, F, I/J (positive)
+- Very Good and E, H (negative)
+
 ```{r}
 tab_cut_color <- table(diamonds$cut, diamonds$color)
-res.ca_cut_color <- CA(tab_cut_color)
+cut_color <- CA(tab_cut_color)
 
 # Eigenvalues
-res.ca_cut_color$eig
-barplot(res.ca_cut_color$eig[,2], main="Eigenvalues")
+cut_color$eig
+barplot(cut_color$eig[,2], main="Eigenvalues")
 
 # Row profiles
-res.ca_cut_color$row$coord
-res.ca_cut_color$row$contrib
-res.ca_cut_color$row$cos2
+cut_color$row$coord
+cut_color$row$contrib
+cut_color$row$cos2
 
 # Column profiles
-res.ca_cut_color$col$coord
-res.ca_cut_color$col$contrib
-res.ca_cut_color$col$cos2
+cut_color$col$coord
+cut_color$col$contrib
+cut_color$col$cos2
 
-# Plot
-plot.CA(res.ca_cut_color)
 ```
 ### Cut x clarity
 There's 4 dimensions because dim = min(5−1, 8−1)
