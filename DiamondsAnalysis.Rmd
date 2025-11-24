@@ -566,7 +566,7 @@ diamonds.pca$var$coord
 plot.PCA(diamonds.pca, choix = "var", axes = c(1, 2))
 ```
 
-## PCA SUPLEMENTARY??
+## PCA SUPLEMENTARY
 
 The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
 
@@ -588,6 +588,8 @@ It is important to determine which variables contribute most to each of the rele
 -   Dimension $1$: Physical Magnitude (and Price Component): Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
 
 -   Dimension $2$: Geometric Balance Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+
+It is important to note that these results are expected when considering the correlation analysis. The physical dimensions and price are highly and positively correlated, whereas table and depth are only mildly and negatively correlated.
 
 ```{r}
 corrplot(diamonds.pca.sup$var$coord)
