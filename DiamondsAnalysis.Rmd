@@ -79,15 +79,14 @@ For each variable, we check: duplicates, existence of zeros, existence of outlie
 Helper function to evaluate missing values and zeros
 
 ```{r}
-check_numeric <- function(x) {
+check_na <- function(x) {
   list(na = sum(is.na(x)),
   zeros = sum(x == 0))
 }
 ```
 
 ```{r}
-num_vars <- diamonds %>% select_if(is.numeric)
-results <- lapply(num_vars, check_numeric)
+results <- lapply(diamonds, check_na)
 results
 ```
 
@@ -419,9 +418,6 @@ ks.test(diamonds$z, "pnorm", mean=mean(diamonds$z), sd=sd(diamonds$z))
 Cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for 37.4% of observations, while the Fair level comprising only 1.8% of the observations. These strange categories could be grouped further depending on the results of the multivariate analysis.
 
 ```{r}
-# Check NA (we don't need to check 0s)
-cat("Missing values in cut:", sum(is.na(diamonds$cut)), "\n") #0
-
 # Distribution
 summary(diamonds$cut)
 barplot(summary(diamonds$cut), main="Diamond Cut Quality")
@@ -444,9 +440,6 @@ barplot(table(diamonds$cut), main="Diamond Cut Quality")
 Color variable shows no missing values. It is a more balanced variable. Nonetheless, the most frequent grade is G, representing 12.6% of observations, while the least frequent is J, with 3.4%, indicating that diamonds with a noticeable tint are less common in the dataset.
 
 ```{r}
-# Check NA
-cat("Missing values in color:", sum(is.na(diamonds$color)), "\n") #0
-
 # Distribution
 summary(diamonds$color)
 barplot(summary(diamonds$color), main="Diamond Color")
@@ -468,12 +461,11 @@ barplot(table(diamonds$color), main="Diamond Color")
 
 ### Clarity variable
 
-Clarity variable shows no missing values. It is clearly unbalanced. The diamond clarity distribution is more frequent for the SI1 and VS2 grades, whereas I1 grade only represents 1.4% of the sample. Hence, the sample is composed mostly of slightly-to-very slightly included stones. The strange categories could be grouped further depending on the results of the multivariate analysis.
+Clarity variable shows no missing values. It is clearly unbalanced. The diamond clarity distribution is more frequent for the SI1 and VS2 grades, whereas I1 grade only represents 1.4% of the sample. Hence, the sample is composed mostly of slightly-to-very slightly included stones. 
+
+We group IF and VVS1 because they are closer in the clarity scale and we do the same with I1 and SI2.
 
 ```{r}
-# Check NA 
-cat("Missing values in clarity:", sum(is.na(diamonds$clarity)), "\n") #0
-
 # Distribution
 summary(diamonds$clarity)
 barplot(summary(diamonds$clarity), main="Diamond Clarity")
@@ -482,13 +474,17 @@ prop.table(table(diamonds$clarity))
 
 # We can group I1 and IF in one group because I1 has little observations and the variable is unbalanced
 
-diamonds$clarity <- ifelse(diamonds$clarity %in% c("I1", "IF"), "I1/IF", as.character(diamonds$clarity))
+diamonds$clarity <- ifelse(diamonds$clarity %in% c("IF", "VVS1"), "IF/VVS1", as.character(diamonds$clarity))
 summary(diamonds$clarity)
+diamonds$clarity <- ifelse(diamonds$clarity %in% c("I1", "SI2"), "I1/SI2", as.character(diamonds$clarity))
+summary(diamonds$clarity)
+
 
 diamonds$clarity <- factor(
   diamonds$clarity,
-  levels = c("I1/IF", "SI1", "SI2", "VS1","VS2","VVS1","VVS2")
+  levels = c("I1/SI2", "SI1", "VS1", "VS2", "VVS2", "IF/VVS1")
 )
+
 
 barplot(table(diamonds$clarity), main="Diamond Clarity")
 ```
@@ -699,29 +695,20 @@ legend("bottomleft",
        cex=0.8)
 ```
 
-
 ## 2.3. Correspondance analysis
 We apply CA only to the original categorical variables (cut, color, clarity), we will analyze this pairwisely: cut x color, cut x clarity, color x clarity.
 
 In MCA, we include the numerical variables by binarizing them, but we do not run CA on these binary variables because MCA already captures their relationships and CA would not add useful information.
 
 ### Cut x color
-There's 4 dimensions because dim = min(5−1, 7−1)
+There's 4 dimensions because dim = min(5−1, 7−1).
 
-Analysis:
-Dimension 1 (58.7%) represents a color quality axis:
-- Premium cut diamonds are associated with poorer colors (G, I/J).
-- Fair/Good diamonds associate with the best colors (D).
-The categories that contribute more to this dimension are: 
-- Premium cut and G color (negative)
-- Fair/Good cut and D color (positive)
+The first two dimensions explain 58.70% + 38.02% = 96.72% of the association between cut and color. This means that the two-dimensional map provides a really good summary of the relationship between the two variables.
 
-Dimension 2 (38.0%) captures differences between Ideal and Very Good:
-- Ideal diamonds are more associated with D, F, and I/J colors.
-- Very Good diamonds tend to be linked with H and E colors.
-The categories that contribute more to this dimension are:
-- Ideal and D, F, I/J (positive)
-- Very Good and E, H (negative)
+Dimension 1 separates two main groups of cut–color combinations. On the left, Premium cut appears close to G and I/J, suggesting that these colors occur slightly more often with Premium cut than expected from the overall distribution. On the right, Fair/Good cut appears near D, indicating a stronger than average association between these categories.
+
+Dimension 2 distinguishes Ideal from Very Good cuts. Ideal lies in the upper part of the map, near D, F, and I/J, indicating slight deviations from the average pattern in this direction. Very Good is in the lower part, close to E and H.
+These categories contribute more strongly to Dimension 2, while other groups that lie closer to the center follow the average distribution more closely.
 
 ```{r}
 tab_cut_color <- table(diamonds$cut, diamonds$color)
@@ -740,59 +727,63 @@ cut_color$row$cos2
 cut_color$col$coord
 cut_color$col$contrib
 cut_color$col$cos2
-
 ```
+
 ### Cut x clarity
-There's 4 dimensions because dim = min(5−1, 8−1)
+There's 4 dimensions because dim = min(5−1, 8−1).
+
+With 2 dimensions we obtain 58.09% + 25.95% = 84.04%, meaning that the 2-dimensional CA map captures most of the association between cut and clarity.
+
+Dimension 1 represents the strongest difference from the average diamond profile. Categories on the right, such as the Ideal cut and very high clarity (IF/VVS1), show similar behaviour and tend to appear together more often than expected. On the left, Fair/Good cut tends to appear with low clarity diamonds more often than the average diamond in the dataset. This dimension separates diamonds that tend to be associated with higher clarity from those linked to lower clarity, based on how their frequencies differ from the overall average.
+
+Dimension 2 shows a second way in which some categories differ from the average diamond. Categories at the top, like IF/VVS1 clarity, behave in a more unusual way compared with the rest of the data. Categories lower on the axis, such as the Very Good cut or VVS2 clarity, also differ from the average but in a different direction. This dimension helps separate categories that do not follow the main pattern shown on Dimension 1.
 
 ```{r}
 tab_cut_clarity <- table(diamonds$cut, diamonds$clarity)
-res.ca_cut_clarity <- CA(tab_cut_clarity)
+cut_clarity <- CA(tab_cut_clarity)
 
 # Eigenvalues
-res.ca_cut_clarity$eig
-barplot(res.ca_cut_clarity$eig[,2], main="Eigenvalues")
+cut_clarity$eig
+barplot(cut_clarity$eig[,2], main="Eigenvalues")
 
 # Row profiles
-res.ca_cut_clarity$row$coord
-res.ca_cut_clarity$row$contrib
-res.ca_cut_clarity$row$cos2
+cut_clarity$row$coord
+cut_clarity$row$contrib
+cut_clarity$row$cos2
 
 # Column profiles
-res.ca_cut_clarity$col$coord
-res.ca_cut_clarity$col$contrib
-res.ca_cut_clarity$col$cos2
-
-# Plot
-plot.CA(res.ca_cut_clarity)
+cut_clarity$col$coord
+cut_clarity$col$contrib
+cut_clarity$col$cos2
 ```
 
 ### Color x clarity
-There's 6 dimensions because dim = min(7−1, 8−1)
+There's 6 dimensions because dim = min(7−1, 8−1).
+
+With 2 dimensions we explain 52.15% + 28.18% = 80.33% of the association between color and clarity, meaning that the 2-dimensional map captures most of the relationship between the two variables.
+
+In this map, clarity groups such as SI1 and I1/SI2, as well as color groups D and I/J, appear close to the origin. This indicates that these categories follow the general pattern in the data and do not show particularly distinctive color–clarity combinations.
+
+In contrast, categories positioned farther from the center have more pronounced deviations from the average profile. For example, IF/VVS1 and VS1 lie on the right-hand side near color G, suggesting that high-clarity stones appear with G more often than expected from the overall distribution. Similarly, VVS2 is located toward the upper left near color E, indicating that this clarity group is unusually associated with E relative to the mean pattern.
 
 ```{r}
 tab_color_clarity <- table(diamonds$color, diamonds$clarity)
-res.ca_color_clarity <- CA(tab_color_clarity)
+color_clarity <- CA(tab_color_clarity)
 
 # Eigenvalues
-res.ca_color_clarity$eig
-barplot(res.ca_color_clarity$eig[,2], main="Eigenvalues")
+color_clarity$eig
+barplot(color_clarity$eig[,2], main="Eigenvalues")
 
 # Row profiles
-res.ca_color_clarity$row$coord
-res.ca_color_clarity$row$contrib
-res.ca_color_clarity$row$cos2
+color_clarity$row$coord
+color_clarity$row$contrib
+color_clarity$row$cos2
 
 # Column profiles
-res.ca_color_clarity$col$coord
-res.ca_color_clarity$col$contrib
-res.ca_color_clarity$col$cos2
-
-# Plot
-plot.CA(res.ca_color_clarity)
+color_clarity$col$coord
+color_clarity$col$contrib
+color_clarity$col$cos2
 ```
-
-
 ## 2.4. Multiple correspondance analysis
 
 In order to do Multiple Correspondance Analysis using also the numerical variables, these will be converted to binary variables with two categories as “over average” and “below average” for each of them, which will also help with its interpretability.
