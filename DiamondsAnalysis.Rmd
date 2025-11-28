@@ -417,6 +417,8 @@ ks.test(diamonds$z, "pnorm", mean=mean(diamonds$z), sd=sd(diamonds$z))
 
 Cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for 37.4% of observations, while the Fair level comprising only 1.8% of the observations. These strange categories could be grouped further depending on the results of the multivariate analysis.
 
+Since Fair and Good are consecutive levels on the standard cut-quality scale and represent similar performance in terms of light return and symmetry, they can be combined into a single category (Fair/Good). This grouping preserves the ordinal logic of the cut grading system while ensuring more balanced frequencies across categories, leading to more robust and interpretable results.
+
 ```{r}
 # Distribution
 summary(diamonds$cut)
@@ -438,6 +440,8 @@ barplot(table(diamonds$cut), main="Diamond Cut Quality")
 ### Color variable
 
 Color variable shows no missing values. It is a more balanced variable. Nonetheless, the most frequent grade is G, representing 12.6% of observations, while the least frequent is J, with 3.4%, indicating that diamonds with a noticeable tint are less common in the dataset.
+
+To avoid categories with very low frequency and to improve stability in the multivariate analysis, the light-tinted grades I and J can be grouped together, as these two grades are consecutive in the GIA color scale and represent similar coloration.
 
 ```{r}
 # Distribution
@@ -461,9 +465,11 @@ barplot(table(diamonds$color), main="Diamond Color")
 
 ### Clarity variable
 
-Clarity variable shows no missing values. It is clearly unbalanced. The diamond clarity distribution is more frequent for the SI1 and VS2 grades, whereas I1 grade only represents 1.4% of the sample. Hence, the sample is composed mostly of slightly-to-very slightly included stones. 
+Clarity variable shows no missing values. It is clearly unbalanced. The diamond clarity distribution is more frequent for the SI1 and VS2 grades. Hence, the sample is composed mostly of slightly-to-very slightly included stones. 
 
-We group IF and VVS1 because they are closer in the clarity scale and we do the same with I1 and SI2.
+Since some clarity levels (particularly I1 and IF) have very low frequencies, the strange categories can be grouped further depending on the results of the multivariate analysis to avoid having categories with extremely few observations.
+
+The grouping should be done by pairing them with their closest neighbouring grades in the GIA clarity scale. Concretely, I1 should be grouped with SI2, and IF with VVS1. This transformation reduces sparsity, preserves the ordinal structure of the variable, and results in more stable and interpretable results.
 
 ```{r}
 # Distribution
@@ -570,7 +576,11 @@ plot.PCA(diamonds.pca, choix = "var", axes = c(1, 2))
 
 The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
 
-The logPrice variable has been treated as a supplementary variable. After performing the initial PCA using all numeric variables, we have found that including price as an active variable could dominate the principal components due to its high variance and strong correlations with the diamond’s physical dimensions. By treating price as supplementary, we can examine how price relates to the main components without affecting their structure. As a result, the extracted components are easier to interpret and focus on the physical properties of the diamonds, while still reflecting their relationship with price.
+The logPrice numeric variable has been considered as a supplementary variable, since it is not a descriptive variable but a result of characteristics given by the numeric and categorical variables.
+
+Including price as an active variable could distort the PCA structure, given its high variance and strong correlations with the physical dimensions of the diamond, and it would make the interpretation of the components less meaningful.
+
+By treating price as a supplementary variable, it is excluded from the calculation of the principal components and only projected onto the factorial space afterwards. This makes it possible to study how price aligns with the main axes without altering their structure. This approach results in a clearer interpretation of the extracted components, focused on the physical properties of the diamonds, while still indicating how these characteristics relate to the final price.
 
 In order to determine the number of components to extract, taking into account that the data is standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted by that dimension. In this case, the first two components (with eigenvalues $4.06$ and $1.26$) are the ones that meet the Kaiser's requirement. Moreover, the cumulative percentage of variance shows that these two components explain $88.65\%$ of the total variance, which indicates that they capture most of the information in the data frame. In addition, the scree plot shows a noticeable elbow after the first component, indicating that retaining two components captures most of the variance while keeping the solution interpretable.
 
@@ -788,19 +798,55 @@ color_clarity$col$cos2
 ```
 ## 2.4. Multiple correspondance analysis
 
-In order to do Multiple Correspondance Analysis using also the numerical variables, these will be converted to binary variables with two categories as “over average” and “below average” for each of them, which will also help with its interpretability.
+When preparing the numerical variables for the Multiple Correspondence Analysis (MCA), most of them were transformed into binary factors (“over average” / “below average”) in order to reduce dimensionality and increase interpretability.
 
-Factor level 'over average' will be defined as 'o', and 'below average' as 'b'.
+However, the variables table and depth were not divided using the median. Instead, both variables were categorized based on gemological criteria, because their interpretation depends on proportion ranges that determine whether a diamond is well-cut or not.
+
+The `table` variable describes the width of the top facet as a percentage of the diamond’s diameter.
+In gemology, there is a clearly defined range considered ideal, typically around 53%–58%, which produces better light performance.
+    - Values within 53–58% → Ideal
+    - Values outside this interval → NotIdeal
+Thus, a two-level factor (“Ideal”, “NotIdeal”) is more coherent and informative.
+
+
+The `depth` variable measures the total depth of the diamond relative to its diameter.
+Unlike table, depth has two different ways of being non-ideal:
+    - Low depth → diamond too shallow (“flat”), light leaks through the pavilion
+    - High depth → diamond too deep, appears small and loses brilliance
+
+Ideal depth lies approximately between 59% and 62.5%
+
+Because both extremes (low and high) represent different types of proportion defects, collapsing the variable into only two categories (“ideal” / “non-ideal”) would lose important information. Therefore, depth is categorized into three levels:
+    - Low (< 59%)
+    - Ideal (59–62.5%)
+    - High (> 62.5%)
+
+This three-group division preserves the geometric meaning of the variable and leads to more interpretable patterns in the MCA.
 
 ```{r}
 dfmca <- diamonds
 nums = names(numeric_vars)
+vars_to_split <- setdiff(nums, c("table", "depth"))
 
-for (var in nums){
+for (var in vars_to_split){
   medianvar = median(dfmca[[var]])
   dfmca[[var]] <- ifelse(dfmca[[var]] >= medianvar, "o", "b") 
   dfmca[[var]] <- as.factor(dfmca[[var]])
 }
+
+# Table
+dfmca$table <- factor(
+  ifelse(dfmca$table >= 53 & dfmca$table <= 58, "Ideal", "NotIdeal")
+)
+
+# Depth
+dfmca$depth <- factor(
+  cut(dfmca$depth,
+      breaks = c(-Inf, 59, 62.5, Inf),
+      labels = c("Low", "Ideal", "High"),
+      right = TRUE)
+)
+
 summary(dfmca)
 ```
 
@@ -817,11 +863,12 @@ tab.disjonctif(dfmca)
 # logPrice used as a supplementary variable
 res.mca <- MCA(dfmca,quali.sup=10)
 summary(res.mca)
+
 ```
 
 In order to choose which dimensions we will work with, one option is to apply the rule of choosing the dimensions with eigenvalues greater than the average inertia of the indicator matrix per dimension.
 
-In this case, as there are 10 variables, J = 10, and the total number of values is K=5+7+8+(7x2)=34, number of dimensions is K-J=24. Therefore, the average inertia is 1/24 (0.04166667), and the dimensions selected would theoretically be until Dim.20.
+In this case, as there are 9 variables, J = 9, and the total number of categories is K=4+6+7+3+(5x2)=30, number of dimensions is K-J=21. Therefore, the average inertia is 1/21 (0.04761905), and the dimensions selected would theoretically be until Dim.17.
 
 Howerver, using the scree plot, we observe a clear elbow around Dimension 2.
 
@@ -830,11 +877,11 @@ After the second dimension, the eigenvalues decrease smoothly and almost linearl
 Therefore, although the theoretical criterion based on average inertia would suggest retaining many more dimensions, the scree plot indicates that the first 2 dimensions concentrate the meaningful information, and the interpretation will be limited to these.
 
 ```{r}
-# K=5+7+8+(7x2)=34
-# no of dimension: K-J=24
-# average inertia per dimension: 1/(K-J)=1/24
+# K=4+6+7+3+(5x2)=30
+# no of dimension: K-J=21
+# average inertia per dimension: 1/(K-J)=1/21
 summary(res.mca, ncp=4)
-# Choose the dimensions with eigenvalues > 1/24 --> Until Dim.20
+# Choose the dimensions with eigenvalues > 1/21 --> Until Dim.17
 
 ### Eigenvalues (scree plot)
 res.mca$eig
@@ -844,19 +891,19 @@ lines(res.mca$eig[,1], type = "o", col = "red", pch = 19, add=T)
 # Choose the dimensions that explain the most variability --> Until Dim.2
 ```
 
-As can be seen in the description of Dimensions, the *most significant variables in each dimension*, which are those represented with the highest value of R2, are: 
+As can be seen in the description of Dimensions, the *most significant variables in each dimension*, which are those represented with the highest value of R2, are the following: 
 
-- For Dimension 1, the variables are `x`, `y`, `z` and `logCarat` as their value of R2 is around 0.9.
-  It is also relevant to note that the supplementary variable `logPrice` is also very significant in this dimension, with a value of R2 of 0.78.
-- For Dimension 2, the variables are `cut` and `table`, as their value of R2 is around 0.69. 
+- For Dimension 1, the variables are `x`, `y`, `z` and `logCarat` all with R² values above 0.90.
+  It is also relevant to note that the supplementary variable `logPrice` is also very significant in this dimension, with a value of R² of 0.79.
+- For Dimension 2, the variables that contribute the most are `cut`, `table`, and `depth`, with R² values of approximately 0.69, 0.42, and 0.38 respectively. 
 
 Also, it is relevant to observe the link between variable and categories to see which are the *most significant categories in each dimension*, which are those represented with the highest absolute value of Estimate.
 
-- Dimension 1: At the category level, the most positively correlated modalities are the “over average” categories of the most significant variables (`x`, `y`, `z` and `logCarat`), which display the highest absolute positive estimates. Conversely, the corresponding “under average” modalities appear on the negative side with the same magnitude but opposite sign. This symmetric structure indicates a clear separation of the observations according to whether their size-related measurements are above or below the average.
+- Dimension 1: The categories most strongly associated with this axis are the “below-average” modalities of the most significant variables (`x`, `y`, `z` and `logCarat`) on the positive side, and their corresponding “over-average” modalities on the negative side. This symmetric pattern indicates that Dimension 1 primarily captures a size gradient, separating smaller stones from larger ones.
 
-- Dimension 2: Among the categories, the “table_o” modality and the Premium cut level show the strongest positive correlation with this dimension. On the opposite side, the “table_b” category and the Ideal cut have large negative estimates, marking the strongest negative associations.
-
-Although it may initially seem counter-intuitive that Premium and Ideal cuts, both generally considered high-quality categories, appear on opposite sides of Dimension 2, this separation does not reflect differences directly in cut quality. This indicates that Premium is more frequently associated with over-average table values, whereas Ideal is more often linked to under-average table values in the dataset. As a result, these two high-quality cuts are positioned far apart—not due to opposite quality levels, but due to contrasting geometric characteristics captured by Dimension 2.
+- Dimension 2: The modalities with the strongest positive association are table_NotIdeal, depth_Low, and cut_Fair/Good.
+On the negative side, the most strongly associated categories are table_Ideal, depth_Ideal, and cut_Ideal.
+This shows that Dimension 2 reflects differences in geometric proportions, contrasting diamonds with non-ideal table and depth values against those with ideal proportions.
 
 
 ```{r}
@@ -870,15 +917,13 @@ dimdesc(res.mca)
 
 For the plots, we will interpret them in the 1st and 2nd dimension, since they are the most significative.
 
-Firstly, we will interpret the *cloud of individuals*. The plot shows both the individuals and the categories represented by the 1st and 2nd dimension.
+Firstly, we will interpret the *cloud of individuals*. The plot shows both the individuals and the categories represented by the 1st and 2nd dimension. In the plot, the following patterns can be observed:
 
--   It is worth noting that there are almost no points in the center of the graph, they are all placed away from the origin.
+The individuals form two clearly separated groups horizontally. This mainly happens because the variables that dominate Dimension 1 were converted into “over” and “below” categories. Since these binary modalities are positioned on opposite sides of the map, the individuals are naturally pulled toward one side or the other depending on whether they fall above or below the median. As a result, almost no points appear near the center, and the two clouds become very visible.
 
--   For the categories, this pattern is due to the transformation of the numerical variables into binary ones, dividing them into “over average” and “below average” categories. Since both categories have similar frequencies, none of them represents a “dominant” or “average” profile. Therefore, both are located in opposite directions.
+Vertically, however, the structure is much softer. The variables contributing to Dimension 2 (cut, table, depth, and partly clarity and color) are not binary, so they do not create two opposing groups. Instead, they spread individuals more gradually, generating a continuous cloud rather than distinct clusters along this axis.
 
--   For the individuals, since each player belongs to either the “over” or “under” group for each variable, the overall profile of individuals is more polarized.
-
--   As a conclusion, binarizing continuous variables helps to highlight contrasts between players’ performances, but at the same time reduces the amount of information in the variables.
+As a whole, the plot shows a strong separation driven by the over/under transformations of the size-related variables, while the multi-level categorical variables introduce smoother variation without forming sharply defined groups.
 
 ```{r}
 ### Clouds ###
@@ -886,11 +931,19 @@ Firstly, we will interpret the *cloud of individuals*. The plot shows both the i
 plot.MCA(res.mca,choix="ind",label="none")
 ```
 
-Then, we will interpret the *cloud of individuals grouped by most significant categories per dimension*. This is done by selecting the variable in the 'habillage' parameter.
+We now interpret the *cloud of individuals using the most significant categories for each dimension*, by selecting the corresponding variable in the habillage parameter. This allows us to visualise how the individuals are distributed across the map according to the categories that contribute the most to each axis.
 
--   For *dimension 1*, the Efficiency `EFF`. The map clearly shows this distinction: in the negative side of the Dim 1 axis, we can see the individuals with an efficiency below average, and in the positive side, those over average.
+-   For *dimension 1*, colouring individuals by `logCarat`. The map clearly shows this distinction: in the negative side of the Dim 1 axis, we can see the individuals with a value of logCarat over average, and in the positive side, those below average.
 
--   For *dimension 2*, it is number of 2pt Field Goal `2PT FG` Although there are a few exceptions, the map also shows this distinction: in the negative side of the Dim 2 axis, we can see the individuals with a value of `2PT FG` below average, and in the positive side, those over average.
+-   For *dimension 2*, grouping individuals by `cut`. The separation is less sharp than for logCarat but some general tendencies can still be observed. Fair/Good and Very Good appear more often in the upper part of the map, while Ideal is mostly concentrated in the lower area.
+
+However, the distribution does not fully follow the expected pattern: Premium and Very Good are quite mixed instead of forming clearly separated groups, unlike Ideal, which shows a much more consistent positioning. This occurs because cut has several levels and interacts with other variables (such as table and depth), which softens the separation along Dimension 2 and produces a more gradual spread of individuals.
+
+Additional view: table (Ideal vs Not Ideal)
+
+Finally, colouring individuals by the table classification shows another soft structure.
+Although the categories are not as strongly separated as logCarat, we can observe that table_NotIdeal tends to appear more in the upper area of the plot, while table_Ideal is more frequent in the lower half.
+Again, this gradient contributes to the vertical spread of individuals but does not create clear clusters.
 
 ```{r}
 ## Cloud of Individuals
@@ -899,45 +952,28 @@ plot.MCA(res.mca,choix="ind",label="none",invisible="var",habillage = "cut")
 plot.MCA(res.mca,choix="ind",label="none",invisible="var",habillage = "table")
 ```
 
-The graph of the active categories is very relevant: the categories of values 'over average' are represented on the positive side of Dim 1, and the ones 'below average' are on the negative side.
+The graph of the active categories is very relevant: the categories of values 'over average' are represented on the positive side of Dim 1, and the ones 'below average' are on the negative side. And dimension 2 shows 'ideal' values on the negative side, and non-ideal ones on the positive.
 
-Considering the total information obtained from the cloud of categories, and also the cloud of variables, the conclusions we draw of the information obtained by the dimensions is the following:
+Considering the total information obtained from the cloud of categories, and also the cloud of variables, the conclusions we draw of the *information obtained by the dimensions* is the following:
 
--   Dimension $1$: Physical Magnitude (and Price Component) Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
+-   Dimension $1$: Physical Magnitude (and Price Component) Dimension $1$ separates diamonds primarily according to their physical scale. Variables such as x, y, z, and logCarat contribute strongly and in the same direction, and logPrice aligns closely as a supplementary variable. This indicates that this axis summarises a general size–value gradient: diamonds with higher coordinates are physically larger and tend to be more expensive, while those on the negative side are smaller, lighter, and typically less valuable
 
--   Dimension $2$: Geometric Balance Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+-   Dimension $2$: Geometric Balance Dimension $2$ is mainly shaped by the categories of table and cut, and depth is also significant. The plot shows a consistent vertical contrast across these three characteristics: the “Ideal” categories appear on the lower side of the axis, while the non-ideal or extreme categories tend to cluster on the upper side.
 
+For table, the “Ideal” modality is located at the bottom, whereas “Not Ideal” appears clearly higher. For cut, the Ideal cut is also positioned in the lower region, while the remaining levels (Fair/Good, Premium, Very Good) lie in the upper half. A similar pattern occurs with depth: both Low and High depth categories are placed on the positive side of Dimension 2, while Ideal depth appears on the negative side.
 
--   *Dimension 1* mainly represents the overall performance level, separating players with “over average” results on the positive side, from those “below average” on the negative side.
+Taken together, these patterns show that Dimension 2 separates diamonds with ideal geometric proportions (Ideal table + Ideal cut + Ideal depth) from those with non-ideal or unbalanced shapes, which tend to be wider, flatter, or too tall relative to the ideal standard.
 
--   *Dimension 2* is more related to the shooting style of the players. Players with above-average values in 2-point field goals (2PT FG) are positioned on the upper side of the axis, together with offensive rebounds (OREB), which makes sense since players who frequently capture offensive rebounds often score from close range, leading to more 2-point shots. These players also tend to have below-average 3-point field goals (3PT FG), which fits with the usual profile of inside players. Conversely, the lower part of the axis shows the opposite pattern — players with higher 3-point shooting and fewer offensive rebounds, typically corresponding to perimeter players.
 
 ```{r}
 ## Cloud of Categories
 plot(res.mca,invisible=c("ind"),title="Graph of the active categories")
-plot(res.mca,invisible=c("ind"),col.var=rep(c("black","red"),15),title="Graph of the active categories")
 
 ## Cloud of variables
 plot(res.mca,choix="var",title="Cloud of variables")
 ```
 
-Additional analysis: Using `position` as a supplementary variable.
-
-This is done in order to check if this variable gives any extra information to the analysis.
-
-As we can see in the analysis, this supplementary variable is mainly focused on the second dimension. Center and forward are on the positive side, while guard is on the negative. The behaviour of these positions corresponds to the interpretation of dimension 2 done previously: players who score more on 2 PT shots and with more offensive rebounds are Center and Forward, and those with more 3 PT shots are the Guards.
-
-```{r}
-# Position used as a supplementary variable
-res.mca <- MCA(dfmca,quali.sup=1)
-
-# Result summaries of MCA
-res.mca$quali.sup
-
-# Graphs of the variables
-plot(res.mca,choix="var",title="Graph of the variables")
-plot(res.mca,invisible=c("ind","var"),hab="quali", title="Graph of the supplementary categories")
-```
+Overall, the MCA highlights which characteristics matter most for differentiating diamonds. Size clearly drives the main separation and is closely aligned with price, whereas geometric balance (Ideal vs. Not Ideal proportions) introduces additional distinctions. In other words, a high-quality cut can enhance a diamond’s value, but it does not compensate for being smaller, and well-balanced proportions tend to strengthen the value of diamonds that are already physically larger.
 
 
 ## 2.5. Clustering and profiling
