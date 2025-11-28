@@ -9,7 +9,13 @@ output:
 geometry: margin=1in
 ---
 
--- MIRAR NO OUTLIER PERO SI QUE NO ESTA MASSA BEN POSADA OBSERVATION EN LA LOGPRICE, X,Y,Z I MIRAR SI ALESHORES PODRIEM APLICAR UN LOG
+- podem usar totes les variables correlacionades en el mca, clustering... o es millor usar per exemple un index ue sorti a partir de la PCA i englobi les variables??
+
+
+- hem d'interpretar tots el clusters al profiling o només el resultant? el problema és que el que millor resultat ens dona es el del pca i aleshores no podriem fer profiling de les categoriques
+
+
+- unificar text + $4$ + $\%$ + ** + treure '' en les variables + "" i - del changpt
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -96,7 +102,7 @@ We observe that no numeric variable has NA or zeros.
 
 After analyzing the carat variable, we observe that it doesn't have severe outliers. The carat variable is right-skewed, with a long tail towards larger values, so is clearly not normally distributed. After using boxcox function, we see that a log transformation is appropriate to improve symmetry and stabilize variance.
 
-Notice that the log transformation does not follow a normal distribution neither. The histogram is clearly not bell-shaped and the QQ-plot has a lot of deviations. As it is expected both the shapiro and kolmogorov test have rejected the normality hypothesis.
+Notice that the log transformation does not follow a normal distribution neither. The histogram is clearly not bell-shaped and the QQ-plot has a lot of deviations. As it is expected both the Shapiro and the Kolmogorov test have rejected the normality hypothesis.
 
 ```{r}
 # Outliers
@@ -145,12 +151,9 @@ ks.test(diamonds$logCarat, "pnorm", mean=mean(diamonds$logCarat), sd=sd(diamonds
 
 ### Depth variable
 
-The depth variable has 2 severe outliers, which we removed. The histogram of the variable shows that the depth variable. Moreover, the QQ-plot almost shows a straight line without major deviations, which suggests that this variable could be considered approximately normal. 
+The depth variable has $2$ severe outliers, which we removed to make the distribution closer to normality. The histogram of the variable shows that the depth variable appears to be bell-shaped. Moreover, the QQ-plot almost shows a straight line without major deviations, which suggests that this variable could be considered approximately normal.
 
-** We observe a long right tail in the histogram, and assessing with the boxplot and the outlier detection, we confirm that they are outliers. We remove them to make the distribution closer to normality.** 
-
-Nonetheless, the shapiro and the kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
-
+Despite the fact that the Shapiro and the Kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis, we have decided to consider the variable to be normally distributed based on the graphical assessment.
 
 ```{r}
 # Outliers
@@ -188,7 +191,9 @@ ks.test(diamonds$depth, "pnorm", mean=mean(diamonds$depth), sd=sd(diamonds$depth
 
 ### Table variable
 
-The variable table contains one severe outlier. After removing it, the distribution becomes almost symmetric with a mild right skewness. Since its shape is already close to normal and a transformation would not provide meaningful improvement, no transformation is applied. The QQ-plot also shows points lying close to a straight line, without major deviations, which further suggests approximate normality. Although the variable is discrete, its wide range of values and its bell-shaped histogram support the assumption that normality may reasonably hold. However, the shapiro kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
+The variable table contains $1$ severe outlier. After removing it, the distribution becomes almost symmetric with a mild right skewness. Since its shape is already close to normal and a transformation would not provide meaningful improvement, no transformation is applied. The QQ-plot also shows points lying close to a straight line, without major deviations, which further suggests approximate normality. Although the variable is discrete, its wide range of values and its bell-shaped histogram support the assumption that normality may reasonably hold.
+
+Despite the fact that the Shapiro and the Kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis, we have decided to consider the variable to be normally distributed based on the graphical assessment.
 
 ```{r}
 # Outliers
@@ -226,7 +231,7 @@ ks.test(diamonds$table, "pnorm", mean=mean(diamonds$table), sd=sd(diamonds$table
 
 ### Price variable
 
-The variable price doesn't have severe outliers, but we can observe a long tail at the right of the boxplot, indicating potential mild outliers. The histogram shows a right skewed distribution, which can be improved by a transformation to reduce its skewness and stabilize variance. Based on the boxcox, it seems like a logarithmic transformation would be suitable. After applying the log transformation, the distribution becomes more symmetric and closer to a bell-shaped form, without being still normal distributed. The QQ-plot suggests that the logarithmic variable is still not normally distributed since many deviations are shown. Morover, the shapiro kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
+The variable price doesn't have severe outliers, but we can observe a long tail at the right of the boxplot, indicating potential mild outliers. The histogram shows a right skewed distribution, which can be improved by a transformation to reduce its skewness and stabilize variance. Based on the boxcox, it seems like a logarithmic transformation would be suitable. After applying the log transformation, the distribution becomes more symmetric and closer to a bell-shaped form, without being still normal distributed. The QQ-plot suggests that the logarithmic variable is still not normally distributed since many deviations are shown. Moreover, the Shapiro and the Kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
 
 ```{r}
 # Outliers
@@ -273,7 +278,7 @@ ks.test(diamonds$logPrice, "pnorm", mean=mean(diamonds$logPrice), sd=sd(diamonds
 
 ### x variable
 
-The x variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
+The x variable does not show any mild nor severe outliers. Nevertheless, the histogram clearly shows that there is one observation with a very low x value compared with the rest. We have attempted to remove this observation, but even after applying a transformation afterward, we have not succeeded in normalizing the variable. For this reason, we have decided to treat the variable in its original form although it clearly does not follow a normal distribution.
 
 ```{r}
 # Outliers
@@ -307,36 +312,10 @@ qqline(diamonds$x)
 shapiro.test(diamonds$x)
 ks.test(diamonds$x, "pnorm", mean=mean(diamonds$x), sd=sd(diamonds$x))
 ```
-ESTA TOT COMENTAT PQ ESPERARE A PREGUNTAR-LI A LA NIHAN SI VAL LA PENA O NO
-
-Although it isn't an outlier, the distribution shows a very low value at the low values of x, which could be the reason why a log transformation isn't considered. We will analize whether removing this observation proves to be benefitial.
-```{r}
-# lowobs <- which(diamonds$x < 4)
-# length(lowobs) # 3/496 observations is less than 1% - we can remove
-# diamonds <- diamonds[-lowobs,] # Remove observation with low value
-# summary(diamonds$x)
-# 
-# b <- boxcox(lm(diamonds$x~1)) # Box-Cox Transformation
-# lambda <- b$x[which.max(b$y)]
-# diamonds$newx <- (diamonds$x ^ lambda - 1) / lambda # lambda = -0.38 (transformation)
-# 
-# # Is newx normally distributed?
-# hist(diamonds$newx, freq = F)
-# m = mean(diamonds$newx)
-# std = sd(diamonds$newx)
-# curve(dnorm(x,m,std),col="red",lwd=2,add=T)
-# 
-# qqnorm(diamonds$newx, main = "newx Q-plot")
-# qqline(diamonds$newx)
-# 
-# shapiro.test(diamonds$newx)
-# ks.test(diamonds$newx, "pnorm", mean=mean(diamonds$newx), sd=sd(diamonds$newx))
-
-```
 
 ### y variable
 
-The y variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
+The y variable does not show any mild nor severe outliers. Nevertheless, the histogram clearly shows that there is one observation with a very low y value compared with the rest. We have attempted to remove this observation, but even after applying a transformation afterward, we have not succeeded in normalizing the variable. For this reason, we have decided to treat the variable in its original form although it clearly does not follow a normal distribution.
 
 ```{r}
 # Outliers
@@ -373,10 +352,7 @@ ks.test(diamonds$y, "pnorm", mean=mean(diamonds$y), sd=sd(diamonds$y))
 
 ### z variable
 
-The y variables does not show any mild nor severe outliers. It's histogram clearly reveals that is not normally distributed.
-
-
-violations of normality at the tails!!!!
+The z variable does not show any mild nor severe outliers. Nevertheless, the histogram clearly shows that there is one observation with a very low z value compared with the rest. We have attempted to remove this observation, but even after applying a transformation afterward, we have not succeeded in normalizing the variable. For this reason, we have decided to treat the variable in its original form although it clearly does not follow a normal distribution.
 
 ```{r}
 # Outliers
@@ -415,7 +391,7 @@ ks.test(diamonds$z, "pnorm", mean=mean(diamonds$z), sd=sd(diamonds$z))
 
 ### Cut variable
 
-Cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for 37.4% of observations, while the Fair level comprising only 1.8% of the observations. These strange categories could be grouped further depending on the results of the multivariate analysis.
+Cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for $37.4\%$ of observations, while the Fair level comprising only $1.8\%$ of the observations. These strange categories could be grouped further depending on the results of the multivariate analysis.
 
 Since Fair and Good are consecutive levels on the standard cut-quality scale and represent similar performance in terms of light return and symmetry, they can be combined into a single category (Fair/Good). This grouping preserves the ordinal logic of the cut grading system while ensuring more balanced frequencies across categories, leading to more robust and interpretable results.
 
@@ -439,7 +415,7 @@ barplot(table(diamonds$cut), main="Diamond Cut Quality")
 
 ### Color variable
 
-Color variable shows no missing values. It is a more balanced variable. Nonetheless, the most frequent grade is G, representing 12.6% of observations, while the least frequent is J, with 3.4%, indicating that diamonds with a noticeable tint are less common in the dataset.
+Color variable shows no missing values. It is a more balanced variable. Nonetheless, the most frequent grade is G, representing $12.6\%$ of observations, while the least frequent is J, with $3.4\%$, indicating that diamonds with a noticeable tint are less common in the dataset.
 
 To avoid categories with very low frequency and to improve stability in the multivariate analysis, the light-tinted grades I and J can be grouped together, as these two grades are consecutive in the GIA color scale and represent similar coloration.
 
@@ -467,9 +443,9 @@ barplot(table(diamonds$color), main="Diamond Color")
 
 Clarity variable shows no missing values. It is clearly unbalanced. The diamond clarity distribution is more frequent for the SI1 and VS2 grades. Hence, the sample is composed mostly of slightly-to-very slightly included stones. 
 
-Since some clarity levels (particularly I1 and IF) have very low frequencies, the strange categories can be grouped further depending on the results of the multivariate analysis to avoid having categories with extremely few observations.
+Since some clarity levels (particularly I1 and IF) have very low frequencies, the strange categories can be grouped to avoid having categories with extremely few observations.
 
-The grouping should be done by pairing them with their closest neighbouring grades in the GIA clarity scale. Concretely, I1 should be grouped with SI2, and IF with VVS1. This transformation reduces sparsity, preserves the ordinal structure of the variable, and results in more stable and interpretable results.
+The grouping should be done by pairing them with their closest neighbouring grades in the GIA clarity scale. Specifically, I1 should be grouped with SI2, and IF with VVS1. This transformation reduces sparsity, preserves the ordinal structure of the variable and results in more stable and interpretable results.
 
 ```{r}
 # Distribution
@@ -501,8 +477,6 @@ In conclusion, we have removed 3 observations and transformed the variables cara
 diamonds <- diamonds[,c(2:6,8:12)]
 ```
 
-### VARAIBLE CREATION????
-
 ## Correlations between numeric variables
 
 The numeric variables are generally highly correlated. The x, y, z, logPrice, and logCarat variables exhibit nearly perfect positive correlations, and their scatter plots form almost straight lines. In fact, the logarithmic transformations of price and carat further increase these correlations.
@@ -510,6 +484,8 @@ The numeric variables are generally highly correlated. The x, y, z, logPrice, an
 In contrast, the depth and table variables show weak correlations with the other variables, with depth being the only variable negatively correlated with all the others. Their scatter plots display a cloud of points without a clear pattern, although table and depth appear slightly negatively correlated.
 
 As expected, the Bartlett test returns a very low p-value, rejecting the null hypothesis that the correlation matrix is equal to the identity matrix.
+
+It is important to note that the correlations of the whole population and of the randomly generated sample are very similar, so no misleading conclusions are drawn from using the sample instead of the full dataset.
 
 ```{r}
 numeric_vars <- diamonds[ , sapply(diamonds, is.numeric)]
@@ -550,37 +526,11 @@ kmo(numeric_vars)
 
 ## 2.1. Principal components analysis
 
-We have decided to take price as a suplementary variable since the results are more interpretable. However, the initial PCA is included.
-
-```{r}
-diamonds.pca <- PCA(numeric_vars, graph = T)
-
-barplot(diamonds.pca$eig[,1], names.arg = 1:7, main = "Scree Plot", xlab = "Dimension", ylab = "Eigenvalue", col = "blue")
-lines(diamonds.pca$eig[,1], type = "o", col = "red", pch = 19, add=T)
-
-diamonds.pca$eig
-```
-
-
-```{r}
-corrplot(diamonds.pca$var$coord)
-diamonds.pca$var$cos2
-diamonds.pca$var$contrib
-
-diamonds.pca$var$coord
-
-plot.PCA(diamonds.pca, choix = "var", axes = c(1, 2))
-```
-
-## PCA SUPLEMENTARY
-
 The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
 
-The logPrice numeric variable has been considered as a supplementary variable, since it is not a descriptive variable but a result of characteristics given by the numeric and categorical variables.
+The objective of this method is to construct an index that summarizes the numerical characteristics of the diamonds (logCarat, x, y, z, depth, and table), with the aim of reducing the dimensionality of the dataset and generating an indicator that can be related to the diamond’s price. Therefore, the logPrice numeric variable has been considered as a supplementary variable. Moreover, the PCA scores can be used to interpret the MDS and clustering results.
 
-Including price as an active variable could distort the PCA structure, given its high variance and strong correlations with the physical dimensions of the diamond, and it would make the interpretation of the components less meaningful.
-
-By treating price as a supplementary variable, it is excluded from the calculation of the principal components and only projected onto the factorial space afterwards. This makes it possible to study how price aligns with the main axes without altering their structure. This approach results in a clearer interpretation of the extracted components, focused on the physical properties of the diamonds, while still indicating how these characteristics relate to the final price.
+By treating price as a supplementary variable, it is excluded from the calculation of the principal components and only projected onto the factorial space afterwards. This makes it possible to study how price aligns with the main axes without altering their structure.
 
 In order to determine the number of components to extract, taking into account that the data is standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted by that dimension. In this case, the first two components (with eigenvalues $4.06$ and $1.26$) are the ones that meet the Kaiser's requirement. Moreover, the cumulative percentage of variance shows that these two components explain $88.65\%$ of the total variance, which indicates that they capture most of the information in the data frame. In addition, the scree plot shows a noticeable elbow after the first component, indicating that retaining two components captures most of the variance while keeping the solution interpretable.
 
@@ -611,12 +561,15 @@ diamonds.pca.sup$var$coord
 plot.PCA(diamonds.pca.sup, choix = "var", axes = c(1, 2))
 ```
 
-Although an individual assessment of the dataset has not provided much additional information, it is important to note that some observations fall far from the main cloud of points. For instance, the diamonds labeled 270 and 380 are clear outliers in dimension two, corresponding to a shallow or flattened diamond and a pointed diamond, respectively. Conversely, the diamond labeled 365 is a clear outlier in dimension one, suggesting that it is larger, heavier, and more valuable.
+Although an individual assessment of the dataset has not provided much additional information, it is important to note that some observations fall far from the main cloud of points. For instance, the diamonds labeled $270$ and $380$ are clear outliers in dimension two, corresponding to a shallow or flattened diamond and a pointed diamond, respectively. Conversely, the diamond labeled 365 is a clear outlier in dimension one, suggesting that it is larger, heavier, and more valuable.
 
 ```{r}
-
 plot.PCA(diamonds.pca.sup, choix = "ind", axes = c(1, 2))
 ```
+
+TO DO CONCLUSIONS
+
+
 ## 2.2. Multidimensional scaling
 
 The Euclidean distance matrix, based on the scaled numerical variables, has been computed using the \emph{dist()} function. Using this matrix, the \emph{cmdscale()} function has been applied. 
@@ -707,17 +660,21 @@ legend("bottomleft",
        cex=0.8)
 ```
 
-## 2.3. Correspondance analysis
-We apply CA only to the original categorical variables (cut, color, clarity), we will analyze this pairwisely: cut x color, cut x clarity, color x clarity.
+## 2.3. Correspondence analysis
 
-In MCA, we include the numerical variables by binarizing them, but we do not run CA on these binary variables because MCA already captures their relationships and CA would not add useful information.
+The CA analysis has been applied using the the original categorical variables (cut, color, clarity) by analyzing them pairwisely. We have applied the \emph{CA()} function from the \emph{FactoMineR} library.
+
+The objective of this method is to identify associations between the different categorical variables in order to determine which levels tend to appear together in the observations. Due to the nature of the categorical variables in this dataset, it is possible to apply CA. Although we will later apply MCA to examine the common relationships among all categorical variables, we considered it useful to first perform a simpler pairwise analysis. This initial step allows us to use the results to facilitate the interpretation of the subsequent MCA.
 
 ### Cut x color
+
+to do individual conclusions !!!!!
+
 There's 4 dimensions because dim = min(5−1, 7−1).
 
 The first two dimensions explain 58.70% + 38.02% = 96.72% of the association between cut and color. This means that the two-dimensional map provides a really good summary of the relationship between the two variables.
 
-Dimension 1 separates two main groups of cut–color combinations. On the left, Premium cut appears close to G and I/J, suggesting that these colors occur slightly more often with Premium cut than expected from the overall distribution. On the right, Fair/Good cut appears near D, indicating a stronger than average association between these categories.
+Dimension 1 separates two main groups of cut-color combinations. On the left, Premium cut appears close to G and I/J, suggesting that these colors occur slightly more often with Premium cut than expected from the overall distribution. On the right, Fair/Good cut appears near D, indicating a stronger than average association between these categories.
 
 Dimension 2 distinguishes Ideal from Very Good cuts. Ideal lies in the upper part of the map, near D, F, and I/J, indicating slight deviations from the average pattern in this direction. Very Good is in the lower part, close to E and H.
 These categories contribute more strongly to Dimension 2, while other groups that lie closer to the center follow the average distribution more closely.
@@ -774,7 +731,7 @@ There's 6 dimensions because dim = min(7−1, 8−1).
 
 With 2 dimensions we explain 52.15% + 28.18% = 80.33% of the association between color and clarity, meaning that the 2-dimensional map captures most of the relationship between the two variables.
 
-In this map, clarity groups such as SI1 and I1/SI2, as well as color groups D and I/J, appear close to the origin. This indicates that these categories follow the general pattern in the data and do not show particularly distinctive color–clarity combinations.
+In this map, clarity groups such as SI1 and I1/SI2, as well as color groups D and I/J, appear close to the origin. This indicates that these categories follow the general pattern in the data and do not show particularly distinctive color-clarity combinations.
 
 In contrast, categories positioned farther from the center have more pronounced deviations from the average profile. For example, IF/VVS1 and VS1 lie on the right-hand side near color G, suggesting that high-clarity stones appear with G more often than expected from the overall distribution. Similarly, VVS2 is located toward the upper left near color E, indicating that this clarity group is unusually associated with E relative to the mean pattern.
 
@@ -796,29 +753,32 @@ color_clarity$col$coord
 color_clarity$col$contrib
 color_clarity$col$cos2
 ```
-## 2.4. Multiple correspondance analysis
+## 2.4. Multiple correspondence analysis
 
-When preparing the numerical variables for the Multiple Correspondence Analysis (MCA), most of them were transformed into binary factors (“over average” / “below average”) in order to reduce dimensionality and increase interpretability.
+POSAR BIBLIOGRAFIA
 
-However, the variables table and depth were not divided using the median. Instead, both variables were categorized based on gemological criteria, because their interpretation depends on proportion ranges that determine whether a diamond is well-cut or not.
+The MCA analysis has been applied using the the original categorical variables and the categorized numerical variables. We have applied the \emph{MCA()} function from the \emph{FactoMineR} library.
 
-The `table` variable describes the width of the top facet as a percentage of the diamond’s diameter.
-In gemology, there is a clearly defined range considered ideal, typically around 53%–58%, which produces better light performance.
-    - Values within 53–58% → Ideal
-    - Values outside this interval → NotIdeal
-Thus, a two-level factor (“Ideal”, “NotIdeal”) is more coherent and informative.
+The objective of this method is to identify global patterns, associations, and similarities among the categories of different variables. Using this approach, we perform a more comprehensive analysis of the results obtained from CA. In addition, the numeric variables have been prepared to be included in the method in a categorized form, allowing us to observe patterns between both numeric and categorical variables. It is important to note that several strategies were tested to categorize the numeric variables, and the best results are those presented in this report. Moreover, the nature of each variable has been taken into account when defining the different categories.
+
+Most of the numerical variables have been transformed into binary factors ("above average" / "below average") to reduce dimensionality and enhance interpretability. However, the table and depth variables have not been dichotomized using the median. Instead, both variables have been categorized based on gemological criteria, as their interpretation depends on proportion ranges that determine whether a diamond is well-cut.
+
+The table variable is defined as the width of the top surface expressed as a percentage of the diamond’s diameter. In gemology, there is a clearly defined range considered ideal, typically around $53-58\%$, which produces better light performance:
+    - Values within $53-58\%$: Ideal
+    - Values outside this interval: NotIdeal
+Thus, a two-level factor ("Ideal", "NotIdeal") is more coherent and informative.
 
 
-The `depth` variable measures the total depth of the diamond relative to its diameter.
+The depth variable measures the total depth of the diamond relative to its diameter.
 Unlike table, depth has two different ways of being non-ideal:
-    - Low depth → diamond too shallow (“flat”), light leaks through the pavilion
-    - High depth → diamond too deep, appears small and loses brilliance
+    - Low depth: diamond too shallow ("flat"), light leaks through the pavilion
+    - High depth: diamond too deep, appears small and loses brilliance
 
 Ideal depth lies approximately between 59% and 62.5%
 
-Because both extremes (low and high) represent different types of proportion defects, collapsing the variable into only two categories (“ideal” / “non-ideal”) would lose important information. Therefore, depth is categorized into three levels:
+Because both extremes (low and high) represent different types of proportion defects, collapsing the variable into only two categories ("ideal" / "non-ideal") would lose important information. Therefore, depth is categorized into three levels:
     - Low (< 59%)
-    - Ideal (59–62.5%)
+    - Ideal (59-62.5%)
     - High (> 62.5%)
 
 This three-group division preserves the geometric meaning of the variable and leads to more interpretable patterns in the MCA.
@@ -863,12 +823,11 @@ tab.disjonctif(dfmca)
 # logPrice used as a supplementary variable
 res.mca <- MCA(dfmca,quali.sup=10)
 summary(res.mca)
-
 ```
 
 In order to choose which dimensions we will work with, one option is to apply the rule of choosing the dimensions with eigenvalues greater than the average inertia of the indicator matrix per dimension.
 
-In this case, as there are 9 variables, J = 9, and the total number of categories is K=4+6+7+3+(5x2)=30, number of dimensions is K-J=21. Therefore, the average inertia is 1/21 (0.04761905), and the dimensions selected would theoretically be until Dim.17.
+In this case, as there are 9 variables, J = 9, and the total number of categories is K=4+6+7+3+(5x2)=30, number of dimensions is K-J=21. Therefore, the average inertia is 1/21 (0.04761905), and the dimensions selected would theoretically be until Dimension 17.
 
 Howerver, using the scree plot, we observe a clear elbow around Dimension 2.
 
@@ -891,15 +850,15 @@ lines(res.mca$eig[,1], type = "o", col = "red", pch = 19, add=T)
 # Choose the dimensions that explain the most variability --> Until Dim.2
 ```
 
-As can be seen in the description of Dimensions, the *most significant variables in each dimension*, which are those represented with the highest value of R2, are the following: 
+As can be seen in the description of Dimensions, the \textbf{most significant variables in each dimension}, which are those represented with the highest value of R2, are the following: 
 
 - For Dimension 1, the variables are `x`, `y`, `z` and `logCarat` all with R² values above 0.90.
   It is also relevant to note that the supplementary variable `logPrice` is also very significant in this dimension, with a value of R² of 0.79.
-- For Dimension 2, the variables that contribute the most are `cut`, `table`, and `depth`, with R² values of approximately 0.69, 0.42, and 0.38 respectively. 
+- For Dimension 2, the variables that contribute the most are `cut`, `table`, and `depth`, with $R^2$ values of approximately 0.69, 0.42, and 0.38 respectively. 
 
 Also, it is relevant to observe the link between variable and categories to see which are the *most significant categories in each dimension*, which are those represented with the highest absolute value of Estimate.
 
-- Dimension 1: The categories most strongly associated with this axis are the “below-average” modalities of the most significant variables (`x`, `y`, `z` and `logCarat`) on the positive side, and their corresponding “over-average” modalities on the negative side. This symmetric pattern indicates that Dimension 1 primarily captures a size gradient, separating smaller stones from larger ones.
+- Dimension 1: The categories most strongly associated with this axis are the "below-average" modalities of the most significant variables (`x`, `y`, `z` and `logCarat`) on the positive side, and their corresponding "over-average" modalities on the negative side. This symmetric pattern indicates that Dimension 1 primarily captures a size gradient, separating smaller stones from larger ones.
 
 - Dimension 2: The modalities with the strongest positive association are table_NotIdeal, depth_Low, and cut_Fair/Good.
 On the negative side, the most strongly associated categories are table_Ideal, depth_Ideal, and cut_Ideal.
@@ -907,7 +866,6 @@ This shows that Dimension 2 reflects differences in geometric proportions, contr
 
 
 ```{r}
-
 ## Coordinates of categories
 res.mca$var$coord
 
@@ -919,7 +877,7 @@ For the plots, we will interpret them in the 1st and 2nd dimension, since they a
 
 Firstly, we will interpret the *cloud of individuals*. The plot shows both the individuals and the categories represented by the 1st and 2nd dimension. In the plot, the following patterns can be observed:
 
-The individuals form two clearly separated groups horizontally. This mainly happens because the variables that dominate Dimension 1 were converted into “over” and “below” categories. Since these binary modalities are positioned on opposite sides of the map, the individuals are naturally pulled toward one side or the other depending on whether they fall above or below the median. As a result, almost no points appear near the center, and the two clouds become very visible.
+The individuals form two clearly separated groups horizontally. This mainly happens because the variables that dominate Dimension 1 were converted into "over” and “below” categories. Since these binary modalities are positioned on opposite sides of the map, the individuals are naturally pulled toward one side or the other depending on whether they fall above or below the median. As a result, almost no points appear near the center, and the two clouds become very visible.
 
 Vertically, however, the structure is much softer. The variables contributing to Dimension 2 (cut, table, depth, and partly clarity and color) are not binary, so they do not create two opposing groups. Instead, they spread individuals more gradually, generating a continuous cloud rather than distinct clusters along this axis.
 
@@ -956,7 +914,7 @@ The graph of the active categories is very relevant: the categories of values 'o
 
 Considering the total information obtained from the cloud of categories, and also the cloud of variables, the conclusions we draw of the *information obtained by the dimensions* is the following:
 
--   Dimension $1$: Physical Magnitude (and Price Component) Dimension $1$ separates diamonds primarily according to their physical scale. Variables such as x, y, z, and logCarat contribute strongly and in the same direction, and logPrice aligns closely as a supplementary variable. This indicates that this axis summarises a general size–value gradient: diamonds with higher coordinates are physically larger and tend to be more expensive, while those on the negative side are smaller, lighter, and typically less valuable
+-   Dimension $1$: Physical Magnitude (and Price Component) Dimension $1$ separates diamonds primarily according to their physical scale. Variables such as x, y, z, and logCarat contribute strongly and in the same direction, and logPrice aligns closely as a supplementary variable. This indicates that this axis summarises a general size-value gradient: diamonds with higher coordinates are physically larger and tend to be more expensive, while those on the negative side are smaller, lighter, and typically less valuable
 
 -   Dimension $2$: Geometric Balance Dimension $2$ is mainly shaped by the categories of table and cut, and depth is also significant. The plot shows a consistent vertical contrast across these three characteristics: the “Ideal” categories appear on the lower side of the axis, while the non-ideal or extreme categories tend to cluster on the upper side.
 
@@ -974,7 +932,6 @@ plot(res.mca,choix="var",title="Cloud of variables")
 ```
 
 Overall, the MCA highlights which characteristics matter most for differentiating diamonds. Size clearly drives the main separation and is closely aligned with price, whereas geometric balance (Ideal vs. Not Ideal proportions) introduces additional distinctions. In other words, a high-quality cut can enhance a diamond’s value, but it does not compensate for being smaller, and well-balanced proportions tend to strengthen the value of diamonds that are already physically larger.
-
 
 ## 2.5. Clustering and profiling
 
@@ -1113,7 +1070,7 @@ plot(si)
 # k=6
 si <- silhouette(k6$cluster, d)
 plot(si)
-# 497 obs, we divide them to 6 clusters, we look for the max silhouette index: 5th cluster
+# 497 obs, we divide them to 6 clusters, we look for the max silhouette index: 3rd cluster
 
 
 ## B) Silhouette function from kmed library
@@ -1134,19 +1091,19 @@ silhouette$plot
 # k=4 higher silhouette value
 ```
 
-**Conclusion:** Overall, the three criteria do not point to the same value of k, but they do suggest a consistent tendency. The Elbow method shows a clear bend around four clusters, the Pseudo-F index does not provide useful guidance, and the Silhouette index indicates that three or four clusters offer the best structure. Thus, **four clusters** appear to be the most balanced and interpretable solution, and this value will be used for the next steps of the analysis.
+To sum up, the three criteria do not point to the same value of k, but they do suggest a consistent tendency. The Elbow method shows a clear bend around four clusters, the Pseudo-F index does not provide useful guidance, and the Silhouette index indicates that three or four clusters offer the best structure. Thus, \textbf{four clusters} appear to be the most balanced and interpretable solution, and this value will be used for the next steps of the analysis.
 
-#### Clustering based on Principal Components
+#### PCA-based clustering
 
 The Hierarchical Clustering on Principal Components (HCPC) method is applied to the scores obtained from the previously computed PCA. This approach combines dimensionality reduction and clustering by performing Ward’s hierarchical clustering on the principal component scores, which reduces the influence of noise and correlation between variables.
 
-The \emph{HCPC()} function is used with an automatic selection of the number of clusters, which results in a partition into 3 clusters.
+The \emph{HCPC()} function is used with an automatic selection of the number of clusters, which results in a partition into $3$ clusters.
 
-From the factor map, the 3 clusters are projected onto the first two principal components, which together explain more than 80% of the total variance. Cluster 1 is mainly located on the left side of the first dimension, which is associated with smaller physical measurements of the diamonds. Cluster 2 occupies an intermediate region, while Cluster 3 is positioned towards the positive side of the first component, corresponding to larger diamond sizes.
+From the factor map, the 3 clusters are projected onto the first two principal components, which together explain more than $80\%$ of the total variance. Cluster 1 is mainly located on the left side of the first dimension, which is associated with smaller physical measurements of the diamonds. Cluster 2 occupies an intermediate region, while Cluster 3 is positioned towards the positive side of the first component, corresponding to larger diamond sizes.
 
 ```{r}
 # HCPC applied to the previously computed PCA
-res.hcpc <- HCPC(diamonds.pca, -1) # automatic cut: 3 clusters
+res.hcpc <- HCPC(diamonds.pca.sup, -1) # automatic cut: 3 clusters
 
 # Dendrogram visualization
 library(factoextra)
@@ -1168,7 +1125,7 @@ Based on the cluster distribution on the PCA factor map and the interpretation o
 
 ```{r}
 # HCPC applied to the previously computed PCA
-res.hcpc <- HCPC(diamonds.pca, nb.clust = 4) # 4 clusters
+res.hcpc <- HCPC(diamonds.pca.sup, nb.clust = 4) # 4 clusters
 
 # Dendrogram visualization
 fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE)
@@ -1181,39 +1138,7 @@ fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE,
 
 ### B) Cluster analysis: numerical and categorical variables
 
-Before performing the clustering analysis that incorporates both numerical and categorical variables, it is important to consider the distribution of the categorical levels. Initially, the clustering is applied using the original categories; however, several levels contain very few observations, which may introduce instability and lead to clusters driven by marginal or unrepresentative cases. For this reason, grouping levels with similar qualitative meaning and low frequency can be a useful strategy to obtain more balanced and consistent clusters.
-
-```{r}
-dfclust <- diamonds
-
-# Cut variable: group Fair and Good in one group 
-dfclust$cut <- ifelse(dfclust$cut %in% c("Fair", "Good"), "Fair/Good", as.character(dfclust$cut))
-
-dfclust$cut <- factor(
-  dfclust$cut,
-  levels = c("Fair/Good", "Ideal", "Premium", "Very Good"))
-
-barplot(table(dfclust$cut), main="Diamond Cut Quality")
-
-# Color variable: group I and J in one group 
-dfclust$color <- ifelse(dfclust$color %in% c("I", "J"), "I/J", as.character(dfclust$color))
-
-dfclust$color <- factor(
-  dfclust$color,
-  levels = c("D", "E", "F", "G", "H", "I/J"))
-
-barplot(table(dfclust$color), main="Diamond Color")
-
-# Clarity variable: group I1 and IF in one group
-dfclust$clarity <- ifelse(dfclust$clarity %in% c("I1", "IF"), "I1/IF", as.character(dfclust$clarity))
-
-dfclust$clarity <- factor(
-  dfclust$clarity,
-  levels = c("I1/IF", "SI1", "SI2", "VS1", "VS2", "VVS1", "VVS2"))
-
-barplot(table(dfclust$clarity), main="Diamond Clarity")
-```
-#### Factor Analysis for Mixed Data
+#### FAMD-based clustering 
 The clustering analysis that includes both numerical and categorical variables is performed through a Factor Analysis of Mixed Data (FAMD), which provides a joint low-dimensional space where continuous and categorical variables contribute to the definition of the principal axes.
 
 !!!!!! Relacionar amb PCA i MCA (quan s'acabi mirar bé)
@@ -1228,12 +1153,9 @@ Dimension 3 (6.15% of variance) is mainly driven by categorical variables, espec
 
 ```{r}
 # Factor Analysis for Mixed Data
-res <- FAMD(dfclust)
+res <- FAMD(diamonds)
 summary(res)
 ```
-
-#### Hierarchical Clustering on FAMD scores
-
 The hierarchical clustering is applied to the individual scores obtained from the FAMD. Using the \emph{HCPC()} function with the automatic cut, the algorithm has selected a three-cluster solution. The separation observed in the factor map is primarily driven by Dimension 1:
 -   **Cluster 1** (black) groups observations with negative coordinates on this dimension, corresponding to smaller diamonds and categories associated with higher quality grades (Ideal cut, better colour). 
 -   **Cluster 2** (red) occupies an intermediate position and presents internal heterogeneity, both in terms of size and categorical composition, which makes the partition less balanced.
@@ -1259,9 +1181,44 @@ fviz_dend(hc_famd, rect = TRUE, rect_fill = TRUE)
 fviz_cluster(hc_famd, repel = TRUE, show.clust.cent = TRUE, main = "Factor map")
 ```
 
+#### MCA-based clustering
+
+The Hierarchical Clustering on Principal Components (HCPC) method is also applied to the individual scores obtained from the MCA. As in the PCA case, this approach performs Ward’s hierarchical clustering on the low-dimensional representation provided by the MCA, so that the clusters reflect the joint structure of the categorical transformations of the numeric variables (over/under average) and the proportion-based factors (table and depth).
+
+Using the \emph{HCPC()} function is used with an automatic cut leads to a six-cluster solution. However, the factor map shows that these six groups are largely overlapping and mainly separated along Dimension 1, which reflects the size gradient introduced by the over/under transformations of the numerical variables. Dimension 2, linked to geometric proportions (Ideal vs. NotIdeal table and depth, and cut), adds some vertical dispersion, but the clusters remain close to each other and difficult to distinguish.
+
+```{r}
+# HCPC applied to the previously computed MCA
+hc_mca <- HCPC(res.mca, -1) # automatic cut: 6 clusters
+
+# Dendrogram visualization
+library(factoextra)
+fviz_dend(hc_mca, rect = TRUE, rect_fill = TRUE)
+
+# Cluster visualization on the PCA factor map
+fviz_cluster(hc_mca, repel = TRUE, show.clust.cent = TRUE,
+             main = "Clusters on MCA Factor Map")
+```
+
+Although the automatic HCPC cut suggests a 6-cluster partition, the factor map and the dendrogram reveal that a 4-cluster solution is more balanced and more interpretable. 
+
+Based on the cluster distribution on the MCA factor map, the characteristics of each group can be summarised as follows: !!!!!!!!!!!
+
+```{r}
+# HCPC applied to the previously computed MCA
+hc_mca <- HCPC(res.mca, nb.clust = 4) # 4 clusters
+
+# Dendrogram visualization
+fviz_dend(hc_mca, rect = TRUE, rect_fill = TRUE)
+
+# Cluster visualization on the PCA factor map
+fviz_cluster(hc_mca, repel = TRUE, show.clust.cent = TRUE,
+             main = "Clusters on PCA Factor Map")
+```
+
 ### Profiling
 
-#### Profiling of the HCPC clysters on PCA scores
+#### Profiling based on PCA scores
 
 The HCPC performed on the PCA scores allows us to characterise the clusters according to the structure captured by the two principal components. Since Dimension 1 reflects the overall physical magnitude–price axis, and Dimension 2 captures the geometric balance between deep and flat diamonds, the clusters can be interpreted in terms of size, price and shape.
 
