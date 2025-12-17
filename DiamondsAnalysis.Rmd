@@ -474,6 +474,7 @@ barplot(table(diamonds$clarity), main="Diamond Clarity")
 In conclusion, we have removed 3 observations and transformed the variables carat and price with a logarithmic transformation for a better interpretation. Hence, the dataframe we will work with is:
 
 ```{r}
+diamondsOg <- diamonds[,c(1:10)]
 diamonds <- diamonds[,c(2:6,8:12)]
 ```
 
@@ -943,11 +944,11 @@ First, clustering is applied using only the numerical variables, combining hiera
 
 #### Hierarchical clustering
 
-The hierarchical clustering analysis is performed on the numerical variables after standardising them with the \emph{scale()} function. This ensures that all variables contribute equally to the computation of distances. An Euclidean distance matrix is then obtained using the \emph{dist()} function applied to the scaled dataset.
+The hierarchical clustering analysis is performed on the numerical variables after standardising them with the \emph{scale()} function. An Euclidean distance matrix is then obtained using the \emph{dist()} function applied to the scaled dataset.
 
 The clustering structure is produced with the \emph{hclust()} function, and two linkage criteria are considered in order to compare their performance. First, the **complete linkage method** is computed, which defines the distance between clusters based on the maximum distance between their observations. Second, the **Ward’s method** is used, which is based on minimising the within-cluster sum of squared errors (SSE).
 
-The resulting dendrograms allow a first inspection of the potential number of clusters. Using the \emph{rect.hclust()} function, possible partitions into 4, 5 and 6 clusters are highlighted. As observed in the figures, the Ward method provides a clearer and more compact separation between groups than the complete linkage method, suggesting that it offers a more interpretable clustering solution.
+The resulting dendrograms allow a first inspection of the potential number of clusters. Using the \emph{rect.hclust()} function, possible partitions into 4, 5 and 6 clusters are highlighted. As observed in the figures, the Ward method provides a clearer and more compact separation between groups than the complete linkage method, suggesting that it offers a more interpretable clustering solution. Based on the Ward dendrogram, a solution with $4$ clusters appears to be the most appropriate, as it captures the main structure of the data before a major increase in fusion height.
 
 ```{r}
 ## Scale numerical data
@@ -980,7 +981,7 @@ rect.hclust(fit2, k=4, border="green")  # 4 clusters
 rect.hclust(fit2, k=5, border="purple") # 5 clusters
 rect.hclust(fit2, k=6, border="orange") # 6 clusters
 
-legend("topright",
+legend("topright", 
        legend = c("4 clusters", "5 clusters", "6 clusters"),
        col = c("green", "purple", "orange"),
        lwd = 2,
@@ -1003,12 +1004,12 @@ The ratio between the between-cluster sum of squares and the total sum of square
 ```{r}
 ## Applying k-means algorithm for different number of clusters 
 aux <- c()
-for (i in 2:7){
+for (i in 2:10){
   k <- kmeans(dfscaled, centers=i, nstart=25)
   aux[i-1] <- k$tot.withinss 
 }
-plot(2:7, aux, xlab="Number of Clusters", ylab="TWSS", type="l", main="TWSS vs. number of clusters")
-# Optimum point: k=4
+plot(2:10, aux, xlab="Number of Clusters", ylab="TWSS", type="l", main="TWSS vs. number of clusters")
+points(4, aux[4 - 1], pch = 19, cex = 1.5, col = "red") # Optimum point: k=4
 
 # k=4
 k4 <- kmeans(dfscaled, centers = 4, nstart = 25) # 4 number of clusters 
@@ -1037,7 +1038,7 @@ k6$betweenss/k6$totss
 
 The **Pseudo-F Index** has been computed for different values of k in order to evaluate the separation between clusters obtained with k-means. This index is based on the ratio between the between-cluster sum of squares (BSS) and the within-cluster sum of squares (WSS).
 
-In this case the index decreases steadily as k increases, with the highest value appearing at $k=2$. Nevertheless, selecting two clusters does not provide a meaningful segmentation of the dataset, and it contradicts the structure suggested by the dendrogram and the TWSS Elbow method.
+In this case the index decreases steadily as k increases, with the highest value appearing at $k=2$. Nevertheless, selecting two clusters does not provide a meaningful segmentation of the dataset and it contradicts the structure suggested by the dendrogram and the TWSS Elbow method.
 
 ```{r}
 # Pseudo F index = BSS*(n-k)/WSS*(k-1)
@@ -1047,6 +1048,7 @@ for (i in 2:20){
   aux[i-1] <- ((k$betweenss)*(nrow(dfscaled)-i))/((k$tot.withinss)*(i-1))
 }
 plot(2:20, aux, xlab="Number of Clusters", ylab="Pseudo-F", type="l", main="Pseudo F Index")
+points(2, aux[2-1], pch = 19, cex = 1.5, col = "red")
 # max Pseudo F --> 2 clusters
 ```
 
@@ -1054,7 +1056,7 @@ plot(2:20, aux, xlab="Number of Clusters", ylab="Pseudo-F", type="l", main="Pseu
 
 Finally, the **Silhouette Index** is computed. For each observation, this value compares the average distance to points within its own cluster with the average distance to points in the nearest alternative cluster.
 
-Using the \emph{silhouette()} function from the \emph{cluster} package, the average silhouette widths obtained for $k=4$ and $k=6$ are $0.36$ and $0.28$, respectively. The four-cluster solution shows higher overall cohesion, with two clusters (notably cluster 2) presenting silhouette values above $0.40$, whereas the six-cluster solution contains multiple clusters with silhouette widths below $0.25$, indicating weaker separation.
+Using the \emph{silhouette()} function from the \emph{cluster} package, the average silhouette widths obtained for $k=4$ and $k=6$ are $0.36$ and $0.28$, respectively. The four-cluster solution shows higher overall cohesion, whereas the six-cluster solution contains multiple clusters with silhouette widths below $0.25$, indicating weaker separation.
 
 The silhouette index is also computed using the \emph{fastkmed()} function from the \emph{kmed} package. This approach confirms the same trend: for a range of cluster solutions, the highest silhouette values are obtained for three or four clusters, whereas the performance decreases for higher values of k. The four-cluster solution achieves a good balance between separation and stability.
 
@@ -1092,6 +1094,27 @@ silhouette$plot
 ```
 
 To sum up, the three criteria do not point to the same value of k, but they do suggest a consistent tendency. The Elbow method shows a clear bend around four clusters, the Pseudo-F index does not provide useful guidance, and the Silhouette index indicates that three or four clusters offer the best structure. Thus, \textbf{four clusters} appear to be the most balanced and interpretable solution, and this value will be used for the next steps of the analysis.
+
+#### k-means clustering using the optimal number of clusters
+
+ss
+
+```{r}
+# Apply k-means with the selected number of clusters
+k4 <- kmeans(dfscaled, centers = 4, nstart = 25)
+dfClust <- diamondsOg[, -c(2:4)]
+# Add cluster label to original unscaled data
+dfClust$Cluster <- as.factor(k4$cluster)
+
+# Descriptive statistics per cluster
+cluster_summary <- dfClust[, -1] %>%
+  group_by(Cluster) %>%
+  summarise(across(everything(), mean, na.rm = TRUE))
+cluster_summary
+
+# Clusters based on factor cut
+#table(dfClust$Cluster, dfClust$cut)
+```
 
 #### PCA-based clustering
 
