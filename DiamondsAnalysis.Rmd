@@ -940,9 +940,7 @@ In this section, a clustering analysis is performed with the objective of identi
 
 First, clustering is applied using only the numerical variables, combining hierarchical and non-hierarchical methods, as well as clustering based on the principal component scores. Second, clustering of numerical and categorical variables is conducted to obtain a more comprehensive segmentation of the data.
 
-### A) Cluster analysis: numerical variables
-
-#### Hierarchical clustering
+### 2.5.1. Hierarchical clustering
 
 The hierarchical clustering analysis is performed on the numerical variables after standardising them with the \emph{scale()} function. An Euclidean distance matrix is then obtained using the \emph{dist()} function applied to the scaled dataset.
 
@@ -977,23 +975,24 @@ fit2 <- hclust(d, method="ward.D2")
 plot(fit2, main="Dendrogram of Ward Method") 
 # 4 clusters/5 clusters
 
+rect.hclust(fit2, k=3, border="brown")  # 3 clusters
 rect.hclust(fit2, k=4, border="green")  # 4 clusters
 rect.hclust(fit2, k=5, border="purple") # 5 clusters
 rect.hclust(fit2, k=6, border="orange") # 6 clusters
 
 legend("topright", 
-       legend = c("4 clusters", "5 clusters", "6 clusters"),
-       col = c("green", "purple", "orange"),
+       legend = c("3 clusters", "4 clusters", "5 clusters", "6 clusters"),
+       col = c("brown", "green", "purple", "orange"),
        lwd = 2,
        cex = 0.8,
        bg = "white")
 ```
 
-#### Non-hierarchical clustering
+### 2.5.2. Non-hierarchical clustering
 
 A non-hierarchical clustering analysis is performed using several criteria to determine an appropriate number of clusters. Three different methods are considered: the **TWSS Elbow Graph**, the **Pseudo F Index**, and the **Silhouette Index**.
 
-##### 1. TWSS Elbow Graph
+##### TWSS Elbow Graph
 
 The Total Within-Cluster Sum of Squares (TWSS) has been computed for different values of k using the **k-means algorithm**, in order to identify an appropriate number of clusters through the **Elbow method**.
 
@@ -1011,30 +1010,48 @@ for (i in 2:10){
 plot(2:10, aux, xlab="Number of Clusters", ylab="TWSS", type="l", main="TWSS vs. number of clusters")
 points(4, aux[4 - 1], pch = 19, cex = 1.5, col = "red") # Optimum point: k=4
 
+# k=3
+k3 <- kmeans(dfscaled, centers = 3, nstart = 25) 
+
+## Sum of Squares 
+k3$withinss 
+k3$totss 
+k3$tot.withinss 
+k3$betweenss + k3$tot.withinss
+k3$betweenss/k3$totss # 0.6251488 separation between clusters
+
 # k=4
-k4 <- kmeans(dfscaled, centers = 4, nstart = 25) # 4 number of clusters 
+k4 <- kmeans(dfscaled, centers = 4, nstart = 25)  
 
 ## Sum of Squares 
 k4$withinss 
 k4$totss 
-k4$tot.withinss # total deviation
-k4$betweenss + k4$tot.withinss # total variation of the dataset
-k4$betweenss/k4$totss 
-# 0.694 fair separation between clusters
+k4$tot.withinss 
+k4$betweenss + k4$tot.withinss 
+k4$betweenss/k4$totss # 0.694 fair separation between clusters
+
+# k=5
+k5 <- kmeans(dfscaled, centers = 5, nstart = 25) 
+
+## Sum of Squares 
+k5$withinss 
+k5$totss 
+k5$tot.withinss 
+k5$betweenss + k5$tot.withinss 
+k5$betweenss/k5$totss # 0.735624 separation between clusters
 
 # k=6
-k6 <- kmeans(dfscaled, centers = 6, nstart = 25) # 6 number of clusters
+k6 <- kmeans(dfscaled, centers = 6, nstart = 25) 
 
 ## Sum of Squares
 k6$withinss
 k6$totss
-k6$tot.withinss # total deviation
-k6$betweenss + k6$tot.withinss # total variation of the dataset
-k6$betweenss/k6$totss
-# 0.768 greater separation between clusters
+k6$tot.withinss
+k6$betweenss + k6$tot.withinss
+k6$betweenss/k6$totss # 0.768 greater separation between clusters
 ```
 
-##### 2. Pseudo F Index
+##### Pseudo F Index
 
 The **Pseudo-F Index** has been computed for different values of k in order to evaluate the separation between clusters obtained with k-means. This index is based on the ratio between the between-cluster sum of squares (BSS) and the within-cluster sum of squares (WSS).
 
@@ -1049,44 +1066,62 @@ for (i in 2:20){
 }
 plot(2:20, aux, xlab="Number of Clusters", ylab="Pseudo-F", type="l", main="Pseudo F Index")
 points(2, aux[2-1], pch = 19, cex = 1.5, col = "red")
-# max Pseudo F --> 2 clusters
+# max Pseudo F: 2 clusters
 ```
 
-##### 3. Silhoutte Index
+##### Silhoutte Index
 
 Finally, the **Silhouette Index** is computed. For each observation, this value compares the average distance to points within its own cluster with the average distance to points in the nearest alternative cluster.
 
-Using the \emph{silhouette()} function from the \emph{cluster} package, the average silhouette widths obtained for $k=4$ and $k=6$ are $0.36$ and $0.28$, respectively. The four-cluster solution shows higher overall cohesion, whereas the six-cluster solution contains multiple clusters with silhouette widths below $0.25$, indicating weaker separation.
+The average silhouette widths obtained for $k=3$, $k=4$, $k=5$ and $k=6$ are $0.35$, $0.36$, $0.28$ and $0.29$, respectively. The four-cluster solution shows higher overall cohesion.
 
-The silhouette index is also computed using the \emph{fastkmed()} function from the \emph{kmed} package. This approach confirms the same trend: for a range of cluster solutions, the highest silhouette values are obtained for three or four clusters, whereas the performance decreases for higher values of k. The four-cluster solution achieves a good balance between separation and stability.
+The silhouette index computed using the \emph{fastkmed()} function confirms the same trend: for a range of cluster solutions, the highest silhouette values are obtained for three or four clusters, whereas the performance decreases for higher values of k. The four-cluster solution achieves a good balance between separation and stability.
 
 ```{r}
 ## A) Silhouette function from cluster library
+set.seed(12345)
 library(cluster)
+
+# k=3
+si <- silhouette(k3$cluster, d)
+plot(si) 
 
 # k=4
 si <- silhouette(k4$cluster, d)
+plot(si) 
+
+# k=5
+si <- silhouette(k5$cluster, d)
 plot(si)
-# 497 obs, we divide them to 4 clusters, we look for the max silhouette index: 2nd cluster
 
 # k=6
 si <- silhouette(k6$cluster, d)
-plot(si)
-# 497 obs, we divide them to 6 clusters, we look for the max silhouette index: 3rd cluster
+plot(si) 
 
 
 ## B) Silhouette function from kmed library
 library(kmed)
 
-# k=4
-res <- fastkmed(d, 4) # iterative algorithm, 4 clusters
+# k=3
+res <- fastkmed(d, 3)
 silhouette <- sil(d, res$medoid, res$cluster)
 silhouette$result
-silhouette$plot 
-# k=3 higher silhouette value
+silhouette$plot # k=3 higher silhouette value
+
+# k=4
+res <- fastkmed(d, 4)
+silhouette <- sil(d, res$medoid, res$cluster)
+silhouette$result
+silhouette$plot # k=3 higher silhouette value
+
+# k=5
+res <- fastkmed(d, 5)
+silhouette <- sil(d, res$medoid, res$cluster)
+silhouette$result
+silhouette$plot # k=4 higher silhouette value
 
 # k=6
-res <- fastkmed(d, 6) # iterative algorithm, 6 clusters
+res <- fastkmed(d, 6) 
 silhouette <- sil(d, res$medoid, res$cluster)
 silhouette$result
 silhouette$plot
@@ -1095,31 +1130,49 @@ silhouette$plot
 
 To sum up, the three criteria do not point to the same value of k, but they do suggest a consistent tendency. The Elbow method shows a clear bend around four clusters, the Pseudo-F index does not provide useful guidance, and the Silhouette index indicates that three or four clusters offer the best structure. Thus, \textbf{four clusters} appear to be the most balanced and interpretable solution, and this value will be used for the next steps of the analysis.
 
-#### k-means clustering using the optimal number of clusters
+### 2.5.3. k-means clustering using the optimal number of clusters
 
-ss
+\textbf{- Cluster 1: Large, high-value diamonds}
+This cluster contains the largest diamonds, with a high average carat (≈ 1.65) and large dimensions (x, y ≈ 7.55). These stones also show the highest mean price (≈ 11,200), clearly representing high-value diamonds driven by size.
+
+\textbf{- Cluster 2: Small, low-value diamonds}
+Diamonds in this cluster are very small, with a low average carat (≈ 0.39) and compact dimensions (x, y ≈ 4.65). This is reflected in a much lower average price (≈ 1,020), corresponding to entry-level, low-value stones.
+
+\textbf{- Cluster 3: Medium-sized, balanced diamonds}
+This cluster represents diamonds of intermediate size, with an average carat of ≈ 0.76 and moderate dimensions (x, y ≈ 5.88). Prices are also intermediate (≈ 3,180), indicating balanced stones in terms of size and value.
+
+\textbf{- Cluster 4: Upper-mid-range diamonds}
+Diamonds in this cluster are larger than average (carat ≈ 0.95; x, y ≈ 6.25) and more expensive than Cluster 3 (≈ 4,630), but clearly smaller and less costly than Cluster 1. This cluster represents upper-mid-range diamonds.
 
 ```{r}
+set.seed(12345) # NO TREURE LA SET SEED D'AQUI QUE SINO CANVIA!!
 # Apply k-means with the selected number of clusters
 k4 <- kmeans(dfscaled, centers = 4, nstart = 25)
-dfClust <- diamondsOg[, -c(2:4)]
+dfClustKmeans <- diamondsOg
 # Add cluster label to original unscaled data
-dfClust$Cluster <- as.factor(k4$cluster)
+dfClustKmeans$Cluster <- as.factor(k4$cluster)
 
 # Descriptive statistics per cluster
-cluster_summary <- dfClust[, -1] %>%
+cluster_summary <- dfClustKmeans[, -c(2:4)] %>%
   group_by(Cluster) %>%
   summarise(across(everything(), mean, na.rm = TRUE))
 cluster_summary
 
-# Clusters based on factor cut
-#table(dfClust$Cluster, dfClust$cut)
+table(dfClustKmeans$Cluster)
+prop.table(table(dfClustKmeans$Cluster))
+
+# Clusters based on factors
+table(dfClustKmeans$Cluster, dfClustKmeans$cut)
+table(dfClustKmeans$Cluster, dfClustKmeans$color)
+table(dfClustKmeans$Cluster, dfClustKmeans$clarity)
 ```
 
-#### PCA-based clustering
+
+### 2.5.4. PCA-based clustering
 
 The Hierarchical Clustering on Principal Components (HCPC) method is applied to the scores obtained from the previously computed PCA. This approach combines dimensionality reduction and clustering by performing Ward’s hierarchical clustering on the principal component scores, which reduces the influence of noise and correlation between variables.
 
+#### Automatic cut: 3 clusters
 The \emph{HCPC()} function is used with an automatic selection of the number of clusters, which results in a partition into $3$ clusters.
 
 From the factor map, the 3 clusters are projected onto the first two principal components, which together explain more than $80\%$ of the total variance. Cluster 1 is mainly located on the left side of the first dimension, which is associated with smaller physical measurements of the diamonds. Cluster 2 occupies an intermediate region, while Cluster 3 is positioned towards the positive side of the first component, corresponding to larger diamond sizes.
@@ -1130,162 +1183,269 @@ res.hcpc <- HCPC(diamonds.pca.sup, -1) # automatic cut: 3 clusters
 
 # Dendrogram visualization
 library(factoextra)
-fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE)
+fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - PCA-based Hierarchical Clustering")
 
-# Cluster visualization on the PCA factor map
-fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE,
-             main = "Clusters on PCA Factor Map")
+# Plot the inertia gain to visualize cluster selection
+plot(res.hcpc, choice = "bar", main = "Inertia gain on PCA")
+
+# Visualize clusters in the PCA factor map
+fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE, main = "Cluster Visualization on PCA Factor Map (Dim 1 vs Dim 2)")
+
+# 3D visualization
+plot(res.hcpc, choice = "3D.map", main = "3D Cluster Visualization")
 ```
+```{r}
+table(res.hcpc$data.clust$clust)
+prop.table(table(res.hcpc$data.clust$clust))
+
+# Cluster description: categorical variables
+res.hcpc$desc.var$test.chi2
+res.hcpc$desc.var$category
+
+# Cluster description: numerical variables
+res.hcpc$desc.var$quanti.var
+res.hcpc$desc.var$quanti
+```
+
+```{r}
+dfClustPCA3 <- diamondsOg
+# Add cluster label to original unscaled data
+dfClustPCA3$Cluster <- as.factor(res.hcpc$data.clust$clust)
+
+# Descriptive statistics per cluster
+cluster_summary_pca <- dfClustPCA3[, -c(2:4)] %>%
+  group_by(Cluster) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
+
+cluster_summary_pca
+
+table(dfClustPCA3$Cluster)
+prop.table(table(dfClustPCA3$Cluster))
+
+# Clusters based on factors
+table(dfClustPCA3$Cluster, dfClustPCA3$cut)
+table(dfClustPCA3$Cluster, dfClustPCA3$color)
+table(dfClustPCA3$Cluster, dfClustPCA3$clarity)
+```
+
+#### 4 clusters
+!!!(JO CREC QUE ES MILLOR K=4 MIRANT EL FACTOR MAP, PERO EL AUTOMATIC CUT DIU K=3, DECIDIR QUIN ES MILLOR PER AFEGIR EL PROFILING, DE MOMENT HE FET EL DE K=4)
 
 Although the automatic HCPC cut suggests a 3-cluster partition, the factor map and the dendrogram reveal that a 4-cluster solution is more balanced and more interpretable. The 3-cluster solution produces one dominant group, whereas splitting the structure into 4 clusters yields groups of comparable size and a clearer separation in the PCA space.
 
-Based on the cluster distribution on the PCA factor map and the interpretation of the principal dimensions, the characteristics of each group can be summarised as follows:
+The PCA-based hierarchical clustering with four clusters reveals a clear grouping structure primarily driven by diamond size and price. Highly significant differences are observed across all main numerical variables, particularly carat, price, and physical dimensions (x, y, z), while depth and table provide additional discrimination among medium-sized diamonds.
 
--   **Cluster 1** (black) is situated on the negative side of Dimension 1, indicating that it consists of the smallest and least expensive diamonds in the dataset. Its spread along Dimension 2 suggests a variety of geometric profiles without a dominant shape.
--   **Cluster 2** (red) is positioned around moderately positive values of Dimension 1 and clearly positive values of Dimension 2, suggesting medium-sized diamonds that tend to be deeper and more vertically proportioned.
--   **Cluster 3** (green) occupies the region of moderately positive Dimension 1 but negative Dimension 2, indicating diamonds that are also medium-to-large in size but display flatter geometric shapes.
--   **Cluster 4** (blue) appears on the positive side of Dimension 1, representing the largest and most valuable diamonds, with shapes that are generally balanced or slightly deep.
+\textbf{- Cluster 1 (black): Small, low-value diamonds}
+This cluster includes the smallest diamonds, with a low average carat (≈ 0.39), small dimensions (x, y ≈ 4.65), and the lowest mean price (≈ 1,020). These stones form a clearly distinct group of low-value diamonds.
+
+\textbf{- Cluster 2 (red): Medium-low diamonds}
+Diamonds in this cluster have intermediate size (carat ≈ 0.78; x, y ≈ 5.92) and moderate prices (≈ 3,300). Compared to the overall average, they present lower depth and higher table values, indicating flatter proportions.
+
+\textbf{- Cluster 3 (green): Medium-high diamonds}
+This cluster groups slightly larger diamonds (carat ≈ 0.94; x, y ≈ 6.23) with higher prices than Cluster 2 (≈ 4,630). These diamonds show higher depth and lower table values, reflecting a different geometric balance within the medium-size range.
+
+\textbf{- Cluster 4 (blue): Large, high-value diamonds}
+Diamonds in this cluster are the largest and most expensive, with the highest carat (≈ 1.65), the largest dimensions (x, y ≈ 7.56), and the highest mean price (≈ 11,100). This group is clearly separated from the rest.
 
 ```{r}
 # HCPC applied to the previously computed PCA
-res.hcpc <- HCPC(diamonds.pca.sup, nb.clust = 4) # 4 clusters
+res.hcpc <- HCPC(diamonds.pca.sup, nb.clust = 4, consol = TRUE) # 4 clusters
 
 # Dendrogram visualization
-fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE)
+library(factoextra)
+fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - PCA-based Hierarchical Clustering")
 
-# Cluster visualization on the PCA factor map
-fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE,
-             main = "Clusters on PCA Factor Map")
+# Plot the inertia gain to visualize cluster selection
+plot(res.hcpc, choice = "bar", main = "Inertia gain on PCA")
+
+# Visualize clusters in the PCA factor map
+fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE, main = "Cluster Visualization on PCA Factor Map (Dim 1 vs Dim 2)")
 ```
 
+```{r}
+table(res.hcpc$data.clust$clust)
+prop.table(table(res.hcpc$data.clust$clust))
 
-### B) Cluster analysis: numerical and categorical variables
+# Cluster description: categorical variables
+res.hcpc$desc.var$test.chi2
+res.hcpc$desc.var$category
 
-#### FAMD-based clustering 
-The clustering analysis that includes both numerical and categorical variables is performed through a Factor Analysis of Mixed Data (FAMD), which provides a joint low-dimensional space where continuous and categorical variables contribute to the definition of the principal axes.
+# Cluster description: numerical variables
+res.hcpc$desc.var$quanti.var
+res.hcpc$desc.var$quanti
+```
 
-!!!!!! Relacionar amb PCA i MCA (quan s'acabi mirar bé)
+```{r}
+dfClustPCA4 <- diamondsOg
+# Add cluster label to original unscaled data
+dfClustPCA4$Cluster <- as.factor(res.hcpc$data.clust$clust)
 
-The interpretation of the continuous variables in the FAMD closely mirrors the results previously obtained with the PCA. Dimension 1, which explains 25.29% of the total variability, is dominated by the physical measurements of the diamonds (x, y, z, logCarat, logPrice), all of which show extremely high squared correlations with this axis. As in the PCA, this dimension represents a size–value gradient, separating small and inexpensive diamonds from those that are larger and more valuable.
+# Descriptive statistics per cluster
+cluster_summary_pca <- dfClustPCA4[, -c(2:4)] %>%
+  group_by(Cluster) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
 
-The categorical variables reinforce this interpretation. Premium cut diamonds and colour categories such as H and especially I/J have positive coordinates on Dimension 1, confirming their association with larger stones. Conversely, better colour grades (D, E) and the Ideal cut are positioned at the negative side of this axis, in line with smaller diamonds.
+cluster_summary_pca
 
-Dimension 2 (7.91% of explained variance) reflects geometric proportions, reproducing the same contrast identified in the PCA between diamonds with greater depth (positive coordinates) and those with larger table (negative coordinates). The categorical variable cut aligns with this structure: Ideal cut appears at the positive end, whereas Premium is strongly negative.
+table(dfClustPCA4$Cluster)
+prop.table(table(dfClustPCA4$Cluster))
 
-Dimension 3 (6.15% of variance) is mainly driven by categorical variables, especially cut categories (Very Good, Fair/Good) and colour categories such as E and H, which show strong positive contributions. Other categories play a smaller role in shaping this axis.
+# Clusters based on factors
+table(dfClustPCA4$Cluster, dfClustPCA4$cut)
+table(dfClustPCA4$Cluster, dfClustPCA4$color)
+table(dfClustPCA4$Cluster, dfClustPCA4$clarity)
+```
+
+### 2.5.5. MCA-based clustering
+
+#### Automatic cut: 6 clusters
+Hierarchical clustering was also applied to the MCA individual scores using the HCPC approach. The automatic cut yields a six-cluster solution. However, inspection of the factor map shows that these clusters are highly overlapping and primarily separated along Dimension 1, which reflects the size gradient induced by the over/under transformations of the numerical variables. Dimension 2, related to geometric proportions and cut quality, introduces limited additional separation. As a result, the six-cluster solution does not provide a clear or interpretable partition of the diamonds.
+
+```{r}
+# HCPC applied to the previously computed MCA
+res.hcpc.mca <- HCPC(res.mca, -1) # automatic cut: 6 clusters
+
+# Dendrogram visualization
+fviz_dend(res.hcpc.mca, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - MCA-based Hierarchical Clustering")
+
+# Plot the inertia gain to visualize cluster selection
+plot(res.hcpc.mca, choice = "bar", main = "Inertia gain on MCA")
+
+# Visualize clusters in the MCA factor map
+fviz_cluster(res.hcpc.mca, repel = TRUE, show.clust.cent = TRUE, main = "Cluster Visualization on MCA Factor Map (Dim 1 vs Dim 2)")
+
+# 3D visualization
+plot(res.hcpc.mca, choice = "3D.map", main = "3D Cluster Visualization")
+```
+
+#### 4 clusters
+Although the automatic HCPC cut on the MCA scores suggests a six-cluster partition, inspection of the factor map and the dendrogram reveals substantial overlap between groups and weak separation. Forcing a four-cluster solution does not resolve this issue, as the clusters remain largely overlapping and lack clear interpretability. Consequently, MCA-based clustering is not retained as a suitable solution for the analysis.
+
+```{r}
+# HCPC applied to the previously computed MCA
+res.hcpc.mca <- HCPC(res.mca, nb.clust = 4, consol = TRUE, graph = FALSE) # 4 clusters
+
+# Visualize the dendrogram
+fviz_dend(res.hcpc.mca, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - MCA-based Hierarchical Clustering")
+
+# Plot the inertia gain to visualize cluster selection
+plot(res.hcpc.mca, choice = "bar", main = "Inertia gain on MCA")
+
+# Visualize clusters in the PCA factor map
+fviz_cluster(res.hcpc.mca, repel = TRUE, show.clust.cent = TRUE,main = "Cluster Visualization on MCA Factor Map (Dim 1 vs Dim 2)")
+
+# 3D visualization
+plot(res.hcpc.mca, choice = "3D.map", main = "3D Cluster Visualization")
+```
+
+```{r}
+table(res.hcpc.mca$data.clust$clust)
+prop.table(table(res.hcpc.mca$data.clust$clust))
+
+# Cluster description: categorical variables
+res.hcpc.mca$desc.var$test.chi2
+res.hcpc.mca$desc.var$category
+```
+
+```{r}
+dfClustMCA <- diamondsOg
+# Add cluster label to original unscaled data
+dfClustMCA$Cluster <- as.factor(res.hcpc.mca$data.clust$clust)
+
+# Descriptive statistics per cluster
+cluster_summary_mca <- dfClustMCA[, -c(2:4)] %>%
+  group_by(Cluster) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
+
+cluster_summary_mca
+
+table(dfClustMCA$Cluster)
+prop.table(table(dfClustMCA$Cluster))
+
+# Clusters based on factors
+table(dfClustMCA$Cluster, dfClustMCA$cut)
+table(dfClustMCA$Cluster, dfClustMCA$color)
+table(dfClustMCA$Cluster, dfClustMCA$clarity)
+```
+
+### 2.5.6. FAMD-based clustering 
+The clustering analysis that includes both numerical and categorical variables is performed through a Factor Analysis of Mixed Data (FAMD).
+
+The interpretation of the continuous variables in the FAMD closely mirrors the results previously obtained with the PCA. Dimension 1, which explains 26.69% of the total variability, is dominated by the physical measurements of the diamonds (x, y, z, logCarat, logPrice), all of which show extremely high squared correlations with this axis. As in the PCA, this dimension represents a size-value gradient, separating small and inexpensive diamonds from those that are larger and more valuable.
+
+The categorical variables align with this structure. Lower color grades (especially I/J) and lower clarity categories (such as I1/SI2) are located on the positive side of Dimension 1, indicating an association with larger and more expensive diamonds. In contrast, higher clarity grades (IF/VVS1, VVS2) and better color grades (E) appear on the negative side of this axis, corresponding to smaller but higher-quality diamonds.
+
+Dimension 2 (8.31% of explained variance) mainly reflects differences in geometric proportions. Ideal cut diamonds are associated with positive values of this dimension, whereas Premium and Fair/Good cuts are positioned at negative values, indicating less favorable geometric balance.
 
 ```{r}
 # Factor Analysis for Mixed Data
 res <- FAMD(diamonds)
 summary(res)
 ```
-The hierarchical clustering is applied to the individual scores obtained from the FAMD. Using the \emph{HCPC()} function with the automatic cut, the algorithm has selected a three-cluster solution. The separation observed in the factor map is primarily driven by Dimension 1:
+The hierarchical clustering is applied to the individual scores obtained from the FAMD. The algorithm has selected a three-cluster solution. The separation observed in the factor map is driven by Dimension 1:
 -   **Cluster 1** (black) groups observations with negative coordinates on this dimension, corresponding to smaller diamonds and categories associated with higher quality grades (Ideal cut, better colour). 
 -   **Cluster 2** (red) occupies an intermediate position and presents internal heterogeneity, both in terms of size and categorical composition, which makes the partition less balanced.
 -   **Cluster 3** (green) lies on the positive side of Dimension 1 and gathers larger diamonds, consistently aligned with levels such as Premium cut and lower-quality colours (H, I/J). 
 
-```{r}
-# Hierarchical Clustering on FAMD scores
-hc_famd <- HCPC(res, -1) # automatic cut: 3 clusters
-```
-To obtain a more homogeneous segmentation, the HCPC has been recomputed by imposing a **four-cluster solution**. In the factor map, the two central clusters separate mainly along Dimension 2, which reflects contrasting geometric proportions and the behaviour of the cut variable: the cluster scoring positively is associated with deeper diamonds and categories such as Ideal, whereas the negatively scoring cluster corresponds to flatter diamonds and Premium cuts. Together with the cluster of small diamonds and the cluster of large diamonds, the four groups provide a clearer interpretation that integrates both numerical and categorical patterns. For this reason, the four-cluster solution is retained for the profiling stage.
+\textbf{- Cluster 1 (red): Small, high-quality diamonds}
+This cluster contains the smallest diamonds (carat ≈ 0.40; x, y ≈ 4.69) and the lowest mean price (≈ 1,072.68). It is significantly associated with high clarity grades (IF/VVS1 and VVS2) and shows a higher presence of Ideal cut and better color grades (notably E).
+
+\textbf{- Cluster 2 (green): Medium-sized diamonds with lower clarity}
+Diamonds in this cluster have intermediate size (carat ≈ 0.93; x, y ≈ 6.23) and a moderate mean price (≈ 4,487.52). The main categorical signal is an over-representation of SI1 and I1/SI2 clarity, suggesting mid-range diamonds with relatively lower clarity compared to Cluster 1.
+
+\textbf{- Cluster 3 (blue): Large diamonds with lower quality indicators}
+This cluster groups the largest and most expensive diamonds (carat ≈ 1.64; x, y ≈ 7.54; price ≈ 10,942.12). It is strongly associated with poorer color grades (especially I/J) and Premium cut, together with lower clarity categories (notably I1/SI2), indicating that size dominates while quality tends to be lower.
 
 ```{r}
 # Hierarchical Clustering on FAMD scores
-hc_famd <- HCPC(res, nb.clust = 4) # 4 clusters 
+res.hcpc.famd <- HCPC(res, -1, consol = TRUE) # automatic cut: 3 clusters
+
+# Visualize the dendrogram
+fviz_dend(res.hcpc.famd, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - FAMD-based Hierarchical Clustering")
+
+# Plot the inertia gain to visualize cluster selection
+plot(res.hcpc.famd, choice = "bar", main = "Inertia gain on FAMD")
+
+# Visualize clusters in the PCA factor map
+fviz_cluster(res.hcpc.famd, repel = TRUE, show.clust.cent = TRUE,main = "Cluster Visualization on FAMD Factor Map (Dim 1 vs Dim 2)")
+
+# 3D visualization
+plot(res.hcpc.famd, choice = "3D.map", main = "3D Cluster Visualization")
 ```
 
 ```{r}
-# Dendrogram with 4 number of clusters
-library(factoextra)
-fviz_dend(hc_famd, rect = TRUE, rect_fill = TRUE)
+table(res.hcpc.famd$data.clust$clust)
+prop.table(table(res.hcpc.famd$data.clust$clust))
 
-# Visualization of Clusters
-fviz_cluster(hc_famd, repel = TRUE, show.clust.cent = TRUE, main = "Factor map")
+# Cluster description: categorical variables
+res.hcpc.famd$desc.var$test.chi2
+res.hcpc.famd$desc.var$category
+
+# Cluster description: numerical variables
+res.hcpc.famd$desc.var$quanti.var
+res.hcpc.famd$desc.var$quanti
 ```
-
-#### MCA-based clustering
-
-The Hierarchical Clustering on Principal Components (HCPC) method is also applied to the individual scores obtained from the MCA. As in the PCA case, this approach performs Ward’s hierarchical clustering on the low-dimensional representation provided by the MCA, so that the clusters reflect the joint structure of the categorical transformations of the numeric variables (over/under average) and the proportion-based factors (table and depth).
-
-Using the \emph{HCPC()} function is used with an automatic cut leads to a six-cluster solution. However, the factor map shows that these six groups are largely overlapping and mainly separated along Dimension 1, which reflects the size gradient introduced by the over/under transformations of the numerical variables. Dimension 2, linked to geometric proportions (Ideal vs. NotIdeal table and depth, and cut), adds some vertical dispersion, but the clusters remain close to each other and difficult to distinguish.
 
 ```{r}
-# HCPC applied to the previously computed MCA
-hc_mca <- HCPC(res.mca, -1) # automatic cut: 6 clusters
+dfClustFAMD <- diamondsOg
+# Add cluster label to original unscaled data
+dfClustFAMD$Cluster <- as.factor(res.hcpc.famd$data.clust$clust)
 
-# Dendrogram visualization
-library(factoextra)
-fviz_dend(hc_mca, rect = TRUE, rect_fill = TRUE)
+# Descriptive statistics per cluster
+cluster_summary_famd <- dfClustFAMD[, -c(2:4)] %>%
+  group_by(Cluster) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
 
-# Cluster visualization on the PCA factor map
-fviz_cluster(hc_mca, repel = TRUE, show.clust.cent = TRUE,
-             main = "Clusters on MCA Factor Map")
+cluster_summary_famd
+
+table(dfClustFAMD$Cluster)
+prop.table(table(dfClustFAMD$Cluster))
+
+# Clusters based on factors
+table(dfClustFAMD$Cluster, dfClustFAMD$cut)
+table(dfClustFAMD$Cluster, dfClustFAMD$color)
+table(dfClustFAMD$Cluster, dfClustFAMD$clarity)
 ```
 
-Although the automatic HCPC cut suggests a 6-cluster partition, the factor map and the dendrogram reveal that a 4-cluster solution is more balanced and more interpretable. 
 
-Based on the cluster distribution on the MCA factor map, the characteristics of each group can be summarised as follows: !!!!!!!!!!!
-
-```{r}
-# HCPC applied to the previously computed MCA
-hc_mca <- HCPC(res.mca, nb.clust = 4) # 4 clusters
-
-# Dendrogram visualization
-fviz_dend(hc_mca, rect = TRUE, rect_fill = TRUE)
-
-# Cluster visualization on the PCA factor map
-fviz_cluster(hc_mca, repel = TRUE, show.clust.cent = TRUE,
-             main = "Clusters on PCA Factor Map")
-```
-
-### Profiling
-
-#### Profiling based on PCA scores
-
-The HCPC performed on the PCA scores allows us to characterise the clusters according to the structure captured by the two principal components. Since Dimension 1 reflects the overall physical magnitude–price axis, and Dimension 2 captures the geometric balance between deep and flat diamonds, the clusters can be interpreted in terms of size, price and shape.
-
-- **Cluster 1:** Smallest and least expensive diamonds
-Cluster 1 presents the lowest means for x, y, z, logCarat and logPrice, with extremely negative v-tests. These diamonds are small, light and low-priced, fully aligned with the negative side of Dimension 1. They also show slightly smaller table values.
-
-- **Cluster 2:** Diamonds with higher depth and smaller tables
-Cluster 2 is defined by geometric proportions, as shown by the strong positive v-test for depth and negative v-test for table. These diamonds tend to be deeper and more vertically elongated, even though their physical magnitude remains below the global average. They represent diamonds with pronounced depth and flat top surfaces, matching the positive side of Dimension 2.
-
-- **Cluster 3:** Moderately large diamonds with high table and low depth
-Cluster 3 shows significantly higher table values and lower depth, the opposite pattern of Cluster 2. Its size-related variables are slightly above the mean, especially x, y, z and logPrice, indicating medium-to-large diamonds. Therefore, these stones correspond to flatter, larger diamonds.
-
-- **Cluster 4:** Largest and most expensive diamonds
-Cluster 4 is characterised by extremely high values of x, y, z, logCarat and logPrice, with very large positive v-tests. This cluster clearly gathers the largest, heaviest and most expensive diamonds in the dataset, representing the upper end of Dimension 1.
-
-```{r}
-res.hcpc$desc.var
-```
-
-#### Profiling based on FAMD scores
-
-The profiling of the clusters obtained from the FAMD scores can be interpreted as follows:
-
-- **Cluster 1:** Small, high-quality diamonds
-Shows strong overrepresentation of the Ideal cut, as well as premium clarity levels such as VVS1, VVS2 and I1/IF, together with an excess of colour D diamonds. Conversely, low-quality colours (I/J) and intermediate clarity levels (VS2, SI2) are significantly underrepresented.
-
-This behaviour is consistent with the quantitative profile: Cluster 1 contains the smallest diamonds in the dataset, with the lowest means for x, y, z and logCarat, and with the lowest logPrice. The diamonds in this group also tend to have smaller tables and slightly higher depth.
-
-- **Cluster 2:** Medium-sized diamonds with premium/proportioned cuts
-This cluster is dominated by the Premium cut, which accounts for almost two-thirds of its observations. It also shows overrepresentation of clarity levels VS1, VS2 and colours E and G, indicating that this group contains well-proportioned diamonds of medium quality. The Ideal cut, however, is strongly underrepresented.
-
-Quantitatively, the diamonds in this cluster remain smaller than the overall mean but are larger than those in Cluster 1. They present the highest table values, confirming that this cluster groups diamonds that are relatively flat in shape, whereas their depth values are slightly lower than the global mean. Price and size metrics are moderately below the overall mean.
-
-- **Cluster 3:** Medium-to-large diamonds with high prices and deeper shapes
-It combines a strong presence of the Ideal cut with an overrepresentation of clarity SI1. The categorical composition indicates a group of medium-quality but well-cut diamonds.
-
-The quantitative variables show that this cluster consists of larger diamonds: the means for x, y, z and logCarat are above the overall mean. This group also exhibits the highest average logPrice, consistent with the size increase. In terms of geometry, these diamonds tend to be deeper.
-
-- **Cluster 4:** Largest, most expensive diamonds with lower colour/clarity grades
-Cluster 4 gathers the largest diamonds in the dataset, with extremely high values for x, y, z, logCarat and logPrice, all showing the highest positive v-tests
-
-Categorically, it shows strong overrepresentation of colour I/J and colour H, and of clarity SI2. Premium cut is also heavily overrepresented, while the Ideal cut appears far below expectations. In geometric terms, these diamonds have large table values and slightly lower depth than average, suggesting flatter shapes.
-
-
-```{r}
-hc_famd$desc.var
-```
+## 2.6. Discriminant analysis
