@@ -1,6 +1,6 @@
 ---
 title: "Diamonds Data Frame Analysis"
-author: "Berta Torrents"
+author: "Laia Jané, Elisa Müller, Berta Torrents and Runxiao Qiu"
 date: "December 2025"
 output:
   pdf_document:
@@ -8,14 +8,6 @@ output:
   word_document: default
 geometry: margin=1in
 ---
-
-- podem usar totes les variables correlacionades en el mca, clustering... o es millor usar per exemple un index ue sorti a partir de la PCA i englobi les variables??
-
-
-- hem d'interpretar tots el clusters al profiling o només el resultant? el problema és que el que millor resultat ens dona es el del pca i aleshores no podriem fer profiling de les categoriques
-
-
-- unificar text + $4$ + $\%$ + ** + treure '' en les variables + "" i - del changpt
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -47,6 +39,9 @@ library(corrplot)
 library(cluster)
 library(ggplot2)
 library(ggrepel)
+library(klaR)
+library(cluster)
+library(kmed)
 ```
 
 ## 1. Data preparation
@@ -959,13 +954,14 @@ fit1 <- hclust(d, method="complete")
 plot(fit1, main="Dendrogram of complete Linkage") 
 # 4 clusters/6 clusters
 
-rect.hclust(fit1, k=4, border="blue") # 4 clusters
-rect.hclust(fit1, k=5, border="cyan") # 5 clusters
-rect.hclust(fit1, k=6, border="red")  # 6 clusters
+rect.hclust(fit1, k=3, border="gold") # 3 clusters
+rect.hclust(fit1, k=4, border="blue")  # 4 clusters
+rect.hclust(fit1, k=5, border="cyan")  # 5 clusters
+rect.hclust(fit1, k=6, border="red")   # 6 clusters
 
 legend("topright",
-       legend = c("4 clusters", "5 clusters", "6 clusters"),
-       col = c("blue", "cyan", "red"),
+       legend = c("3 clusters", "4 clusters", "5 clusters", "6 clusters"),
+       col = c("gold", "blue", "cyan", "red"),
        lwd = 2,
        cex = 0.8,
        bg = "white")
@@ -1080,7 +1076,6 @@ The silhouette index computed using the \emph{fastkmed()} function confirms the 
 ```{r}
 ## A) Silhouette function from cluster library
 set.seed(12345)
-library(cluster)
 
 # k=3
 si <- silhouette(k3$cluster, d)
@@ -1100,8 +1095,6 @@ plot(si)
 
 
 ## B) Silhouette function from kmed library
-library(kmed)
-
 # k=3
 res <- fastkmed(d, 3)
 silhouette <- sil(d, res$medoid, res$cluster)
@@ -1170,7 +1163,7 @@ table(dfClustKmeans$Cluster, dfClustKmeans$clarity)
 
 ### 2.5.4. PCA-based clustering
 
-The Hierarchical Clustering on Principal Components (HCPC) method is applied to the scores obtained from the previously computed PCA. This approach combines dimensionality reduction and clustering by performing Ward’s hierarchical clustering on the principal component scores, which reduces the influence of noise and correlation between variables.
+The Hierarchical Clustering on Principal Components (HCPC) method is applied to the scores obtained from the previously computed PCA. 
 
 #### Automatic cut: 3 clusters
 The \emph{HCPC()} function is used with an automatic selection of the number of clusters, which results in a partition into $3$ clusters.
@@ -1229,23 +1222,23 @@ table(dfClustPCA3$Cluster, dfClustPCA3$clarity)
 ```
 
 #### 4 clusters
-!!!(JO CREC QUE ES MILLOR K=4 MIRANT EL FACTOR MAP, PERO EL AUTOMATIC CUT DIU K=3, DECIDIR QUIN ES MILLOR PER AFEGIR EL PROFILING, DE MOMENT HE FET EL DE K=4)
-
 Although the automatic HCPC cut suggests a 3-cluster partition, the factor map and the dendrogram reveal that a 4-cluster solution is more balanced and more interpretable. The 3-cluster solution produces one dominant group, whereas splitting the structure into 4 clusters yields groups of comparable size and a clearer separation in the PCA space.
 
-The PCA-based hierarchical clustering with four clusters reveals a clear grouping structure primarily driven by diamond size and price. Highly significant differences are observed across all main numerical variables, particularly carat, price, and physical dimensions (x, y, z), while depth and table provide additional discrimination among medium-sized diamonds.
+The PCA-based hierarchical clustering with four clusters reveals a clear grouping structure primarily driven by diamond size and price. Highly significant differences are observed across all main numerical variables, particularly carat, price, and physical dimensions (x, y, z), while depth and table provide additional discrimination among medium-sized diamonds. Categorical variables further refine this structure and highlight a clear size-quality trade-off across clusters.
 
 \textbf{- Cluster 1 (black): Small, low-value diamonds}
-This cluster includes the smallest diamonds, with a low average carat (≈ 0.39), small dimensions (x, y ≈ 4.65), and the lowest mean price (≈ 1,020). These stones form a clearly distinct group of low-value diamonds.
+This cluster includes the smallest diamonds, with a low average carat (≈ 0.39), small dimensions (x, y ≈ 4.65), and the lowest mean price (≈ 1,020). From a categorical perspective, it is dominated by Ideal cut diamonds, with colors mainly in the E–G range. Clarity is centered on SI1 and VS2, although a substantial number of high-clarity stones (IF/VVS1) are also present. Overall, this cluster represents small diamonds with relatively good and balanced quality attributes.
 
 \textbf{- Cluster 2 (red): Medium-low diamonds}
-Diamonds in this cluster have intermediate size (carat ≈ 0.78; x, y ≈ 5.92) and moderate prices (≈ 3,300). Compared to the overall average, they present lower depth and higher table values, indicating flatter proportions.
+Diamonds in this cluster have intermediate size (carat ≈ 0.78; x, y ≈ 5.92) and moderate prices (≈ 3,300). They are characterized by lower depth and higher table values, indicating flatter proportions. Categorically, this group is mainly composed of Premium-cut diamonds, with F color most frequent and clarity largely concentrated in SI1 and VS2, with very few high-clarity stones. This cluster reflects a compromise where size increases at the expense of quality.
 
 \textbf{- Cluster 3 (green): Medium-high diamonds}
-This cluster groups slightly larger diamonds (carat ≈ 0.94; x, y ≈ 6.23) with higher prices than Cluster 2 (≈ 4,630). These diamonds show higher depth and lower table values, reflecting a different geometric balance within the medium-size range.
+This cluster groups slightly larger diamonds (carat ≈ 0.94; x, y ≈ 6.23) with higher prices than Cluster 2 (≈ 4,630). These diamonds show higher depth and lower table values, suggesting improved geometric balance. In categorical terms, Ideal cut is predominant, with G color most common. However, clarity is mainly SI1 and I1/SI2, indicating lower clarity on average than Cluster 1 despite better proportions.
 
 \textbf{- Cluster 4 (blue): Large, high-value diamonds}
-Diamonds in this cluster are the largest and most expensive, with the highest carat (≈ 1.65), the largest dimensions (x, y ≈ 7.56), and the highest mean price (≈ 11,100). This group is clearly separated from the rest.
+Diamonds in this cluster are the largest and most expensive, with the highest carat (≈ 1.65), the largest dimensions (x, y ≈ 7.56), and the highest mean price (≈ 11,100). This group is dominated by Premium cuts, poorer color grades (H–I/J), and lower clarity levels, mainly I1/SI2 and VS2. These results indicate that, for this cluster, diamond value is driven primarily by size rather than quality attributes.
+
+Overall, the four clusters describe a clear size-quality trade-off: smaller diamonds tend to concentrate better quality grades, whereas larger diamonds are associated with lower color and clarity but substantially higher prices.
 
 ```{r}
 # HCPC applied to the previously computed PCA
@@ -1323,7 +1316,7 @@ Although the automatic HCPC cut on the MCA scores suggests a six-cluster partiti
 
 ```{r}
 # HCPC applied to the previously computed MCA
-res.hcpc.mca <- HCPC(res.mca, nb.clust = 4, consol = TRUE, graph = FALSE) # 4 clusters
+res.hcpc.mca <- HCPC(res.mca, nb.clust = 4, consol = TRUE) # 4 clusters
 
 # Visualize the dendrogram
 fviz_dend(res.hcpc.mca, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - MCA-based Hierarchical Clustering")
@@ -1382,18 +1375,15 @@ Dimension 2 (8.31% of explained variance) mainly reflects differences in geometr
 res <- FAMD(diamonds)
 summary(res)
 ```
-The hierarchical clustering is applied to the individual scores obtained from the FAMD. The algorithm has selected a three-cluster solution. The separation observed in the factor map is driven by Dimension 1:
--   **Cluster 1** (black) groups observations with negative coordinates on this dimension, corresponding to smaller diamonds and categories associated with higher quality grades (Ideal cut, better colour). 
--   **Cluster 2** (red) occupies an intermediate position and presents internal heterogeneity, both in terms of size and categorical composition, which makes the partition less balanced.
--   **Cluster 3** (green) lies on the positive side of Dimension 1 and gathers larger diamonds, consistently aligned with levels such as Premium cut and lower-quality colours (H, I/J). 
+The hierarchical clustering is applied to the individual scores obtained from the FAMD. The algorithm has selected a three-cluster solution. The separation observed in the factor map is driven by Dimension 1.
 
-\textbf{- Cluster 1 (red): Small, high-quality diamonds}
+\textbf{- Cluster 1 (black): Small, high-quality diamonds}
 This cluster contains the smallest diamonds (carat ≈ 0.40; x, y ≈ 4.69) and the lowest mean price (≈ 1,072.68). It is significantly associated with high clarity grades (IF/VVS1 and VVS2) and shows a higher presence of Ideal cut and better color grades (notably E).
 
-\textbf{- Cluster 2 (green): Medium-sized diamonds with lower clarity}
+\textbf{- Cluster 2 (red): Medium-sized diamonds with lower clarity}
 Diamonds in this cluster have intermediate size (carat ≈ 0.93; x, y ≈ 6.23) and a moderate mean price (≈ 4,487.52). The main categorical signal is an over-representation of SI1 and I1/SI2 clarity, suggesting mid-range diamonds with relatively lower clarity compared to Cluster 1.
 
-\textbf{- Cluster 3 (blue): Large diamonds with lower quality indicators}
+\textbf{- Cluster 3 (green): Large diamonds with lower quality indicators}
 This cluster groups the largest and most expensive diamonds (carat ≈ 1.64; x, y ≈ 7.54; price ≈ 10,942.12). It is strongly associated with poorer color grades (especially I/J) and Premium cut, together with lower clarity categories (notably I1/SI2), indicating that size dominates while quality tends to be lower.
 
 ```{r}
@@ -1447,12 +1437,31 @@ table(dfClustFAMD$Cluster, dfClustFAMD$color)
 table(dfClustFAMD$Cluster, dfClustFAMD$clarity)
 ```
 
+!! TREURE, ERA PER COMPROVAR QUE FAMD AMB 4 NO ERA MILLOR QUE PCA AMB 4, PERO CLEARLY HI HA OVERLAPPING DELS CLUSTERS BLACK AND RED, worse
+```{r}
+# Hierarchical Clustering on FAMD scores
+res.hcpc.famd <- HCPC(res, nb.clust = 4, consol = TRUE) 
+
+# Visualize the dendrogram
+fviz_dend(res.hcpc.famd, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - FAMD-based Hierarchical Clustering")
+
+# Plot the inertia gain to visualize cluster selection
+plot(res.hcpc.famd, choice = "bar", main = "Inertia gain on FAMD")
+
+# Visualize clusters in the PCA factor map
+fviz_cluster(res.hcpc.famd, repel = TRUE, show.clust.cent = TRUE,main = "Cluster Visualization on FAMD Factor Map (Dim 1 vs Dim 2)")
+
+# 3D visualization
+plot(res.hcpc.famd, choice = "3D.map", main = "3D Cluster Visualization")
+```
+
+
 ### Hotelling or MANOVA --> MANOVA (cal explicar per que)
 After identifying 4 clusters through PCA-based hierarchical clustering, we decided that this was the best clustering method. To assess whether the clusters are really meaningful, Multivariate Analysis of Variance (MANOVA) has been conducted. 
 
 Two complementary MANOVA strategies have been applied.
 - *MANOVA on original numerical variables*: logCarat, x, y, z, depth, table, and logPrice, using cluster membership as the grouping factor.
-- *MANOVA on PCA scores*, specifically, applying it to the first two principal component scores obtained from the PCA, which summarize the main latent dimensions of the data. The first component represents a size–value gradient, while the second captures geometric balance related to table and depth proportions. Using PCA scores as response variables avoids multicollinearity and directly tests whether clusters differ along the same dimensions used to construct them.
+- *MANOVA on PCA scores*, specifically, applying it to the first two principal component scores obtained from the PCA, which summarize the main latent dimensions of the data. The first component represents a size-value gradient, while the second captures geometric balance related to table and depth proportions. Using PCA scores as response variables avoids multicollinearity and directly tests whether clusters differ along the same dimensions used to construct them.
 
 For the first analysis, before applying MANOVA, the normality assumption must be considered. Normality was assessed using both statistical tests and graphical inspection. The results can be summarized as follows:
 - logCarat does not satisfy normality even after the logarithmic transformation, according to formal normality tests.
@@ -1486,7 +1495,6 @@ boxplot(z ~ Cluster, data = df_manova, main = "z by Cluster")
 boxplot(depth ~ Cluster, data = df_manova, main = "depth by Cluster")
 boxplot(table ~ Cluster, data = df_manova, main = "table by Cluster")
 boxplot(logPrice ~ Cluster, data = df_manova, main = "logPrice by Cluster")
-
 ```
 
 For the second approach, we use PCA scores to perform MANOVA. For this, we also need to check the normality and homogeneity of the PCA scores:
@@ -1517,7 +1525,6 @@ boxM(df_manova_pca[, c("PC1", "PC2")], df_manova_pca$Cluster)
 
 boxplot(PC1 ~ Cluster, data = df_manova_pca, main = "PC1 by Cluster")
 boxplot(PC2 ~ Cluster, data = df_manova_pca, main = "PC2 by Cluster")
-
 ```
 
 ```{r}
@@ -1530,12 +1537,13 @@ summary.aov(man_pca)
 TukeyHSD(aov(PC1 ~ Cluster, data = df_manova_pca))
 TukeyHSD(aov(PC2 ~ Cluster, data = df_manova_pca))
 ```
+
+
 ## 2.6. Discriminant analysis
 In DA, we will work with the same normal variables than in MANOVA.
 As data is not normal and not independent, we use QDA.
 
 ```{r}
-library(MASS)
 df_da <- df_manova
 qda.fit <- qda(Cluster ~ x + y + z + depth + table + logPrice, data = df_da)
 qda.fit
@@ -1573,9 +1581,7 @@ pa<-qda.fit$prior[1]^2 + qda.fit$prior[2]^2;pa
 comp<-cbind(qda.fit$type,pred$class); comp
 
 
-## Stepwise Classification ##
-
-library(klaR)
+# Stepwise Classification
 ?stepclass
 
 qdastep <- stepclass(df_da[,1:6],df_da[,7],method="qda",direction="backward", criterion="CR") 
@@ -1588,11 +1594,12 @@ qdastep$process
 qdastep$model
 qdastep$result.pm
 ```
+
 Stepclass function indicates that best model is with y, depth, table, we assess if it's better than our full model:
+
 ```{r}
 qda.fit.step <- qda(Cluster ~ y + depth + table, data = df_da)
 qda.fit.step
-
 
 qda.fit.step$prior
 names(qda.fit.step)
