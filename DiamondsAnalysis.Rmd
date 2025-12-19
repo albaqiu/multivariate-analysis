@@ -1447,7 +1447,7 @@ table(dfClustFAMD$Cluster, dfClustFAMD$color)
 table(dfClustFAMD$Cluster, dfClustFAMD$clarity)
 ```
 
-### Hotelling or MANOVA
+### Hotelling or MANOVA --> MANOVA (cal explicar per que)
 After identifying 4 clusters through PCA-based hierarchical clustering, we decided that this was the best clustering method. To assess whether the clusters are really meaningful, Multivariate Analysis of Variance (MANOVA) has been conducted. 
 
 Two complementary MANOVA strategies have been applied.
@@ -1463,19 +1463,40 @@ For the first analysis, before applying MANOVA, the normality assumption must be
 
 Overall, while strict univariate normality is not met for all variables, the deviations are generally mild. Since logCarat is not normal even with graphical assessment, we won't use it in the MANOVA analysis.
 
+But for this approach, we see that the homogeneity assumption is not fullfilled. SO CANNOT PROCEED, WE CHECK MANOVA FOR THE PCA SCORES TO SEE IF WE CAN DO IT?????????????????????
+
 ```{r}
+# df using dfClustPCA4 (has price, not logPrice)
+df_manova <- dfClustPCA4[, c("x", "y", "z", "depth", "table", "price", "Cluster")]
+df_manova$logPrice <- log(df_manova$price)
+df_manova <- df_manova[, c("x", "y", "z", "depth", "table", "logPrice", "Cluster")]
+
 #check homogeneity
+library(biotools)
+
+# Homogeneity of covariance matrices obtained from multivariate normal data
+boxM(
+  df_manova[, c("x", "y", "z", "depth", "table", "logPrice")],
+  df_manova$Cluster
+) #pvalue < 0.05
+
+boxplot(x ~ Cluster, data = df_manova, main = "x by Cluster")
+boxplot(y ~ Cluster, data = df_manova, main = "y by Cluster")
+boxplot(z ~ Cluster, data = df_manova, main = "z by Cluster")
+boxplot(depth ~ Cluster, data = df_manova, main = "depth by Cluster")
+boxplot(table ~ Cluster, data = df_manova, main = "table by Cluster")
+boxplot(logPrice ~ Cluster, data = df_manova, main = "logPrice by Cluster")
+
 ```
 
-
 For the second approach, we use PCA scores to perform MANOVA. For this, we also need to check the normality and homogeneity of the PCA scores:
-None of them are normal and there's no homogeneity
+None of them are normal and there's no homogeneity!!!!!!
 ```{r}
 # Extract the first two PCA individual coordinates
 df_manova_pca <- as.data.frame(diamonds.pca.sup$ind$coord[, 1:2])
 colnames(df_manova_pca) <- c("PC1", "PC2")
 
-# Add cluster membership from PCA-based clustering (k = 4)
+# Add cluster membership
 df_manova_pca$Cluster <- dfClustPCA4$Cluster
 
 # normality
@@ -1487,13 +1508,16 @@ for (i in 1:2) {
                 mean = mean(df_manova_pca[, i]),
                 sd = sd(df_manova_pca[, i])))
 }
+# transformation??????? idk if we can transform PCA scores
+
 
 # homogeneity
 library(biotools)
+boxM(df_manova_pca[, c("PC1", "PC2")], df_manova_pca$Cluster)
 
-boxM(df_manova_pca[, c("PC1", "PC2")],df_manova_pca$Cluster)
 boxplot(PC1 ~ Cluster, data = df_manova_pca, main = "PC1 by Cluster")
 boxplot(PC2 ~ Cluster, data = df_manova_pca, main = "PC2 by Cluster")
+
 ```
 
 ```{r}
@@ -1506,7 +1530,97 @@ summary.aov(man_pca)
 TukeyHSD(aov(PC1 ~ Cluster, data = df_manova_pca))
 TukeyHSD(aov(PC2 ~ Cluster, data = df_manova_pca))
 ```
-
-
 ## 2.6. Discriminant analysis
+In DA, we will work with the same normal variables than in MANOVA.
+As data is not normal and not independent, we use QDA.
+
+```{r}
+library(MASS)
+df_da <- df_manova
+qda.fit <- qda(Cluster ~ x + y + z + depth + table + logPrice, data = df_da)
+qda.fit
+
+qda.fit$prior
+names(qda.fit)
+
+#Predicting Groups
+pred <- predict(qda.fit)
+names(pred)
+
+#Class Predictions 
+qda.fit$class
+
+#Posterior Probabilities 
+qda.fit$posterior
+
+#Contingency Table of Observed and Predicted Values
+tab<-table(df_da$Cluster,pred$class); tab
+
+#Correct Classification Rate (CCR)
+classrate<-sum(diag(tab))/sum(tab)
+classrate
+
+# Total CCR (alternative way)
+sum(diag(prop.table(tab)))
+
+#CCR across groups (over rows)
+diag(prop.table(tab, 1))
+
+#Prediction Accuracy p1^2+p^2
+pa<-qda.fit$prior[1]^2 + qda.fit$prior[2]^2;pa
+
+#Comparison of Original and Predicted Groups
+comp<-cbind(qda.fit$type,pred$class); comp
+
+
+## Stepwise Classification ##
+
+library(klaR)
+?stepclass
+
+qdastep <- stepclass(df_da[,1:6],df_da[,7],method="qda",direction="backward", criterion="CR") 
+# numerical variables, grouping, method, direction, criterion
+qdastep
+summary(qdastep)
+names(qdastep)
+
+qdastep$process
+qdastep$model
+qdastep$result.pm
+```
+Stepclass function indicates that best model is with y, depth, table, we assess if it's better than our full model:
+```{r}
+qda.fit.step <- qda(Cluster ~ y + depth + table, data = df_da)
+qda.fit.step
+
+
+qda.fit.step$prior
+names(qda.fit.step)
+
+#Predicting Groups
+pred_step <- predict(qda.fit.step)
+names(pred_step)
+
+#Class Predictions 
+qda.fit.step$class
+
+#Posterior Probabilities 
+qda.fit.step$posterior
+
+#Contingency Table of Observed and Predicted Values
+tab2<-table(df_da$Cluster,pred_step$class); tab2
+
+#Correct Classification Rate (CCR)
+classrate<-sum(diag(tab2))/sum(tab2)
+classrate
+
+# Total CCR (alternative way)
+sum(diag(prop.table(tab2)))
+
+#CCR across groups (over rows)
+diag(prop.table(tab2, 1))
+
+#Prediction Accuracy p1^2+p^2
+pa2<-qda.fit.step$prior[1]^2 + qda.fit.step$prior[2]^2;pa2
+```
 
