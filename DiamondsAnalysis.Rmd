@@ -851,10 +851,10 @@ lines(res.mca$eig[,1], type = "o", col = "red", pch = 19, add=T)
 # Choose the dimensions that explain the most variability --> Until Dim.2
 ```
 
-As can be seen in the description of Dimensions, the \textbf{most significant variables in each dimension}, which are those represented with the highest value of R2, are the following: 
+As can be seen in the description of Dimensions, the \textbf{most significant variables in each dimension}, which are those represented with the highest value of $R^2$, are the following: 
 
-- For Dimension 1, the variables are `x`, `y`, `z` and `logCarat` all with R² values above 0.90.
-  It is also relevant to note that the supplementary variable `logPrice` is also very significant in this dimension, with a value of R² of 0.79.
+- For Dimension 1, the variables are `x`, `y`, `z` and `logCarat` all with $R^2$ values above 0.90.
+  It is also relevant to note that the supplementary variable `logPrice` is also very significant in this dimension, with a value of $R^2$ of 0.79.
 - For Dimension 2, the variables that contribute the most are `cut`, `table`, and `depth`, with $R^2$ values of approximately 0.69, 0.42, and 0.38 respectively. 
 
 Also, it is relevant to observe the link between variable and categories to see which are the *most significant categories in each dimension*, which are those represented with the highest absolute value of Estimate.
@@ -878,7 +878,7 @@ For the plots, we will interpret them in the 1st and 2nd dimension, since they a
 
 Firstly, we will interpret the *cloud of individuals*. The plot shows both the individuals and the categories represented by the 1st and 2nd dimension. In the plot, the following patterns can be observed:
 
-The individuals form two clearly separated groups horizontally. This mainly happens because the variables that dominate Dimension 1 were converted into "over” and “below” categories. Since these binary modalities are positioned on opposite sides of the map, the individuals are naturally pulled toward one side or the other depending on whether they fall above or below the median. As a result, almost no points appear near the center, and the two clouds become very visible.
+The individuals form two clearly separated groups horizontally. This mainly happens because the variables that dominate Dimension 1 were converted into "over" and "below" categories. Since these binary modalities are positioned on opposite sides of the map, the individuals are naturally pulled toward one side or the other depending on whether they fall above or below the median. As a result, almost no points appear near the center, and the two clouds become very visible.
 
 Vertically, however, the structure is much softer. The variables contributing to Dimension 2 (cut, table, depth, and partly clarity and color) are not binary, so they do not create two opposing groups. Instead, they spread individuals more gradually, generating a continuous cloud rather than distinct clusters along this axis.
 
@@ -1447,5 +1447,66 @@ table(dfClustFAMD$Cluster, dfClustFAMD$color)
 table(dfClustFAMD$Cluster, dfClustFAMD$clarity)
 ```
 
+### Hotelling or MANOVA
+After identifying 4 clusters through PCA-based hierarchical clustering, we decided that this was the best clustering method. To assess whether the clusters are really meaningful, Multivariate Analysis of Variance (MANOVA) has been conducted. 
+
+Two complementary MANOVA strategies have been applied.
+- *MANOVA on original numerical variables*: logCarat, x, y, z, depth, table, and logPrice, using cluster membership as the grouping factor.
+- *MANOVA on PCA scores*, specifically, applying it to the first two principal component scores obtained from the PCA, which summarize the main latent dimensions of the data. The first component represents a size–value gradient, while the second captures geometric balance related to table and depth proportions. Using PCA scores as response variables avoids multicollinearity and directly tests whether clusters differ along the same dimensions used to construct them.
+
+For the first analysis, before applying MANOVA, the normality assumption must be considered. Normality was assessed using both statistical tests and graphical inspection. The results can be summarized as follows:
+- logCarat does not satisfy normality even after the logarithmic transformation, according to formal normality tests.
+- Depth fails the normality tests, however, its histogram and Q-Q plot show an approximately symmetric, bell-shaped distribution, so it can be considered approximately normal from a graphical perspective.
+- Table also fails the normality tests, although its distribution is fairly symmetric with only mild skewness.
+- logPrice, after logarithmic transformation, becomes much more symmetric; despite still failing formal normality tests, its graphical shape is reasonably close to normal.
+- x, y, and z do not strictly follow a normal distribution according to the tests, although they present unimodal distributions without extreme skewness or heavy tails.
+
+Overall, while strict univariate normality is not met for all variables, the deviations are generally mild. Since logCarat is not normal even with graphical assessment, we won't use it in the MANOVA analysis.
+
+```{r}
+#check homogeneity
+```
+
+
+For the second approach, we use PCA scores to perform MANOVA. For this, we also need to check the normality and homogeneity of the PCA scores:
+None of them are normal and there's no homogeneity
+```{r}
+# Extract the first two PCA individual coordinates
+df_manova_pca <- as.data.frame(diamonds.pca.sup$ind$coord[, 1:2])
+colnames(df_manova_pca) <- c("PC1", "PC2")
+
+# Add cluster membership from PCA-based clustering (k = 4)
+df_manova_pca$Cluster <- dfClustPCA4$Cluster
+
+# normality
+for (i in 1:2) {
+  hist(df_manova_pca[, i], main = colnames(df_manova_pca)[i])
+  print(colnames(df_manova_pca)[i])
+  print(shapiro.test(df_manova_pca[, i]))
+  print(ks.test(df_manova_pca[, i], "pnorm",
+                mean = mean(df_manova_pca[, i]),
+                sd = sd(df_manova_pca[, i])))
+}
+
+# homogeneity
+library(biotools)
+
+boxM(df_manova_pca[, c("PC1", "PC2")],df_manova_pca$Cluster)
+boxplot(PC1 ~ Cluster, data = df_manova_pca, main = "PC1 by Cluster")
+boxplot(PC2 ~ Cluster, data = df_manova_pca, main = "PC2 by Cluster")
+```
+
+```{r}
+# One-way MANOVA
+man_pca <- manova(cbind(PC1, PC2) ~ Cluster, data = df_manova_pca)
+summary(man_pca)
+summary.aov(man_pca)
+
+# Post-hoc comparisons
+TukeyHSD(aov(PC1 ~ Cluster, data = df_manova_pca))
+TukeyHSD(aov(PC2 ~ Cluster, data = df_manova_pca))
+```
+
 
 ## 2.6. Discriminant analysis
+
