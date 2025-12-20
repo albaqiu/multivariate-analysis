@@ -1244,9 +1244,10 @@ Overall, the four clusters describe a clear size-quality trade-off: smaller diam
 # HCPC applied to the previously computed PCA
 res.hcpc <- HCPC(diamonds.pca.sup, nb.clust = 4, consol = TRUE) # 4 clusters
 
+pal <- c("#000000", "#E41A1C", "green3", "dodgerblue") 
+
 # Dendrogram visualization
-library(factoextra)
-fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - PCA-based Hierarchical Clustering")
+fviz_dend(res.hcpc, k = 4, rect = TRUE,  rect_fill = TRUE, k_colors = pal, main = "Dendrogram - PCA-based Hierarchical Clustering")
 
 # Plot the inertia gain to visualize cluster selection
 plot(res.hcpc, choice = "bar", main = "Inertia gain on PCA")
@@ -1318,8 +1319,10 @@ Although the automatic HCPC cut on the MCA scores suggests a six-cluster partiti
 # HCPC applied to the previously computed MCA
 res.hcpc.mca <- HCPC(res.mca, nb.clust = 4, consol = TRUE) # 4 clusters
 
-# Visualize the dendrogram
-fviz_dend(res.hcpc.mca, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - MCA-based Hierarchical Clustering")
+pal <- c("#000000", "#E41A1C", "green3", "dodgerblue") 
+
+# Dendrogram visualization
+fviz_dend(res.hcpc.mca, k = 4, rect = TRUE,  rect_fill = TRUE, k_colors = pal, main = "Dendrogram - PCA-based Hierarchical Clustering")
 
 # Plot the inertia gain to visualize cluster selection
 plot(res.hcpc.mca, choice = "bar", main = "Inertia gain on MCA")
@@ -1390,14 +1393,16 @@ This cluster groups the largest and most expensive diamonds (carat ≈ 1.64; x, 
 # Hierarchical Clustering on FAMD scores
 res.hcpc.famd <- HCPC(res, -1, consol = TRUE) # automatic cut: 3 clusters
 
-# Visualize the dendrogram
-fviz_dend(res.hcpc.famd, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - FAMD-based Hierarchical Clustering")
+pal <- c("#000000", "#E41A1C", "green3") 
+
+# Dendrogram visualization
+fviz_dend(res.hcpc.famd, k = 3, rect = TRUE,  rect_fill = TRUE, k_colors = pal, main = "Dendrogram - FAMD-based Hierarchical Clustering")
 
 # Plot the inertia gain to visualize cluster selection
 plot(res.hcpc.famd, choice = "bar", main = "Inertia gain on FAMD")
 
 # Visualize clusters in the PCA factor map
-fviz_cluster(res.hcpc.famd, repel = TRUE, show.clust.cent = TRUE,main = "Cluster Visualization on FAMD Factor Map (Dim 1 vs Dim 2)")
+fviz_cluster(res.hcpc.famd, repel = TRUE, show.clust.cent = TRUE, main = "Cluster Visualization on FAMD Factor Map (Dim 1 vs Dim 2)")
 
 # 3D visualization
 plot(res.hcpc.famd, choice = "3D.map", main = "3D Cluster Visualization")
