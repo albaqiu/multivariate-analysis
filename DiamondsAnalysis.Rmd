@@ -46,7 +46,7 @@ library(kmed)
 
 ## 1. Data preparation
 
-The dataset have been imported using the \emph{read.csv()} function from the \emph{dplyr} library. The variable named X have been removed, as it corresponds to an index column rather than an explanatory variable. Additionally, the categorical variables cut, color, and clarity have been correctly converted into factors.
+The dataset has been imported using the \emph{read.csv()} function from the \emph{dplyr} library. The variable named X has been removed, as it corresponds to an index column rather than an explanatory variable. Additionally, the categorical variables cut, color, and clarity have been correctly converted into factors.
 
 ```{r}
 diamonds <- read.csv('diamonds.csv')
@@ -60,7 +60,7 @@ diamonds$clarity <- as.factor(diamonds$clarity)
 summary(diamonds)
 ```
 
-Since the dataset contained a large number of observations $(53940)$, a random sample of $500$ observations has been selected to allow for a more manageable and focused analysis. It is worth noting that the means of the numerical variables and the proportions of observations in each category do not vary significantly.
+Since the dataset contains a large number of observations $(53940)$, a random sample of $500$ observations has been selected to allow for a more manageable and focused analysis. It is worth noting that the means of the numerical variables and the proportions of observations in each category do not vary significantly.
 
 ```{r}
 n <- nrow(diamonds)
@@ -73,11 +73,11 @@ summary(diamonds)
 
 ## Exploratory data analysis
 
-For each variable, we check: duplicates, existence of zeros, existence of outliers, existence of missing values and we apply transformations if it is needed.
+For each variable, we have checked duplicates, existence of zeros, existence of outliers, existence of missing values and we have applied transformations if needed.
 
 ## Numerical variables
 
-Helper function to evaluate missing values and zeros
+Helper function to evaluate missing values and zeros.
 
 ```{r}
 check_na <- function(x) {
@@ -91,13 +91,13 @@ results <- lapply(diamonds, check_na)
 results
 ```
 
-We observe that no numeric variable has NA or zeros.
+Observation: no numeric variable has NA or zeros.
 
 ### Carat variable
 
-After analyzing the carat variable, we observe that it doesn't have severe outliers. The carat variable is right-skewed, with a long tail towards larger values, so is clearly not normally distributed. After using boxcox function, we see that a log transformation is appropriate to improve symmetry and stabilize variance.
+After analyzing the carat variable, no severe outliers are observed. The carat variable is right-skewed, with a long tail toward larger values, and therefore is not normally distributed. After applying the Box-Cox transformation, a logarithmic transformation has been identified as appropriate to improve symmetry and stabilize variance.
 
-Notice that the log transformation does not follow a normal distribution neither. The histogram is clearly not bell-shaped and the QQ-plot has a lot of deviations. As it is expected both the Shapiro and the Kolmogorov test have rejected the normality hypothesis.
+However, the log-transformed variable does not follow a normal distribution either. The histogram is not bell-shaped, and the Q-Q plot shows substantial deviations. As expected, both the Shapiro-Wilk test and the Kolmogorov-Smirnov test have rejected the hypothesis of normality.
 
 ```{r}
 # Outliers
@@ -146,9 +146,9 @@ ks.test(diamonds$logCarat, "pnorm", mean=mean(diamonds$logCarat), sd=sd(diamonds
 
 ### Depth variable
 
-The depth variable has $2$ severe outliers, which we removed to make the distribution closer to normality. The histogram of the variable shows that the depth variable appears to be bell-shaped. Moreover, the QQ-plot almost shows a straight line without major deviations, which suggests that this variable could be considered approximately normal.
+The depth variable shows two severe outliers, which have been removed to make the distribution closer to normality. The histogram indicates that the depth variable is approximately bell-shaped. In addition, the Q-Q plot is close to a straight line without major deviations, suggesting that this variable can be considered approximately normal.
 
-Despite the fact that the Shapiro and the Kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis, we have decided to consider the variable to be normally distributed based on the graphical assessment.
+Although the Shapiro-Wilk test and the Kolmogorov-Smirnov test yield low p-values, leading to the rejection of the normality hypothesis, the variable has been considered normally distributed based on the graphical assessment.
 
 ```{r}
 # Outliers
@@ -186,9 +186,9 @@ ks.test(diamonds$depth, "pnorm", mean=mean(diamonds$depth), sd=sd(diamonds$depth
 
 ### Table variable
 
-The variable table contains $1$ severe outlier. After removing it, the distribution becomes almost symmetric with a mild right skewness. Since its shape is already close to normal and a transformation would not provide meaningful improvement, no transformation is applied. The QQ-plot also shows points lying close to a straight line, without major deviations, which further suggests approximate normality. Although the variable is discrete, its wide range of values and its bell-shaped histogram support the assumption that normality may reasonably hold.
+The table variable contains one severe outlier, which has been removed. After its removal, the distribution becomes almost symmetric, with a mild right skewness. Since the shape is already close to normal and a transformation would not provide a meaningful improvement, no transformation is applied. The Q-Q plot shows points lying close to a straight line without major deviations, which further suggests approximate normality. Although the variable is discrete, its wide range of values and its bell-shaped histogram support the assumption that normality can reasonably be assumed.
 
-Despite the fact that the Shapiro and the Kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis, we have decided to consider the variable to be normally distributed based on the graphical assessment.
+Despite the low p-values obtained from the Shapiro-Wilk test and the Kolmogorov-Smirnov test, which lead to the rejection of the normality hypothesis, the variable has been considered normally distributed based on the graphical assessment.
 
 ```{r}
 # Outliers
@@ -226,7 +226,7 @@ ks.test(diamonds$table, "pnorm", mean=mean(diamonds$table), sd=sd(diamonds$table
 
 ### Price variable
 
-The variable price doesn't have severe outliers, but we can observe a long tail at the right of the boxplot, indicating potential mild outliers. The histogram shows a right skewed distribution, which can be improved by a transformation to reduce its skewness and stabilize variance. Based on the boxcox, it seems like a logarithmic transformation would be suitable. After applying the log transformation, the distribution becomes more symmetric and closer to a bell-shaped form, without being still normal distributed. The QQ-plot suggests that the logarithmic variable is still not normally distributed since many deviations are shown. Moreover, the Shapiro and the Kolmogorov test show a low p-value, leading to the rejection of the normality hypothesis.
+The price variable does not show severe outliers, although a long right tail is observed in the boxplot, indicating the presence of potential mild outliers. The histogram shows a right-skewed distribution, which can be improved through a transformation to reduce skewness and stabilize variance. Based on the Box-Cox analysis, a logarithmic transformation has been identified as suitable. After applying the log transformation, the distribution becomes more symmetric and closer to a bell-shaped form, although it remains non-normally distributed. The Q-Q plot indicates that the log-transformed variable still deviates from normality, with several noticeable deviations from the straight line. In addition, both the Shapiro-Wilk test and the Kolmogorov-Smirnov test yield low p-values, leading to the rejection of the normality hypothesis.
 
 ```{r}
 # Outliers
@@ -273,7 +273,7 @@ ks.test(diamonds$logPrice, "pnorm", mean=mean(diamonds$logPrice), sd=sd(diamonds
 
 ### x variable
 
-The x variable does not show any mild nor severe outliers. Nevertheless, the histogram clearly shows that there is one observation with a very low x value compared with the rest. We have attempted to remove this observation, but even after applying a transformation afterward, we have not succeeded in normalizing the variable. For this reason, we have decided to treat the variable in its original form although it clearly does not follow a normal distribution.
+The x variable does not show mild or severe outliers. Nevertheless, the histogram indicates the presence of one observation with a very low x value compared with the rest of the data. An attempt has been made to remove this observation. However, even after applying a transformation, the variable has not been successfully normalized. For this reason, the variable has been analyzed in its original form, despite clearly not following a normal distribution.
 
 ```{r}
 # Outliers
@@ -310,7 +310,7 @@ ks.test(diamonds$x, "pnorm", mean=mean(diamonds$x), sd=sd(diamonds$x))
 
 ### y variable
 
-The y variable does not show any mild nor severe outliers. Nevertheless, the histogram clearly shows that there is one observation with a very low y value compared with the rest. We have attempted to remove this observation, but even after applying a transformation afterward, we have not succeeded in normalizing the variable. For this reason, we have decided to treat the variable in its original form although it clearly does not follow a normal distribution.
+The y variable does not show mild or severe outliers. Nevertheless, the histogram indicates the presence of one observation with a very low y value compared with the rest of the data. An attempt has been made to remove this observation. However, even after applying a transformation, the variable has not been successfully normalized. For this reason, the variable has been analyzed in its original form, despite clearly not following a normal distribution.
 
 ```{r}
 # Outliers
@@ -347,7 +347,7 @@ ks.test(diamonds$y, "pnorm", mean=mean(diamonds$y), sd=sd(diamonds$y))
 
 ### z variable
 
-The z variable does not show any mild nor severe outliers. Nevertheless, the histogram clearly shows that there is one observation with a very low z value compared with the rest. We have attempted to remove this observation, but even after applying a transformation afterward, we have not succeeded in normalizing the variable. For this reason, we have decided to treat the variable in its original form although it clearly does not follow a normal distribution.
+The z variable does not show mild or severe outliers. Nevertheless, the histogram indicates the presence of one observation with a very low z value compared with the rest of the data. An attempt has been made to remove this observation. However, even after applying a transformation, the variable has not been successfully normalized. For this reason, the variable has been analyzed in its original form, despite clearly not following a normal distribution.
 
 ```{r}
 # Outliers
@@ -386,9 +386,9 @@ ks.test(diamonds$z, "pnorm", mean=mean(diamonds$z), sd=sd(diamonds$z))
 
 ### Cut variable
 
-Cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for $37.4\%$ of observations, while the Fair level comprising only $1.8\%$ of the observations. These strange categories could be grouped further depending on the results of the multivariate analysis.
+The cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for $37.4\%$ of the observations, while the Fair level represents only $1.8\%$ of the data. These sparse categories can be further grouped depending on the results of the multivariate analysis.
 
-Since Fair and Good are consecutive levels on the standard cut-quality scale and represent similar performance in terms of light return and symmetry, they can be combined into a single category (Fair/Good). This grouping preserves the ordinal logic of the cut grading system while ensuring more balanced frequencies across categories, leading to more robust and interpretable results.
+Since Fair and Good are consecutive levels on the standard cut-quality scale and represent similar performance in terms of light return and symmetry, they have been combined into a single category (Fair/Good). This grouping preserves the ordinal logic of the cut grading system while ensuring more balanced category frequencies, leading to more robust and interpretable results.
 
 ```{r}
 # Distribution
@@ -410,9 +410,9 @@ barplot(table(diamonds$cut), main="Diamond Cut Quality")
 
 ### Color variable
 
-Color variable shows no missing values. It is a more balanced variable. Nonetheless, the most frequent grade is G, representing $12.6\%$ of observations, while the least frequent is J, with $3.4\%$, indicating that diamonds with a noticeable tint are less common in the dataset.
+The color variable shows no missing values and is relatively well balanced. Nevertheless, the most frequent grade is G, representing $12.6\%$ of the observations, while the least frequent grade is J, accounting for $3.4\%$, indicating that diamonds with a noticeable tint are less common in the dataset.
 
-To avoid categories with very low frequency and to improve stability in the multivariate analysis, the light-tinted grades I and J can be grouped together, as these two grades are consecutive in the GIA color scale and represent similar coloration.
+To avoid categories with very low frequencies and to improve stability in the multivariate analysis, the light-tinted grades I and J have been grouped together. These grades are consecutive on the GIA color scale and represent similar coloration.
 
 ```{r}
 # Distribution
@@ -436,11 +436,9 @@ barplot(table(diamonds$color), main="Diamond Color")
 
 ### Clarity variable
 
-Clarity variable shows no missing values. It is clearly unbalanced. The diamond clarity distribution is more frequent for the SI1 and VS2 grades. Hence, the sample is composed mostly of slightly-to-very slightly included stones. 
+The clarity variable shows no missing values and is clearly unbalanced. The distribution is dominated by the SI1 and VS2 grades, indicating that the sample is mainly composed of slightly to very slightly included diamonds.
 
-Since some clarity levels (particularly I1 and IF) have very low frequencies, the strange categories can be grouped to avoid having categories with extremely few observations.
-
-The grouping should be done by pairing them with their closest neighbouring grades in the GIA clarity scale. Specifically, I1 should be grouped with SI2, and IF with VVS1. This transformation reduces sparsity, preserves the ordinal structure of the variable and results in more stable and interpretable results.
+Since some clarity levels, particularly I1 and IF, have very low frequencies, these sparse categories have been grouped to avoid levels with extremely few observations. The grouping has been performed by pairing each level with its closest neighboring grade on the GIA clarity scale: I1 has been grouped with SI2, and IF with VVS1. This transformation reduces sparsity, preserves the ordinal structure of the variable, and leads to more stable and interpretable results.
 
 ```{r}
 # Distribution
@@ -466,7 +464,7 @@ diamonds$clarity <- factor(
 barplot(table(diamonds$clarity), main="Diamond Clarity")
 ```
 
-In conclusion, we have removed 3 observations and transformed the variables carat and price with a logarithmic transformation for a better interpretation. Hence, the dataframe we will work with is:
+In conclusion, three observations have been removed, and the carat and price variables have been transformed using a logarithmic transformation to improve interpretability. In addition, categorical variables have been grouped to reduce sparsity and ensure more balanced category frequencies while preserving their ordinal structure. Hence, the dataframe used for subsequent analyses is:
 
 ```{r}
 diamondsOg <- diamonds[,c(1:10)]
@@ -477,11 +475,11 @@ diamonds <- diamonds[,c(2:6,8:12)]
 
 The numeric variables are generally highly correlated. The x, y, z, logPrice, and logCarat variables exhibit nearly perfect positive correlations, and their scatter plots form almost straight lines. In fact, the logarithmic transformations of price and carat further increase these correlations.
 
-In contrast, the depth and table variables show weak correlations with the other variables, with depth being the only variable negatively correlated with all the others. Their scatter plots display a cloud of points without a clear pattern, although table and depth appear slightly negatively correlated.
+In contrast, the depth and table variables show weak correlations with the remaining variables, with depth being the only variable negatively correlated with all others. Their scatter plots display diffuse clouds of points without a clear pattern, although table and depth appear to be slightly negatively correlated.
 
-As expected, the Bartlett test returns a very low p-value, rejecting the null hypothesis that the correlation matrix is equal to the identity matrix.
+As expected, the Bartlett test has returned a very low p-value, leading to the rejection of the null hypothesis that the correlation matrix is equal to the identity matrix.
 
-It is important to note that the correlations of the whole population and of the randomly generated sample are very similar, so no misleading conclusions are drawn from using the sample instead of the full dataset.
+It is also noted that the correlation structures of the full population and the randomly generated sample are very similar. Therefore, no misleading conclusions are introduced by using the sample instead of the complete dataset.
 
 ```{r}
 numeric_vars <- diamonds[ , sapply(diamonds, is.numeric)]
@@ -495,7 +493,7 @@ pairs(numeric_vars, main="Scatterplot Matrix of Numeric Variables")
 cortest.bartlett(cor_matrix, nrow(diamonds))
 ```
 
-Taking into account the KMO index, since it is higher than 0.5, the data are factorable. In other words, the variables are sufficiently correlated with each other so that meaningful factors can be extracted.
+Considering the KMO index, since it is higher than 0.5, the data are considered factorable. In other words, the variables are sufficiently correlated with each other to allow the extraction of meaningful factors.
 
 ```{r}
 # (function written by Prof. Shigenobu Aok.)
@@ -522,13 +520,13 @@ kmo(numeric_vars)
 
 ## 2.1. Principal components analysis
 
-The PCA analysis has been applied using the numeric variables of the diamonds dataset with the \emph{PCA()} function from the \emph{FactoMineR} library.
+The PCA analysis has been applied using the numeric variables of the diamonds dataset through the \emph{PCA()} function from the \emph{FactoMineR} library.
 
-The objective of this method is to construct an index that summarizes the numerical characteristics of the diamonds (logCarat, x, y, z, depth, and table), with the aim of reducing the dimensionality of the dataset and generating an indicator that can be related to the diamond’s price. Therefore, the logPrice numeric variable has been considered as a supplementary variable. Moreover, the PCA scores can be used to interpret the MDS and clustering results.
+Given the strong correlations among the numerical variables, PCA has been considered an appropriate method to construct an index summarizing the numerical characteristics of the diamonds (logCarat, x, y, z, depth and table), with the aim of reducing the dimensionality of the dataset and generating an indicator that can be related to the diamond price. For this reason, the logPrice variable has been treated as a supplementary variable. Another objective has been to facilitate the interpretation of the MDS results. In addition, due to the high correlation among the variables, performing clustering on the principal components rather than on the original variables has been expected to produce more interpretable and robust clusters, by preventing distance-based clustering methods from being influenced by redundant information.
 
-By treating price as a supplementary variable, it is excluded from the calculation of the principal components and only projected onto the factorial space afterwards. This makes it possible to study how price aligns with the main axes without altering their structure.
+By treating price as a supplementary variable, it has been excluded from the computation of the principal components and only projected onto the factorial space afterward. This approach makes it possible to analyze how price aligns with the main axes without affecting their structure.
 
-In order to determine the number of components to extract, taking into account that the data is standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted by that dimension. In this case, the first two components (with eigenvalues $4.06$ and $1.26$) are the ones that meet the Kaiser's requirement. Moreover, the cumulative percentage of variance shows that these two components explain $88.65\%$ of the total variance, which indicates that they capture most of the information in the data frame. In addition, the scree plot shows a noticeable elbow after the first component, indicating that retaining two components captures most of the variance while keeping the solution interpretable.
+To determine the number of components to retain, and taking into account that the data are standardized, the Kaiser criterion has been applied. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, larger eigenvalues indicate a greater proportion of explained variability. In this case, the first two components, with eigenvalues $4.06$ and $1.26$, satisfy the Kaiser criterion. Moreover, the cumulative percentage of explained variance shows that these two components account for $88.65%$ of the total variance, indicating that they capture most of the information in the dataset. Additionally, the scree plot exhibits a clear elbow after the first component, suggesting that retaining two components provides a good balance between variance explained and interpretability.
 
 ```{r}
 diamonds.pca.sup <- PCA(numeric_vars, quanti.sup = 7, graph = T)
@@ -539,13 +537,18 @@ lines(diamonds.pca.sup$eig[,1], type = "o", col = "red", pch = 19, add=T)
 diamonds.pca.sup$eig
 ```
 
-It is important to determine which variables contribute most to each of the relevant components in order to reduce the number of variables. Hence, considering the coordinates of the variables, it is possible to see which variable is associated with each component. On the other hand, examining the $cos^2$ values shows which variables are more strongly related to a given component.
+It is important to identify which variables contribute most to each relevant component in order to reduce the number of variables. By considering the coordinates of the variables, it is possible to determine which variables are associated with each component. In addition, examining the $cos^2$ values indicates which variables are more strongly related to a given component.
 
--   Dimension $1$: Physical Magnitude (and Price Component): Dimension $1$ shows strong positive loadings for variables related to the diamond’s physical magnitude, such as x, y, z, and logCarat. As can be seen by the plot, the supplementary variable logPrice is very correlated with dimension 1. This indicates a clear relationship between a diamond’s overall material magnitude and its price. As expected, larger and heavier diamonds tend to be more expensive. Hence, this axis can be interpreted as an overall physical magnitude-price direction. Diamonds with high coordinates on dimension $1$ are generally larger, heavier, and more valuable, while diamonds with low coordinates tend to be smaller and less expensive.
+- \textbf{Dimension $1$: Overall physical magnitude and price association}
 
--   Dimension $2$: Geometric Balance Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Considering that depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. In other words, dimension $2$ is positively associated with taller, more pointed diamonds with a narrower top surface relative to their width, and negatively associated with shallow or flattened diamonds.
+Dimension $1$ shows strong positive loadings for variables related to the physical magnitude of the diamond, such as x, y, z and logCarat. As shown in the figure, the supplementary variable logPrice is highly correlated with Dimension $1$. This indicates a clear relationship between the overall physical magnitude of a diamond and its price. As expected, larger and heavier diamonds tend to be more expensive. Therefore, this axis can be interpreted as an overall physical magnitude-price dimension. Diamonds with high coordinates on Dimension $1$ are generally larger, heavier, and more valuable, whereas diamonds with low coordinates tend to be smaller and less expensive.
 
-It is important to note that these results are expected when considering the correlation analysis. The physical dimensions and price are highly and positively correlated, whereas table and depth are only mildly and negatively correlated.
+
+- \textbf{Dimension $2$: Geometric balance}
+
+Dimension $2$ shows a strong positive loading for the depth variable and a strong negative loading for the table variable. Since depth measures the vertical height of the diamond from the culet (bottom point) to the table (top flat surface), this dimension can be interpreted as a geometric balance between tall and wide diamonds. Specifically, Dimension $2$ is positively associated with taller, more pointed diamonds with a relatively narrower top surface, and negatively associated with shallower or more flattened diamonds.
+
+It is important to note that these results are consistent with the correlation analysis. The physical dimensions and price variables are highly and positively correlated, whereas table and depth show a mild negative correlation.
 
 ```{r}
 corrplot(diamonds.pca.sup$var$coord)
@@ -557,22 +560,23 @@ diamonds.pca.sup$var$coord
 plot.PCA(diamonds.pca.sup, choix = "var", axes = c(1, 2))
 ```
 
-Although an individual assessment of the dataset has not provided much additional information, it is important to note that some observations fall far from the main cloud of points. For instance, the diamonds labeled $270$ and $380$ are clear outliers in dimension two, corresponding to a shallow or flattened diamond and a pointed diamond, respectively. Conversely, the diamond labeled 365 is a clear outlier in dimension one, suggesting that it is larger, heavier, and more valuable.
+Although the individual assessment of the dataset has not provided substantial additional information, it is important to note that some observations lie far from the main cloud of points. For instance, the diamond labeled $270$ is a clear outlier along dimension $2$, indicating that it corresponds to a shallow or flattened diamond, whereas the diamonds labeled $308$ and $358$ are clearly more pointed. Conversely, the diamond labeled $365$ is a clear outlier along dimension $1$, indicating that it is larger, heavier, and more valuable.
 
 ```{r}
 plot.PCA(diamonds.pca.sup, choix = "ind", axes = c(1, 2))
 ```
 
-TO DO CONCLUSIONS
-
+In conclusion, PCA has effectively summarized the numeric variables of the diamonds dataset into a small number of interpretable and uncorrelated components. The first two dimensions capture most of the total variability and reflect meaningful characteristics of the diamonds. Dimension $1$ represents overall physical magnitude and is strongly associated with price, while Dimension $2$ captures geometric differences related to depth and table. This reduced representation retains most of the information in the data and provides a solid basis for further analyses.
 
 ## 2.2. Multidimensional scaling
 
-The Euclidean distance matrix, based on the scaled numerical variables, has been computed using the \emph{dist()} function. Using this matrix, the \emph{cmdscale()} function has been applied. 
+Multidimensional scaling has been applied to provide an alternative representation of the diamonds dataset based directly on distances between observations, with the aim of assessing whether the patterns and structures identified through PCA are preserved. In addition, different distance measures are considered in order to evaluate the effect of including categorical variables on the resulting similarity structure.
 
-The number of dimensions selected has been $k=2$. Taking into account the scree plot, it shows a noticeable elbow after the first component, indicating that retaining two dimensions captures most of the variance while keeping the solution interpretable. Moreover, the GOF obtained for the two-dimensional solution is $0.89\%$, indicating that the map preserves a substantial proportion of the original distance information and provides a reasonably good representation of the relationships among the observations.
+The Euclidean distance matrix, based on the scaled numerical variables, has been computed using the \emph{dist()} function. Classical multidimensional scaling has then been applied through the \emph{cmdscale()} function.
 
-The MDS individual plot shows relationships similar to those observed in the PCA results. The diamonds labeled $270$, $365$, and $308$ are clearly outstanding observations, standing apart from the main cloud. In fact, since they occupy the same positions as in the PCA, it can be concluded that the first and second MDS coordinates correspond closely to the first and second PCA components. One notable difference between the two methods is that MDS distributes the individuals more evenly across the space, rather than concentrating them as in the PCA plot.
+The number of dimensions retained is $k=2$. According to the scree plot, a noticeable elbow appears after the first dimension, indicating that retaining two dimensions captures most of the information while keeping the solution interpretable. Moreover, the GOF obtained for the two-dimensional solution is $0.89$, indicating that the map preserves a substantial proportion of the original distance information and provides a reasonably good representation of the relationships among observations.
+
+The MDS individual plot shows patterns similar to those observed in the PCA results. The diamonds labeled $270$, $308$, $358$ and $365$ stand clearly apart from the main cloud of points. Since these observations occupy positions comparable to those observed in the PCA representation, it can be concluded that the first and second MDS dimensions closely correspond to the first and second PCA components. One notable difference between the two methods is that MDS distributes the observations more evenly across the space, rather than concentrating them as in the PCA plot.
 
 ```{r}
 ds_eu <- dist(scale(numeric_vars), method = "euclidean")
@@ -596,11 +600,11 @@ plot(x, y, xlab="Coordinate 1", ylab="Coordinate 2",
 text(x, y, labels = row.names(diamonds), cex=.7)
 ```
 
-On the other hand, we have also performed the MDS analysis using the Gower distance, computed with the \emph{daisy} function from the \emph{cluster} library, allowing us to include all categorical variables. 
+On the other hand, MDS has also been performed using the Gower distance, computed with the \emph{daisy()} function from the \emph{cluster} library, which allows the inclusion of both numerical and categorical variables. This approach makes it possible to assess whether categorical information contributes additional structure beyond that captured by the numerical variables alone.
 
-The scree plot also suggests that using two dimensions captures most of the variance while keeping the solution interpretable. In the case of Euclidean distance, both GOF values are identical. However, when using the Gower distance, the two GOF components differ slightly. The first value $(0.26)$ measures the proportion of total variance explained by the two dimensions, considering both positive and negative eigenvalues, whereas the second value $(0.36)$ only accounts for the positive eigenvalues. This difference arises because the Gower distance combines mixed variable types.
+The scree plot again suggests that retaining two dimensions captures most of the information while keeping the solution interpretable. In the case of the Euclidean distance, both GOF values are identical. However, when using the Gower distance, the two GOF measures differ slightly. The first value $(0.26)$ represents the proportion of total variance explained by the two dimensions when both positive and negative eigenvalues are considered, whereas the second value $(0.36)$ accounts only for the positive eigenvalues. This difference arises because the Gower distance combines variables of mixed types, which affects the eigenvalue structure of the distance matrix.
 
-Although the GOF measure is lower when including the categorical variables, it is important to note that the individual plot clearly separates the diamonds into four distinct groups, which should be analyzed further. Nonetheless, observations $365$ is still an outstanding observation.
+Although the GOF values are lower when categorical variables are included, this result is expected, as incorporating mixed data types introduces additional heterogeneity into the distance computation. Nevertheless, the individual plot shows a clear separation of the diamonds into four distinct groups, suggesting that categorical variables contribute meaningful information for distinguishing similarity patterns among observations. Observation $365$ remains a clearly outstanding case in the MDS representation.
 
 ```{r}
 ds_gw <- daisy(diamonds, metric = "gower")
@@ -647,14 +651,9 @@ draw.ellipse(x0=0.2, y0=0.12, a=0.12, b=0.08, col="green", lwd=2.5)
 draw.ellipse(x0=0.20, y0=-0.12, a=0.18, b=0.12, col="orange", lwd=2.5)
 
 text(x, y, labels = row.names(diamonds), cex=.7)
-
-legend("bottomleft", 
-       legend=c("Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4"),
-       col=c("red", "blue", "green", "orange"),
-       lwd=2.5, 
-       bty="n",
-       cex=0.8)
 ```
+
+In this context, MDS has proven to be a valuable complementary method to PCA, providing an alternative, distance-based perspective on the structure of the diamonds dataset. The strong consistency between the Euclidean MDS and PCA representations reinforces the robustness of the main dimensions identified using numerical variables. In contrast, the Gower-based MDS reveals additional structure driven by the inclusion of categorical variables, leading to a clearer separation of observations and highlighting grouping patterns that are not captured by numerical information alone. Overall, MDS enhances the interpretability of the data and supports the understanding and validation of subsequent clustering results when dealing with correlated variables and mixed data types.
 
 ## 2.3. Correspondence analysis
 
@@ -931,17 +930,17 @@ Overall, the MCA highlights which characteristics matter most for differentiatin
 
 ## 2.5. Clustering and profiling
 
-In this section, a clustering analysis is performed with the objective of identifying meaningful groups within the dataset. The analysis is carried out under two different settings.
+In this section, a clustering analysis is performed with the aim of identifying homogeneous groups of diamonds that share similar characteristics. The objective is to detect natural group structures in the data and to compare the clustering results obtained under different modeling settings.
 
-First, clustering is applied using only the numerical variables, combining hierarchical and non-hierarchical methods, as well as clustering based on the principal component scores. Second, clustering of numerical and categorical variables is conducted to obtain a more comprehensive segmentation of the data.
+The analysis is carried out under two complementary settings. First, clustering is performed using only the numerical variables, combining hierarchical and non-hierarchical methods, as well as clustering based on the principal component scores, in order to take advantage of the reduced and uncorrelated representation provided by PCA. Second, clustering is extended to include both numerical and categorical variables, with the aim of obtaining a more comprehensive and informative segmentation of the diamonds dataset.
 
 ### 2.5.1. Hierarchical clustering
 
-The hierarchical clustering analysis is performed on the numerical variables after standardising them with the \emph{scale()} function. An Euclidean distance matrix is then obtained using the \emph{dist()} function applied to the scaled dataset.
+The hierarchical clustering analysis is performed on the numerical variables after standardisation using the \emph{scale()} function. A Euclidean distance matrix is then computed by applying the \emph{dist()} function to the scaled dataset.
 
-The clustering structure is produced with the \emph{hclust()} function, and two linkage criteria are considered in order to compare their performance. First, the **complete linkage method** is computed, which defines the distance between clusters based on the maximum distance between their observations. Second, the **Ward’s method** is used, which is based on minimising the within-cluster sum of squared errors (SSE).
+The clustering structure is obtained using the \emph{hclust()} function, and two linkage criteria are considered in order to compare their performance. First, the \textbf{complete linkage method} is applied, which defines the distance between clusters based on the maximum distance between their observations. Second, \textbf{Ward’s method} is used, which is based on minimising the within-cluster sum of squared errors (SSE). Other linkage methods have also been applied, but they have been discarded as they result in highly unbalanced and poorly interpretable cluster solutions.
 
-The resulting dendrograms allow a first inspection of the potential number of clusters. Using the \emph{rect.hclust()} function, possible partitions into 4, 5 and 6 clusters are highlighted. As observed in the figures, the Ward method provides a clearer and more compact separation between groups than the complete linkage method, suggesting that it offers a more interpretable clustering solution. Based on the Ward dendrogram, a solution with $4$ clusters appears to be the most appropriate, as it captures the main structure of the data before a major increase in fusion height.
+The resulting dendrograms allow an initial inspection of the potential number of clusters. Using the \emph{rect.hclust()} function, possible partitions into 4, 5, and 6 clusters are highlighted. As observed in the figures, Ward’s method provides a clearer and more compact separation between groups than the complete linkage method, suggesting a more interpretable clustering solution. Based on the Ward dendrogram, a solution with 4 clusters appears to be the most appropriate, as it captures the main structure of the data before a major increase in fusion height.
 
 ```{r}
 ## Scale numerical data
@@ -949,7 +948,10 @@ dfscaled <- scale(numeric_vars)
 dfscaled <- as.data.frame(dfscaled) # convert the scaled data to a dataframe
 d <- dist(dfscaled, method = "euclidean") # apply distance matrix on the scaled dataframe
 
-## Complete linkage method
+## Set margins 
+par(xpd = TRUE, mar = c(5, 4, 4, 8))
+
+## 1. Complete linkage method
 fit1 <- hclust(d, method="complete") 
 plot(fit1, main="Dendrogram of complete Linkage") 
 # 4 clusters/6 clusters
@@ -966,7 +968,7 @@ legend("topright",
        cex = 0.8,
        bg = "white")
 
-## Ward method
+## 2. Ward method
 fit2 <- hclust(d, method="ward.D2") 
 plot(fit2, main="Dendrogram of Ward Method") 
 # 4 clusters/5 clusters
@@ -982,19 +984,63 @@ legend("topright",
        lwd = 2,
        cex = 0.8,
        bg = "white")
+
+## 3. Single linkage method
+fit3 <- hclust(d, method = "single")
+plot(fit3, main = "Dendrogram of Single Linkage")
+
+rect.hclust(fit3, k = 3, border = "pink") # 3 clusters
+rect.hclust(fit3, k = 4, border = "blue") # 4 clusters
+rect.hclust(fit3, k = 5, border = "yellow") # 5 clusters
+rect.hclust(fit3, k = 6, border = "purple") # 6 clusters
+
+legend("topright", inset = c(-0.25, 0),
+       legend = c("3 clusters", "4 clusters", "5 clusters", "6 clusters"),
+       col = c("pink", "blue", "yellow", "purple"),
+       lwd = 2, cex = 0.8, bg = "white")
+
+## 4. Average linkage method
+fit4 <- hclust(d, method = "average")
+plot(fit4, main = "Dendrogram of Average Linkage")
+
+rect.hclust(fit4, k = 3, border = "cyan") # 3 clusters
+rect.hclust(fit4, k = 4, border = "red") # 4 clusters
+rect.hclust(fit4, k = 5, border = "green") # 5 clusters
+rect.hclust(fit4, k = 6, border = "orange") # 6 clusters
+
+legend("topright", inset = c(-0.25, 0),
+       legend = c("3 clusters", "4 clusters", "5 clusters", "6 clusters"),
+       col = c("cyan", "red", "green", "orange"),
+       lwd = 2, cex = 0.8, bg = "white")
+
+## 5. Centroid linkage method
+fit5 <- hclust(d, method = "centroid")
+plot(fit5, main = "Dendrogram of Centroid Linkage")
+
+rect.hclust(fit5, k = 3, border = "pink") # 3 clusters
+rect.hclust(fit5, k = 4, border = "purple") # 4 clusters
+rect.hclust(fit5, k = 5, border = "blue") # 5 clusters
+rect.hclust(fit5, k = 6, border = "brown") # 6 clusters
+
+legend("topright", inset = c(-0.25, 0),
+       legend = c("3 clusters", "4 clusters", "5 clusters", "6 clusters"),
+       col = c("pink", "purple", "blue", "brown"),
+       lwd = 2, cex = 0.8, bg = "white")
+
+par(xpd = FALSE, mar = c(5, 4, 4, 2))
 ```
 
 ### 2.5.2. Non-hierarchical clustering
 
-A non-hierarchical clustering analysis is performed using several criteria to determine an appropriate number of clusters. Three different methods are considered: the **TWSS Elbow Graph**, the **Pseudo F Index**, and the **Silhouette Index**.
+A non-hierarchical clustering analysis is performed using several criteria to determine an appropriate number of clusters. Three different methods are considered: the \textbf{TWSS Elbow Graph}, the \textbf{Pseudo F Index}, and the \textbf{Silhouette Index}.
 
 ##### TWSS Elbow Graph
 
-The Total Within-Cluster Sum of Squares (TWSS) has been computed for different values of k using the **k-means algorithm**, in order to identify an appropriate number of clusters through the **Elbow method**.
+The Total Within-Cluster Sum of Squares (TWSS) has been computed for different values of k using the \textbf{k-means algorithm}, with the aim of identifying an appropriate number of clusters through the \textbf{Elbow method}.
 
-As shown in the figure, the TWSS decreases sharply between $k=2$ and $k=4$, and then continues to decrease more gradually. A noticeable bend appears around $k=4$.
+As shown in the figure, the TWSS decreases sharply between $k=2$ and $k=4$, and then continues to decrease more gradually. A noticeable bend appears around $k=4$, suggesting this value as a reasonable choice for the number of clusters.
 
-The ratio between the between-cluster sum of squares and the total sum of squares is computed. For $k=4$, this ratio is equal to $0.694$, indicating a fair degree of separation between clusters.
+In addition, the ratio between the between-cluster sum of squares and the total sum of squares has been computed. For $k=4$, this ratio is equal to $0.694$, indicating a fair degree of separation between clusters.
 
 ```{r}
 ## Applying k-means algorithm for different number of clusters 
@@ -1049,9 +1095,9 @@ k6$betweenss/k6$totss # 0.768 greater separation between clusters
 
 ##### Pseudo F Index
 
-The **Pseudo-F Index** has been computed for different values of k in order to evaluate the separation between clusters obtained with k-means. This index is based on the ratio between the between-cluster sum of squares (BSS) and the within-cluster sum of squares (WSS).
+The \textbf{Pseudo F Index} has been computed for different values of k in order to evaluate the separation between clusters obtained with the k-means algorithm. This index is based on the ratio between the between-cluster sum of squares (BSS) and the within-cluster sum of squares (WSS).
 
-In this case the index decreases steadily as k increases, with the highest value appearing at $k=2$. Nevertheless, selecting two clusters does not provide a meaningful segmentation of the dataset and it contradicts the structure suggested by the dendrogram and the TWSS Elbow method.
+In this case, the index decreases steadily as k increases, with the highest value observed at $k=2$. However, selecting two clusters does not provide a meaningful segmentation of the dataset and is not consistent with the structure suggested by the dendrogram and the TWSS Elbow method.
 
 ```{r}
 # Pseudo F index = BSS*(n-k)/WSS*(k-1)
@@ -1067,15 +1113,14 @@ points(2, aux[2-1], pch = 19, cex = 1.5, col = "red")
 
 ##### Silhoutte Index
 
-Finally, the **Silhouette Index** is computed. For each observation, this value compares the average distance to points within its own cluster with the average distance to points in the nearest alternative cluster.
+Finally, the \textbf{Silhouette Index} is computed. For each observation, this measure compares the average distance to points within its own cluster with the average distance to points in the nearest alternative cluster.
 
-The average silhouette widths obtained for $k=3$, $k=4$, $k=5$ and $k=6$ are $0.35$, $0.36$, $0.28$ and $0.29$, respectively. The four-cluster solution shows higher overall cohesion.
+The average silhouette widths obtained for $k=3$, $k=4$, $k=5$, and $k=6$ are $0.35$, $0.36$, $0.28$, and $0.29$, respectively. The four-cluster solution exhibits the highest overall cohesion.
 
-The silhouette index computed using the \emph{fastkmed()} function confirms the same trend: for a range of cluster solutions, the highest silhouette values are obtained for three or four clusters, whereas the performance decreases for higher values of k. The four-cluster solution achieves a good balance between separation and stability.
+The silhouette index computed using the \emph{fastkmed()} function confirms the same pattern: across the range of cluster solutions considered, the highest silhouette values are obtained for three or four clusters, while performance decreases for larger values of k. Overall, the four-cluster solution provides a good balance between cluster separation and stability.
 
 ```{r}
 ## A) Silhouette function from cluster library
-set.seed(12345)
 
 # k=3
 si <- silhouette(k3$cluster, d)
@@ -1117,28 +1162,28 @@ silhouette$plot # k=4 higher silhouette value
 res <- fastkmed(d, 6) 
 silhouette <- sil(d, res$medoid, res$cluster)
 silhouette$result
-silhouette$plot
-# k=4 higher silhouette value
+silhouette$plot # k=4 higher silhouette value
 ```
 
-To sum up, the three criteria do not point to the same value of k, but they do suggest a consistent tendency. The Elbow method shows a clear bend around four clusters, the Pseudo-F index does not provide useful guidance, and the Silhouette index indicates that three or four clusters offer the best structure. Thus, \textbf{four clusters} appear to be the most balanced and interpretable solution, and this value will be used for the next steps of the analysis.
+To sum up, the three criteria do not point to a single value of k, but they suggest a consistent overall tendency. The Elbow method shows a clear bend around four clusters, the Pseudo-F index does not provide useful guidance, and the Silhouette index indicates that three or four clusters yield the most coherent structure. Therefore, \textbf{four clusters} appear to be the most balanced and interpretable solution, and this value is used in the subsequent steps of the analysis.
 
 ### 2.5.3. k-means clustering using the optimal number of clusters
 
 \textbf{- Cluster 1: Large, high-value diamonds}
-This cluster contains the largest diamonds, with a high average carat (≈ 1.65) and large dimensions (x, y ≈ 7.55). These stones also show the highest mean price (≈ 11,200), clearly representing high-value diamonds driven by size.
+This cluster contains the largest diamonds in terms of avergage carat ($\approx 1.65$) and physical dimensions (x, y, z), and it is associated with the highest average price ($\approx 11.200$). It shows a high prevalence of Premium cuts, while color grades are mainly concentrated in the near-colorless to tinted range (H and I/J). Clarity grades are predominantly in the lower categories. This group corresponds to large diamonds whose price is mainly driven by size.
 
 \textbf{- Cluster 2: Small, low-value diamonds}
-Diamonds in this cluster are very small, with a low average carat (≈ 0.39) and compact dimensions (x, y ≈ 4.65). This is reflected in a much lower average price (≈ 1,020), corresponding to entry-level, low-value stones.
+This cluster groups the smallest diamonds, with the lowest average carat ($\approx 0.39$), dimensions, and prices ($\approx 1.200$). A large proportion of Ideal cuts are in this cluster, with medium color grades and clarity levels.
 
 \textbf{- Cluster 3: Medium-sized, balanced diamonds}
-This cluster represents diamonds of intermediate size, with an average carat of ≈ 0.76 and moderate dimensions (x, y ≈ 5.88). Prices are also intermediate (≈ 3,180), indicating balanced stones in terms of size and value.
+Diamonds in this cluster have intermediate carat ($\approx 0.76$), moderate dimensions and price values ($\approx 3.180$). They are characterized by a strong dominance of Premium and Very Good cuts and colorless diamonds. This cluster represents well-balanced diamonds combining size and quality.
 
 \textbf{- Cluster 4: Upper-mid-range diamonds}
-Diamonds in this cluster are larger than average (carat ≈ 0.95; x, y ≈ 6.25) and more expensive than Cluster 3 (≈ 4,630), but clearly smaller and less costly than Cluster 1. This cluster represents upper-mid-range diamonds.
+Diamonds in this cluster are larger than average with $\approx 0.95$ average carat and $\approx 6.25$ x, y values. They are the second most expensive diamonds cluster, with an average of $\approx 4.630$. There is a high proportion of Ideal and clearless diamonds. Hence, this cluster represents upper-mid-range diamonds.
 
 ```{r}
 set.seed(12345) # NO TREURE LA SET SEED D'AQUI QUE SINO CANVIA!!
+
 # Apply k-means with the selected number of clusters
 k4 <- kmeans(dfscaled, centers = 4, nstart = 25)
 dfClustKmeans <- diamondsOg
@@ -1160,26 +1205,26 @@ table(dfClustKmeans$Cluster, dfClustKmeans$color)
 table(dfClustKmeans$Cluster, dfClustKmeans$clarity)
 ```
 
-
 ### 2.5.4. PCA-based clustering
 
-The Hierarchical Clustering on Principal Components (HCPC) method is applied to the scores obtained from the previously computed PCA. 
+The Hierarchical Clustering on Principal Components (HCPC) method has been applied to the scores obtained from the previously computed PCA. The categorical variables have been set as supplementary in order to allow their interpretation within the resulting clusters.
+
+```{r}
+diamonds.pca.sup.clust <- PCA(diamonds, quanti.sup = 10, quali.sup = c(1,2,3), graph = T)
+```
+
 
 #### Automatic cut: 3 clusters
-The \emph{HCPC()} function is used with an automatic selection of the number of clusters, which results in a partition into $3$ clusters.
+The \emph{HCPC()} function has been used with an automatic selection of the number of clusters, which has resulted in a partition into $3$ clusters.
 
-From the factor map, the 3 clusters are projected onto the first two principal components, which together explain more than $80\%$ of the total variance. Cluster 1 is mainly located on the left side of the first dimension, which is associated with smaller physical measurements of the diamonds. Cluster 2 occupies an intermediate region, while Cluster 3 is positioned towards the positive side of the first component, corresponding to larger diamond sizes.
+From the factor map, the three clusters have been projected onto the first two principal components. Cluster $1$ is mainly located on the negative side of the first dimension, which is associated with smaller physical measurements of the diamonds. Cluster $2$ occupies an intermediate region, whereas Cluster $3$ is positioned towards the positive side of the first component, corresponding to larger diamond sizes. It is worth noting that no clear separation is observed along the second dimension, indicating that the clustering criterion mainly distinguishes diamonds according to size and price.
 
 ```{r}
 # HCPC applied to the previously computed PCA
-res.hcpc <- HCPC(diamonds.pca.sup, -1) # automatic cut: 3 clusters
+res.hcpc <- HCPC(diamonds.pca.sup.clust, -1) # automatic cut: 3 clusters
 
 # Dendrogram visualization
-library(factoextra)
 fviz_dend(res.hcpc, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - PCA-based Hierarchical Clustering")
-
-# Plot the inertia gain to visualize cluster selection
-plot(res.hcpc, choice = "bar", main = "Inertia gain on PCA")
 
 # Visualize clusters in the PCA factor map
 fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE, main = "Cluster Visualization on PCA Factor Map (Dim 1 vs Dim 2)")
@@ -1222,27 +1267,12 @@ table(dfClustPCA3$Cluster, dfClustPCA3$clarity)
 ```
 
 #### 4 clusters
-Although the automatic HCPC cut suggests a 3-cluster partition, the factor map and the dendrogram reveal that a 4-cluster solution is more balanced and more interpretable. The 3-cluster solution produces one dominant group, whereas splitting the structure into 4 clusters yields groups of comparable size and a clearer separation in the PCA space.
 
-The PCA-based hierarchical clustering with four clusters reveals a clear grouping structure primarily driven by diamond size and price. Highly significant differences are observed across all main numerical variables, particularly carat, price, and physical dimensions (x, y, z), while depth and table provide additional discrimination among medium-sized diamonds. Categorical variables further refine this structure and highlight a clear size-quality trade-off across clusters.
-
-\textbf{- Cluster 1 (black): Small, low-value diamonds}
-This cluster includes the smallest diamonds, with a low average carat (≈ 0.39), small dimensions (x, y ≈ 4.65), and the lowest mean price (≈ 1,020). From a categorical perspective, it is dominated by Ideal cut diamonds, with colors mainly in the E–G range. Clarity is centered on SI1 and VS2, although a substantial number of high-clarity stones (IF/VVS1) are also present. Overall, this cluster represents small diamonds with relatively good and balanced quality attributes.
-
-\textbf{- Cluster 2 (red): Medium-low diamonds}
-Diamonds in this cluster have intermediate size (carat ≈ 0.78; x, y ≈ 5.92) and moderate prices (≈ 3,300). They are characterized by lower depth and higher table values, indicating flatter proportions. Categorically, this group is mainly composed of Premium-cut diamonds, with F color most frequent and clarity largely concentrated in SI1 and VS2, with very few high-clarity stones. This cluster reflects a compromise where size increases at the expense of quality.
-
-\textbf{- Cluster 3 (green): Medium-high diamonds}
-This cluster groups slightly larger diamonds (carat ≈ 0.94; x, y ≈ 6.23) with higher prices than Cluster 2 (≈ 4,630). These diamonds show higher depth and lower table values, suggesting improved geometric balance. In categorical terms, Ideal cut is predominant, with G color most common. However, clarity is mainly SI1 and I1/SI2, indicating lower clarity on average than Cluster 1 despite better proportions.
-
-\textbf{- Cluster 4 (blue): Large, high-value diamonds}
-Diamonds in this cluster are the largest and most expensive, with the highest carat (≈ 1.65), the largest dimensions (x, y ≈ 7.56), and the highest mean price (≈ 11,100). This group is dominated by Premium cuts, poorer color grades (H–I/J), and lower clarity levels, mainly I1/SI2 and VS2. These results indicate that, for this cluster, diamond value is driven primarily by size rather than quality attributes.
-
-Overall, the four clusters describe a clear size-quality trade-off: smaller diamonds tend to concentrate better quality grades, whereas larger diamonds are associated with lower color and clarity but substantially higher prices.
+Although the automatic HCPC cut suggests a three-cluster partition, the factor map and the dendrogram reveal that a four-cluster solution is more balanced and more interpretable. The three-cluster solution produces one dominant group, whereas splitting the structure into four clusters yields groups of more comparable size and a clearer separation in the PCA space. In particular, the four-cluster solution takes into account both the first and the second principal dimensions, separating the diamonds not only according to their overall size and price, but also according to their geometric proportions, as captured by depth and table.
 
 ```{r}
 # HCPC applied to the previously computed PCA
-res.hcpc <- HCPC(diamonds.pca.sup, nb.clust = 4, consol = TRUE) # 4 clusters
+res.hcpc <- HCPC(diamonds.pca.sup.clust, nb.clust = 4, consol = TRUE) # 4 clusters
 
 pal <- c("#000000", "#E41A1C", "green3", "dodgerblue") 
 
@@ -1254,8 +1284,63 @@ plot(res.hcpc, choice = "bar", main = "Inertia gain on PCA")
 
 # Visualize clusters in the PCA factor map
 fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE, main = "Cluster Visualization on PCA Factor Map (Dim 1 vs Dim 2)")
+
+fviz_cluster(res.hcpc, show.clust.cent = TRUE, main = "Cluster Visualization on PCA Factor Map (Dim 1 vs Dim 2)", labelsize = 0)
 ```
 
+The PCA-based hierarchical clustering applied with four clusters reveals clearly differentiated diamond profiles in terms of quality and physical characteristics. A chi-square test indicates a highly significant association between cluster membership and all categorical variables (clarity, color, and cut) leading to the rejection of the null hypothesis of independence in every case, as evidenced by the corresponding p-values. Furthermore, the ANOVA results indicate highly significant differences across all major numerical variables. In particular, the strongest discriminatory power is observed for the dimensional variables (x,y,z), as well as for carat weight and price, for which the null hypothesis of equal means across clusters is decisively rejected with extremely small p-values. Depth and table also differ significantly across clusters, although with more moderate effect sizes. These results confirm that the clusters reflect fundamentally different diamond size, value, and proportion profiles.
+
+\textbf{- Cluster 1 (black): Small, high-clarity and clear diamonds with low price}
+
+This cluster accounts for $42.8\%$ of the sample. It is characterized by very high clarity grades, with a strong over-representation of IF/VVS1 and VVS2 diamonds. For instance, $77.8\%$ of IF/VVS1 diamonds belong to this cluster, largely exceeding their overall proportion in the dataset. Ideal cuts and color E are also significantly over-represented, whereas more tinted color categories such as I/J and lower clarity levels such as I1/SI2 are strongly under-represented. Overall, this cluster is mainly composed of colorless and high-clarity diamonds.
+
+Despite their superior clarity and cut, diamonds in this cluster exhibit significantly smaller physical dimensions (x, y and z), approximately $18$ units below the overall mean, and lower logCarat values, around $18.7$ units below the overall mean. The logPrice variable is also well below the overall mean, by approximately $18.2$ units. These diamonds tend to present slightly higher depth values and smaller table values, indicating more pointed stones with narrower top surfaces, which is consistent with their smaller overall size.
+
+Therefore, this cluster is composed of small-sized diamonds with excellent cut, color, and clarity characteristics, whose market value remains limited mainly due to their reduced physical size rather than to quality-related attributes.
+
+\textbf{- Cluster 2 (red): Shallow diamonds with low cut quality}
+
+This cluster accounts for $14.3\%$ of the sample and exhibits a distinctly cut-driven profile. Fair/Good cuts are significantly over-represented, whereas Ideal cuts are strongly under-represented. Diamonds with color grade F also appear more frequently than expected in this cluster.
+
+As expected, from a numerical perspective, this cluster is primarily distinguished by proportion-related variables rather than by size or price. Diamonds in this group display significantly higher table values (approximately $10.2$ units above the overall mean) and substantially lower depth values (about $12.5$ units below the overall mean), indicating flatter stones. No strong deviations are observed for carat weight, price, or the main dimensional measures (x, y and z).
+
+Consequently, this cluster corresponds to diamonds with less optimal geometric proportions, typically associated with lower cut quality, but without extreme differences in overall size or price value.
+
+\textbf{- Cluster 3 (green): Medium-sized diamonds with moderate prices}
+
+This cluster accounts for $27.6\%$ of the sample. It contains diamonds that are moderately larger and more expensive than average, as indicated by significantly positive deviations in logCarat, logPrice, and all three physical dimensions (x, y and z). Depth values are also slightly above the overall mean, while table values are marginally lower. It should be highlighted that the numerical deviations are moderate, as they range between approximately $6$ and $8$ units above the overall mean.
+
+From a qualitative perspective, this cluster shows an over-representation of lower clarity grades (I1/SI2) and an under-representation of very high clarity categories (IF/VVS1 and VVS2). Premium cuts are also under-represented, suggesting that value in this cluster is driven more by physical size than by clarity or cut quality.
+
+Accordingly, this cluster represents medium-sized diamonds which, despite lower clarity grades, are associated with above-average prices.
+
+\textbf{- Cluster 4 (blue): Large, lower-clarity and tinted diamonds with high price}
+
+This cluster accounts for $15.3\%$ of the sample and is clearly distinguished by the largest and most valuable diamonds in the dataset. All size-related variables (x, y, z and logCarat), together with logPrice, show very large positive deviations from the overall mean, ranging approximately from $14$ to $15.5$ units. In addition, the table variable also presents a mean value above the overall average.
+
+From a qualitative perspective, this cluster is associated with more tinted diamonds, with a higher frequency of color grades I/J and H, as well as lower clarity levels (I1/SI2). In contrast, high-quality color and clarity categories (D, E, F and IF/VVS1) are strongly under-represented. Premium cuts are significantly over-represented, whereas Ideal cuts are under-represented.
+
+This pattern indicates that diamonds in this cluster achieve their high prices primarily through size rather than quality, emphasising the dominant role of physical magnitude over color, clarity, and cut in determining their market value.
+
+The spatial distribution of the clusters in the PCA factor map further supports the validity of the clustering solution. In the Figure, clusters $1$ (black) and $4$ (blue) are located at opposite extremes of the first dimension, indicating a strong separation based on physical size and price. On the other hand, clusters $2$ (red) and $3$ (green) are mainly differentiated along the second dimension, reflecting differences in geometric proportions, clarity, and cut quality.
+
+In conclusion, the PCA-based hierarchical clustering proves to be particularly effective in this context. By performing clustering on the principal components rather than on the original correlated variables, the method focuses on the main sources of variability in the data and reduces redundancy. This leads to well-separated, stable, and interpretable clusters that reflect meaningful differences in diamond size, price and quality.
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\textbf{- Cluster 1 (black): Small, low price diamonds}
+This cluster includes the smallest diamonds, with a low average carat (≈ 0.39), small dimensions (x, y ≈ 4.65), and the lowest mean price (≈ 1,020). From a categorical perspective, it is dominated by Ideal cut diamonds, with colors mainly in the E–G range. Clarity is centered on SI1 and VS2, although a substantial number of high-clarity stones (IF/VVS1) are also present. Overall, this cluster represents small diamonds with relatively good and balanced quality attributes.
+
+\textbf{- Cluster 2 (red): Medium-low diamonds}
+Diamonds in this cluster have intermediate size (carat ≈ 0.78; x, y ≈ 5.92) and moderate prices (≈ 3,300). They are characterized by lower depth and higher table values, indicating flatter proportions. Categorically, this group is mainly composed of Premium-cut diamonds, with F color most frequent and clarity largely concentrated in SI1 and VS2, with very few high-clarity stones. This cluster reflects a compromise where size increases at the expense of quality.
+
+\textbf{- Cluster 3 (green): Medium-high diamonds}
+This cluster groups slightly larger diamonds (carat ≈ 0.94; x, y ≈ 6.23) with higher prices than Cluster 2 (≈ 4,630). These diamonds show higher depth and lower table values, suggesting improved geometric balance. In categorical terms, Ideal cut is predominant, with G color most common. However, clarity is mainly SI1 and I1/SI2, indicating lower clarity on average than Cluster 1 despite better proportions.
+
+
+\textbf{- Cluster 4 (blue): Large, high-value diamonds}
+Diamonds in this cluster are the largest and most expensive, with the highest carat (≈ 1.65), the largest dimensions (x, y ≈ 7.56), and the highest mean price (≈ 11,100). This group is dominated by Premium cuts, poorer color grades (H–I/J), and lower clarity levels, mainly I1/SI2 and VS2. These results indicate that, for this cluster, diamond value is driven primarily by size rather than quality attributes.
+
+Overall, the four clusters describe a clear size-quality trade-off: smaller diamonds tend to concentrate better quality grades, whereas larger diamonds are associated with lower color and clarity but substantially higher prices.
 ```{r}
 table(res.hcpc$data.clust$clust)
 prop.table(table(res.hcpc$data.clust$clust))
@@ -1293,7 +1378,8 @@ table(dfClustPCA4$Cluster, dfClustPCA4$clarity)
 ### 2.5.5. MCA-based clustering
 
 #### Automatic cut: 6 clusters
-Hierarchical clustering was also applied to the MCA individual scores using the HCPC approach. The automatic cut yields a six-cluster solution. However, inspection of the factor map shows that these clusters are highly overlapping and primarily separated along Dimension 1, which reflects the size gradient induced by the over/under transformations of the numerical variables. Dimension 2, related to geometric proportions and cut quality, introduces limited additional separation. As a result, the six-cluster solution does not provide a clear or interpretable partition of the diamonds.
+
+Hierarchical clustering has also been applied to the MCA scores using the HCPC approach. The automatic cut has resulted in a six-cluster solution. However, inspection of the factor map shows that these clusters are highly overlapping and mainly separated along dimension $1$, which reflects the size gradient induced by the over/under transformations of the numerical variables. Dimension $2$, which is related to geometric proportions and cut quality, provides only limited additional separation. As a consequence, the six-cluster solution does not yield a clear or interpretable partition of the diamonds
 
 ```{r}
 # HCPC applied to the previously computed MCA
@@ -1301,9 +1387,6 @@ res.hcpc.mca <- HCPC(res.mca, -1) # automatic cut: 6 clusters
 
 # Dendrogram visualization
 fviz_dend(res.hcpc.mca, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - MCA-based Hierarchical Clustering")
-
-# Plot the inertia gain to visualize cluster selection
-plot(res.hcpc.mca, choice = "bar", main = "Inertia gain on MCA")
 
 # Visualize clusters in the MCA factor map
 fviz_cluster(res.hcpc.mca, repel = TRUE, show.clust.cent = TRUE, main = "Cluster Visualization on MCA Factor Map (Dim 1 vs Dim 2)")
@@ -1313,7 +1396,10 @@ plot(res.hcpc.mca, choice = "3D.map", main = "3D Cluster Visualization")
 ```
 
 #### 4 clusters
-Although the automatic HCPC cut on the MCA scores suggests a six-cluster partition, inspection of the factor map and the dendrogram reveals substantial overlap between groups and weak separation. Forcing a four-cluster solution does not resolve this issue, as the clusters remain largely overlapping and lack clear interpretability. Consequently, MCA-based clustering is not retained as a suitable solution for the analysis.
+
+Although the automatic HCPC cut on the MCA scores suggests a six-cluster partition, inspection of the factor map and the dendrogram reveals substantial overlap between groups and weak separation. 
+
+Forcing a four-cluster solution does not improve this situation, as the clusters remain largely overlapping and lack clear interpretability. Consequently, MCA-based clustering is not retained as an appropriate solution for this analysis.
 
 ```{r}
 # HCPC applied to the previously computed MCA
@@ -1364,30 +1450,44 @@ table(dfClustMCA$Cluster, dfClustMCA$color)
 table(dfClustMCA$Cluster, dfClustMCA$clarity)
 ```
 
-### 2.5.6. FAMD-based clustering 
-The clustering analysis that includes both numerical and categorical variables is performed through a Factor Analysis of Mixed Data (FAMD).
+### 2.5.6. FAMD-based clustering
 
-The interpretation of the continuous variables in the FAMD closely mirrors the results previously obtained with the PCA. Dimension 1, which explains 26.69% of the total variability, is dominated by the physical measurements of the diamonds (x, y, z, logCarat, logPrice), all of which show extremely high squared correlations with this axis. As in the PCA, this dimension represents a size-value gradient, separating small and inexpensive diamonds from those that are larger and more valuable.
+The clustering analysis that incorporates both numerical and categorical variables has been conducted using a Factor Analysis of Mixed Data (FAMD).
 
-The categorical variables align with this structure. Lower color grades (especially I/J) and lower clarity categories (such as I1/SI2) are located on the positive side of Dimension 1, indicating an association with larger and more expensive diamonds. In contrast, higher clarity grades (IF/VVS1, VVS2) and better color grades (E) appear on the negative side of this axis, corresponding to smaller but higher-quality diamonds.
+The interpretation of the continuous variables is fully consistent with the results previously obtained from the PCA. 
 
-Dimension 2 (8.31% of explained variance) mainly reflects differences in geometric proportions. Ideal cut diamonds are associated with positive values of this dimension, whereas Premium and Fair/Good cuts are positioned at negative values, indicating less favorable geometric balance.
+Dimension 1, which explains $26.69\%$ of the total variability, is dominated by the physical measurements of the diamonds (x, y, z, logCarat, and logPrice), all of which exhibit very high squared correlations with this axis. As in the PCA, this dimension represents a size-value gradient, separating small, inexpensive diamonds from larger and more valuable ones. The categorical variables follow the same structure. More tinted color grades (especially I/J) and lower clarity categories (I1/SI2) are positioned on the positive side of Dimension 1, indicating an association with larger and more expensive diamonds. In contrast, higher clarity grades (IF/VVS1 and VVS2) and colorless grades (E) are located on the negative side of this dimension, corresponding to smaller but higher-quality diamonds.
+
+Dimension 2, which explains $8.31\%$ of the variance, mainly reflects differences in geometric proportions. Ideal cuts are associated with positive values of this dimension, whereas Premium and Fair/Good cuts are located on the negative side, indicating less optimal geometric balance.
 
 ```{r}
 # Factor Analysis for Mixed Data
 res <- FAMD(diamonds)
 summary(res)
 ```
-The hierarchical clustering is applied to the individual scores obtained from the FAMD. The algorithm has selected a three-cluster solution. The separation observed in the factor map is driven by Dimension 1.
 
-\textbf{- Cluster 1 (black): Small, high-quality diamonds}
-This cluster contains the smallest diamonds (carat ≈ 0.40; x, y ≈ 4.69) and the lowest mean price (≈ 1,072.68). It is significantly associated with high clarity grades (IF/VVS1 and VVS2) and shows a higher presence of Ideal cut and better color grades (notably E).
+The FAMD-based hierarchical clustering applied with three clusters reveals clearly differentiated diamond profiles in terms of quality and physical characteristics. A chi-square test indicates a highly significant association between cluster membership and all categorical variables (clarity, color, and cut) leading to the rejection of the null hypothesis of independence in every case, as evidenced by the corresponding p-values. Furthermore, the ANOVA results indicate highly significant differences across all size-related measures, indicating that they are the strongest discriminators across clusters. In other words, the variables x, y, z, logCarat, and logPrice all exhibit extremely large effect sizes, indicating that cluster separation is driven predominantly by diamond size and price. In contrast, table and depth show statistically significant but much smaller effect sizes, suggesting a secondary role in cluster differentiation.
 
-\textbf{- Cluster 2 (red): Medium-sized diamonds with lower clarity}
-Diamonds in this cluster have intermediate size (carat ≈ 0.93; x, y ≈ 6.23) and a moderate mean price (≈ 4,487.52). The main categorical signal is an over-representation of SI1 and I1/SI2 clarity, suggesting mid-range diamonds with relatively lower clarity compared to Cluster 1.
+\textbf{- Cluster 1 (black): Small, high-clarity diamonds with low price}
+This cluster accounts for $47\%$ of sample the sample. It is strongly associated with very high clarity grades, with IF/VVS1 and VVS2 diamonds being significantly over-represented. Ideal cuts and color E are also over-represented, whereas darker color grades (H and I/J), Premium cuts, and low-clarity categories (I1/SI2) are significantly under-represented.
 
-\textbf{- Cluster 3 (green): Large diamonds with lower quality indicators}
-This cluster groups the largest and most expensive diamonds (carat ≈ 1.64; x, y ≈ 7.54; price ≈ 10,942.12). It is strongly associated with poorer color grades (especially I/J) and Premium cut, together with lower clarity categories (notably I1/SI2), indicating that size dominates while quality tends to be lower.
+From a numerical perspective, this cluster is characterized by substantially smaller diamonds. All size-related variables (x, y, z and logCarat), together with logPrice, exhibit very large negative deviations from the overall mean, indicating that these diamonds are considerably smaller and less expensive than average. Table values are also slightly below the overall mean.
+
+Overall, this cluster represents small, low-priced diamonds with excellent clarity and cut quality, for which superior quality does not translate into high prices due to limited physical size.
+
+\textbf{- Cluster 2 (red): Medium-sized diamonds with moderate quality} 
+This cluster accounts for $38\%$ of sample the sample and shows a categorical profile dominated by mid clarity grades, with SI1 and I1/SI2 diamonds being significantly over-represented. In contrast, very high clarity categories (IF/VVS1 and VVS2) are clearly under-represented.
+
+From a numerical perspective, this cluster contains moderately large and relatively valuable diamonds. All dimensional variables and logCarat display significant positive deviations from the overall mean, as does logPrice, indicating above-average size and price. Table values are slightly higher than average, while no pronounced deviations are observed for depth.
+
+Thus, this cluster corresponds to medium-sized diamonds whose market value is mainly driven by carat weight, despite only moderate clarity levels.
+
+\textbf{- Cluster 3 (green): Very large, lower-quality diamonds}
+This cluster accounts for $15\%$ of sample the sample and is clearly distinguished by its association with lower color and clarity grades. Diamonds with color I/J, Premium cuts, and I1/SI2 clarity are strongly over-represented, whereas high-quality color grades (D, E, F), Ideal cuts, and very high clarity categories (IF/VVS1) are significantly under-represented.
+
+From a numerical point of view, this cluster contains the largest and most expensive diamonds in the dataset. All size-related variables and logCarat exhibit extremely large positive deviations from the overall mean, and logPrice is also far above average. Table values are higher than average, while depth is slightly below average, indicating flatter geometric proportions.
+
+Overall, this pattern indicates that diamonds in this cluster attain high prices primarily due to their size rather than intrinsic quality, highlighting the dominant role of carat weight over color, clarity or cut precision.
 
 ```{r}
 # Hierarchical Clustering on FAMD scores
