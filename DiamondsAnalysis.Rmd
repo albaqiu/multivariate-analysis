@@ -42,6 +42,7 @@ library(ggrepel)
 library(klaR)
 library(cluster)
 library(kmed)
+library(biotools)
 ```
 
 ## 1. Data preparation
@@ -1322,7 +1323,7 @@ From a qualitative perspective, this cluster is associated with more tinted diam
 
 This pattern indicates that diamonds in this cluster achieve their high prices primarily through size rather than quality, emphasising the dominant role of physical magnitude over color, clarity, and cut in determining their market value.
 
-The spatial distribution of the clusters in the PCA factor map further supports the validity of the clustering solution. In the Figure, clusters $1$ (black) and $4$ (blue) are located at opposite extremes of the first dimension, indicating a strong separation based on physical size and price. On the other hand, clusters $2$ (red) and $3$ (green) are mainly differentiated along the second dimension, reflecting differences in geometric proportions, clarity, and cut quality.
+The spatial distribution of the clusters in the PCA factor map further supports the validity of the clustering solution. In the Figure, clusters $1$ (black), $3$ (green) and $4$ (blue) are located at along the first dimension, indicating a strong separation based on physical size and price. On the other hand, cluster $2$ (red) is mainly differentiated along the second dimension, reflecting differences in geometric proportions, clarity, and cut quality.
 
 In conclusion, the PCA-based hierarchical clustering proves to be particularly effective in this context. By performing clustering on the principal components rather than on the original correlated variables, the method focuses on the main sources of variability in the data and reduces redundancy. This leads to well-separated, stable, and interpretable clusters that reflect meaningful differences in diamond size, price and quality.
 
@@ -1561,6 +1562,115 @@ plot(res.hcpc.famd, choice = "3D.map", main = "3D Cluster Visualization")
 ```
 
 
+## 2.6. Discriminant analysis
+
+In this section, the objective is to develop a model that predicts the cut of each diamond based on the depth and table variables. To apply the subsequent methods, it is necessary for the numerical variables to follow a normal distribution. Based on the exploratory data analysis conducted earlier, normality can only be assumed for the depth and table variables. Furthermore, since a certain association between the diamond cut and its geometric proportions has been observed, it is reasonable to create a model that predicts the cut using these variables.
+
+
+### 2.6.1. MANOVA
+
+Before developing the model, it is important to assess whether significant differences exist in the depth and table variables across the different diamond cuts. Hence, MANOVA statistical test can be used to assess whether there are overall differences in the mean vectors of depth and table across multiple diamond cuts simultaneously.
+
+First, it is important to assess the homogeneity of variances across the different cut levels for the two normally distributed variables. To this end, Box’s M test has been applied to evaluate the equality of variance-covariance matrices, using the \emph{boxM()} function.
+
+As the resulting p-value is significantly lower than the significance level $\alpha=0.05$, the null hypothesis of homogeneity of variances is rejected. Furthermore, an inspection of the boxplots reveals clear differences in the variance homogeneity across the depth and table variables.
+
+```{r}
+# Homogeneity of covariance matrices obtained from multivariate normal data
+boxM(
+  diamonds[, c("depth", "table")],
+  diamonds$cut
+) #p-value < 0.05
+
+boxplot(depth ~ cut, data = diamonds, main = "Depth distribution in different cuts")
+boxplot(table ~ cut, data = diamonds, main = "Table distribution in different cuts")
+```
+
+The MANOVA test rejects the null hypothesis of equal mean vectors for depth and table across the different cut levels, with a very small p-value ($<2.2\times10^{-16}$). This indicates that there is a statistically significant difference in the means of depth and table when comparing the various levels of the cut variable. To further investigate these differences, separate ANOVA tests have been conducted for depth and table individually. 
+
+The results of the ANOVA test for the depth variable reject the null hypothesis of equal means across groups (p-value of $2.5\times10^{-5}$), indicating significant differences in mean depth values across the four diamond cut categories. Specifically, the post-hoc Tukey tests reveal that Premium diamonds differ significantly in depth from Fair/Good, Ideal, and Very Good diamonds. However, no significant differences in depth are observed between the following pairs: Very Good vs Fair/Good, Very Good vs Ideal, and Ideal vs Fair/Good, suggesting that these cut categories exhibit similar depth characteristics.
+
+Similarly, the ANOVA test for the table variable also rejects the null hypothesis of equal means across groups (p-value $<2.2\times10^{-16}$), indicating significant differences in mean table values across the four cut categories. Post-hoc Tukey tests reveal that, with the exception of the Premium vs Fair/Good and Very Good vs Fair/Good comparisons, all other cut categories show significant differences in table values.
+
+```{r}
+res.man <- manova(cbind(depth, table) ~ cut, data = diamonds)
+summary(res.man)
+summary.aov(res.man)
+
+TukeyHSD(aov(depth~cut,data=diamonds),"cut")
+TukeyHSD(aov(table~cut,data=diamonds),"cut")
+```
+
+### 2.6.2. Discriminant Analysis
+
+Considering the three main types of discriminant models, it is reasonable to use Quadratic Discriminant Analysis (QDA) to create a model that predicts the diamond cut based on the variables depth and table. Since the two variables are slightly correlated, the Naive Bayes method is not appropriate. Additionally, because the variables do not share the same covariance matrix, Linear Discriminant Analysis is also unsuitable.
+
+The prior probabilities reflect the empirical class distribution of the dataset, with Ideal ($37.6\%$) and Premium ($30\%$) cuts being the most frequent categories and Fair/Good ($9.2\%$) the least frequent. The estimated group means show coherent and gradual patterns across cut categories. Nonetheless, there is no cut category characterized by extremely high table values combined with very low depth values, nor by very low table values combined with high depth values, indicating that extreme geometric configurations are not exclusive to any single cut category.
+
+The model achieves an overall correct classification rate (CCR) of $67\%$, which represents a substantial improvement over random classification and indicates good predictive performance given the limited number of predictors. In particular, the model performs very well for the most prevalent and well-defined categories, Ideal and Premium, with class-specific accuracies of $90.4\%$ and $87.2\%$, respectively. This suggests that depth and table are especially informative for identifying higher-quality cuts, where geometric differences are more pronounced. In contrast, classification performance is considerably lower for Fair/Good ($19.6\%$) and Very Good ($21.7\%$) cuts.
+
+Misclassifications occur mainly between neighboring cut categories. Most Fair/Good diamonds are classified as Very Good, while most Very Good diamonds are classified as Premium. This pattern is consistent with the ordinal nature of cut quality and indicates that the model captures the underlying structure of the data rather than producing arbitrary errors.
+
+It should be highlighted taht the model represents a clear improvement over random guessing. The baseline accuracy, computed from class proportions, is $38.86\%$, whereas the achieved CCR is substantially higher. Furthermore, the Q statistic rejects the null hypothesis of random classification. This confirms that the discriminant function extract meaningful information for cut classification, even with a limited set of predictors.
+
+In conclusion, the results show that Quadratic Discriminant Analysis provides a robust and informative classification approach, and that depth and table alone allow for a reasonably accurate and interpretable prediction of diamond cut quality, particularly for distinguishing higher-grade cuts.
+
+```{r}
+qda.fit <- qda(cut ~ depth + table, data = diamonds)
+qda.fit
+
+qda.fit$prior
+
+# Predicting Groups
+pred <- predict(qda.fit)
+
+# Class Predictions 
+qda.fit$class
+
+# Posterior Probabilities 
+qda.fit$posterior
+
+# Contingency Table of Observed and Predicted Values
+# rows are the real cut categories and columns the predicted categories
+tab<-table(diamonds$cut,pred$class); tab
+
+# Correct Classification Rate (CCR)
+classrate<-sum(diag(tab))/sum(tab)
+classrate
+
+# Total CCR (alternative way)
+sum(diag(prop.table(tab)))
+
+# CCR across groups (over rows)
+diag(prop.table(tab, 1))
+
+# Prediction Accuracy p1^2+p2^2+p3^2+p4^2
+pa <- sum(qda.fit$prior^2)
+pa
+
+# Q-statistic
+n <- sum(tab) # Total number of observations
+k <- nrow(tab) # Number of classes (number of rows in the confusion matrix)
+ntilde <- sum(diag(tab)) # Number of correctly classified observations (sum of the diagonal)
+
+Q <- (n - ntilde*k)^2 / (n * (k - 1)); Q
+
+# p-value using chi-squared distribution with (k - 1) degrees of freedom
+pvalue <- 1 - pchisq(Q, df = k - 1); pvalue
+```
+
+
+
+
+
+
+
+
+
+
+
+
+----------ALBA
 ### Hotelling or MANOVA --> MANOVA (cal explicar per que)
 After identifying 4 clusters through PCA-based hierarchical clustering, we decided that this was the best clustering method. To assess whether the clusters are really meaningful, Multivariate Analysis of Variance (MANOVA) has been conducted. 
 
