@@ -1605,24 +1605,34 @@ TukeyHSD(aov(table~cut,data=diamonds),"cut")
 
 Considering the three main types of discriminant models, it is reasonable to use Quadratic Discriminant Analysis (QDA) to create a model that predicts the diamond cut based on the variables depth and table. Since the two variables are slightly correlated, the Naive Bayes method is not appropriate. Additionally, because the variables do not share the same covariance matrix, Linear Discriminant Analysis is also unsuitable.
 
-The prior probabilities reflect the empirical class distribution of the dataset, with Ideal ($37.6\%$) and Premium ($30\%$) cuts being the most frequent categories and Fair/Good ($9.2\%$) the least frequent. The estimated group means show coherent and gradual patterns across cut categories. Nonetheless, there is no cut category characterized by extremely high table values combined with very low depth values, nor by very low table values combined with high depth values, indicating that extreme geometric configurations are not exclusive to any single cut category.
+To obtain an unbiased assessment of the predictive performance, the dataset has been randomly divided into a training set and a test set. The Quadratic Discriminant Analysis model has been estimated using only the training data, while all predictions and performance measures have been computed exclusively on the test set. This separation ensures that the reported classification accuracy reflects the model’s ability to generalize to unseen observations rather than its fit to the data used for estimation.
 
-The model achieves an overall correct classification rate (CCR) of $67\%$, which represents a substantial improvement over random classification and indicates good predictive performance given the limited number of predictors. In particular, the model performs very well for the most prevalent and well-defined categories, Ideal and Premium, with class-specific accuracies of $90.4\%$ and $87.2\%$, respectively. This suggests that depth and table are especially informative for identifying higher-quality cuts, where geometric differences are more pronounced. In contrast, classification performance is considerably lower for Fair/Good ($19.6\%$) and Very Good ($21.7\%$) cuts.
+The prior probabilities reflect the empirical class distribution of the training dataset, with Ideal ($42\%$) and Premium ($25.5\%$) cuts being the most frequent categories and Fair/Good ($9.3\%$) the least frequent. The estimated group means show coherent and gradual patterns across cut categories. Nonetheless, there is no cut category characterized by extremely high table values combined with very low depth values, nor by very low table values combined with high depth values, indicating that extreme geometric configurations are not exclusive to any single cut category.
 
-Misclassifications occur mainly between neighboring cut categories. Most Fair/Good diamonds are classified as Very Good, while most Very Good diamonds are classified as Premium. This pattern is consistent with the ordinal nature of cut quality and indicates that the model captures the underlying structure of the data rather than producing arbitrary errors.
+When evaluated on the test set, the QDA achieves an overall correct classification rate (CCR) of $66.5\%$, which represents a substantial improvement over random classification and indicates good predictive performance given the limited number of predictors. In particular, the model performs very well for the most prevalent and well-defined categories, Ideal and Premium, with class-specific accuracies of $89.4\%$ and $84.4\%$, respectively. This suggests that depth and table are especially informative for identifying higher-quality cuts, where geometric differences are more pronounced. In contrast, classification performance is considerably lower for Fair/Good ($27.7\%$) and Very Good ($23.7\%$) cuts.
 
-It should be highlighted taht the model represents a clear improvement over random guessing. The baseline accuracy, computed from class proportions, is $38.86\%$, whereas the achieved CCR is substantially higher. Furthermore, the Q statistic rejects the null hypothesis of random classification. This confirms that the discriminant function extract meaningful information for cut classification, even with a limited set of predictors.
+Misclassifications occur mainly between neighboring cut categories. The amount of Fair/Good diamonds that are classified as Very Good is twice the number of those correctly classified, and the same pattern is seen with Very Good diamonds being classified as Premium. This pattern is consistent with the ordinal nature of cut quality and indicates that the model captures the underlying structure of the data rather than producing arbitrary errors.
+
+It should be highlighted that the model represents a clear improvement over random guessing. The baseline accuracy, computed from class proportions, is $30.4\%$, whereas the achieved CCR is substantially higher. Furthermore, the Q statistic rejects the null hypothesis of random classification. This confirms that the discriminant function extract meaningful information for cut classification, even with a limited set of predictors.
 
 In conclusion, the results show that Quadratic Discriminant Analysis provides a robust and informative classification approach, and that depth and table alone allow for a reasonably accurate and interpretable prediction of diamond cut quality, particularly for distinguishing higher-grade cuts.
 
 ```{r}
-qda.fit <- qda(cut ~ depth + table, data = diamonds)
+# train 2/3, test 1/3
+lltrain <- sample(1:nrow(diamonds), round(0.67*nrow(diamonds), dig=0))
+dftrain <- diamonds[lltrain,]
+dftest <- diamonds[-lltrain,]
+```
+
+
+```{r}
+qda.fit <- qda(cut ~ depth + table, data = dftrain)
 qda.fit
 
 qda.fit$prior
 
 # Predicting Groups
-pred <- predict(qda.fit)
+pred <- predict(qda.fit, newdata = dftest)
 
 # Class Predictions 
 qda.fit$class
@@ -1632,7 +1642,7 @@ qda.fit$posterior
 
 # Contingency Table of Observed and Predicted Values
 # rows are the real cut categories and columns the predicted categories
-tab<-table(diamonds$cut,pred$class); tab
+tab<-table(dftest$cut,pred$class); tab
 
 # Correct Classification Rate (CCR)
 classrate<-sum(diag(tab))/sum(tab)
@@ -1658,15 +1668,6 @@ Q <- (n - ntilde*k)^2 / (n * (k - 1)); Q
 # p-value using chi-squared distribution with (k - 1) degrees of freedom
 pvalue <- 1 - pchisq(Q, df = k - 1); pvalue
 ```
-
-
-
-
-
-
-
-
-
 
 
 
