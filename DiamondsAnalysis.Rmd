@@ -668,7 +668,7 @@ There's 3 dimensions because dim = min(4−1, 6−1).
 
 The first two dimensions explain 58.70% + 38.02% = 96.72% of the association between cut and color. This means that the two-dimensional map provides a really good summary of the relationship between the two variables.
 
-The correspondence analysis shows distinct association patterns between cut and color when considering the representation on the first two dimensions, which together explain a substantial proportion of the total inertia. See Figure ... with the two-dimensional map.
+The correspondence analysis shows distinct association patterns between cut and color when considering the representation on the first two dimensions, which together explain a substantial proportion of the total inertia.
 
 The Premium cut is located in the left-hand side of the map and is positioned close to the color G, indicating a clear association between these categories. This relationship is mainly structured along Dimension 1, where both categories are well represented and contribute strongly to the inertia. The Fair/Good cut appears on the right-hand side of the map. However, it is not located in close proximity to any specific color category, suggesting that its distinct position reflects an overall difference in profile rather than a strong association with a single color level. The Ideal cut is located in the upper-right quadrant, relatively close to D and F, indicating a moderate association with these color levels. This position is primarily influenced by Dimension 2, on which Ideal is well represented and contributes substantially. Finally, the Very Good cut lies in the lower part of the map and is closest to H and E, suggesting an association with these color categories. This relationship is also mainly captured by Dimension 2.
 
@@ -703,7 +703,7 @@ There's 3 dimensions because dim = min(4−1, 6−1).
 
 With 2 dimensions we obtain 58.09% + 25.95% = 84.04%, meaning that the 2-dimensional CA map captures most of the association between cut and clarity.
 
-The correspondence analysis reveals clear relationship patterns between clarity grade and cut quality as captured by the first two dimensions, which together account for the majority of the total inertia. See Figure above with the two-dimensional map.
+The correspondence analysis reveals clear relationship patterns between clarity grade and cut quality as captured by the first two dimensions, which together account for the majority of the total inertia.
 
 VVS2 is positioned in the upper-right quadrant of the map, relatively isolated from the cut quality categories. Its elevated position along Dimension 2 suggests it has a distinct profile, though it shows some proximity to Very Good cut. On the other hand, I1/SI2 is positioned on the left side of the map, showing clear proximity to both Premium and Fair/Good cuts. This location along Dimension 1 suggests that lower clarity grades are distinctly associated with these cut qualities, representing a profile separate from higher clarity grades. Finally, IF/VVS1 occupies the far-right position on Dimension 1, positioned closest to Ideal cut.
 
@@ -740,9 +740,11 @@ There's 5 dimensions because dim = min(6−1, 6−1).
 
 With 2 dimensions we explain 52.15% + 28.18% = 80.33% of the association between color and clarity, meaning that the 2-dimensional map captures most of the relationship between the two variables.
 
-In this map, clarity groups such as SI1 and I1/SI2, as well as color groups D and I/J, appear close to the origin. This indicates that these categories follow the general pattern in the data and do not show particularly distinctive color-clarity combinations.
+The correspondence analysis shows the spatial distribution of clarity grades and color categories when considering the representation on the first two dimensions, which together account for the majority of the total inertia.
 
-In contrast, categories positioned farther from the center have more pronounced deviations from the average profile. For example, IF/VVS1 and VS1 lie on the right-hand side near color G, suggesting that high-clarity stones appear with G more often than expected from the overall distribution. Similarly, VVS2 is located toward the upper left near color E, indicating that this clarity group is unusually associated with E relative to the mean pattern.
+The map does not reveal clear association patterns between clarity and color. Most clarity grades (VS2, SI1, I1/SI2) are clustered near the origin, and similarly, most color categories (D, I/J, F, H) are grouped in the central area of the map. This positioning indicates that these variables do not show strong associations with each other. Additionally, the categories that are positioned away from the origin (VVS2, VS1, IF/VVS1 for clarity; E, G for color) remain relatively isolated and do not appear in close proximity to categories from the other variable.
+
+Furthermore, examination of alternative dimensional combinations did not reveal any clearer association patterns between these two variables. The consistent lack of clear co-location between clarity grades and color categories across multiple dimensional representations, strongly suggests that these two characteristics are largely independent in this dataset, with minimal systematic association between them.
 
 ```{r}
 tab_color_clarity <- table(diamonds$color, diamonds$clarity)
