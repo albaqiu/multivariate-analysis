@@ -1543,25 +1543,6 @@ table(dfClustFAMD$Cluster, dfClustFAMD$color)
 table(dfClustFAMD$Cluster, dfClustFAMD$clarity)
 ```
 
-!! TREURE, ERA PER COMPROVAR QUE FAMD AMB 4 NO ERA MILLOR QUE PCA AMB 4, PERO CLEARLY HI HA OVERLAPPING DELS CLUSTERS BLACK AND RED, worse
-```{r}
-# Hierarchical Clustering on FAMD scores
-res.hcpc.famd <- HCPC(res, nb.clust = 4, consol = TRUE) 
-
-# Visualize the dendrogram
-fviz_dend(res.hcpc.famd, rect = TRUE, rect_fill = TRUE, main = "Dendrogram - FAMD-based Hierarchical Clustering")
-
-# Plot the inertia gain to visualize cluster selection
-plot(res.hcpc.famd, choice = "bar", main = "Inertia gain on FAMD")
-
-# Visualize clusters in the PCA factor map
-fviz_cluster(res.hcpc.famd, repel = TRUE, show.clust.cent = TRUE,main = "Cluster Visualization on FAMD Factor Map (Dim 1 vs Dim 2)")
-
-# 3D visualization
-plot(res.hcpc.famd, choice = "3D.map", main = "3D Cluster Visualization")
-```
-
-
 ## 2.6. Discriminant analysis
 
 In this section, the objective is to develop a model that predicts the cut of each diamond based on the depth and table variables. To apply the subsequent methods, it is necessary for the numerical variables to follow a normal distribution. Based on the exploratory data analysis conducted earlier, normality can only be assumed for the depth and table variables. Furthermore, since a certain association between the diamond cut and its geometric proportions has been observed, it is reasonable to create a model that predicts the cut using these variables.
@@ -1609,6 +1590,60 @@ To obtain an unbiased assessment of the predictive performance, the dataset has 
 
 The prior probabilities reflect the empirical class distribution of the training dataset, with Ideal ($42\%$) and Premium ($25.5\%$) cuts being the most frequent categories and Fair/Good ($9.3\%$) the least frequent. The estimated group means show coherent and gradual patterns across cut categories. Nonetheless, there is no cut category characterized by extremely high table values combined with very low depth values, nor by very low table values combined with high depth values, indicating that extreme geometric configurations are not exclusive to any single cut category.
 
+```{r}
+# train 2/3, test 1/3
+lltrain <- sample(1:nrow(diamonds), round(0.67*nrow(diamonds), dig=0))
+dftrain <- diamonds[lltrain,]
+dftest <- diamonds[-lltrain,]
+qda.fit <- qda(cut ~ depth + table, data = dftrain)
+qda.fit
+
+qda.fit$prior
+```
+
+When evaluated on the train set, the QDA achieves an overall correct classification rate (CCR) of $68.8\%$, which represents a substantial improvement over random classification and indicates good predictive performance given the limited number of predictors. In particular, the model performs very well for the most prevalent and well-defined categories, Ideal and Premium, with class-specific accuracies of $92\%$ and $88.8\%$, respectively. This suggests that depth and table are especially informative for identifying higher-quality cuts, where geometric differences are more pronounced. In contrast, classification performance is considerably lower for Fair/Good ($16\%$) and Very Good ($18.6\%$) cuts.
+
+It should be highlighted that the model represents a clear improvement over random guessing. The baseline accuracy, computed from class proportions, is $30.4\%$, whereas the achieved CCR is substantially higher. Furthermore, the Q statistic rejects the null hypothesis of random classification. This confirms that the discriminant function extract meaningful information for cut classification, even with a limited set of predictors.
+
+```{r}
+# Predicting Groups
+pred <- predict(qda.fit, newdata = dftrain)
+
+# Class Predictions 
+qda.fit$class
+
+# Posterior Probabilities 
+qda.fit$posterior
+
+# Contingency Table of Observed and Predicted Values
+# rows are the real cut categories and columns the predicted categories
+tab<-table(dftrain$cut,pred$class); tab
+
+# Correct Classification Rate (CCR)
+classrate<-sum(diag(tab))/sum(tab)
+classrate
+
+# Total CCR (alternative way)
+sum(diag(prop.table(tab)))
+
+# CCR across groups (over rows)
+diag(prop.table(tab, 1))
+
+# Prediction Accuracy p1^2+p2^2+p3^2+p4^2
+pa <- sum(qda.fit$prior^2)
+pa
+
+# Q-statistic
+n <- sum(tab) # Total number of observations
+k <- nrow(tab) # Number of classes (number of rows in the confusion matrix)
+ntilde <- sum(diag(tab)) # Number of correctly classified observations (sum of the diagonal)
+
+Q <- (n - ntilde*k)^2 / (n * (k - 1)); Q
+
+# p-value using chi-squared distribution with (k - 1) degrees of freedom
+pvalue <- 1 - pchisq(Q, df = k - 1); pvalue
+```
+
 When evaluated on the test set, the QDA achieves an overall correct classification rate (CCR) of $66.5\%$, which represents a substantial improvement over random classification and indicates good predictive performance given the limited number of predictors. In particular, the model performs very well for the most prevalent and well-defined categories, Ideal and Premium, with class-specific accuracies of $89.4\%$ and $84.4\%$, respectively. This suggests that depth and table are especially informative for identifying higher-quality cuts, where geometric differences are more pronounced. In contrast, classification performance is considerably lower for Fair/Good ($27.7\%$) and Very Good ($23.7\%$) cuts.
 
 Misclassifications occur mainly between neighboring cut categories. The amount of Fair/Good diamonds that are classified as Very Good is twice the number of those correctly classified, and the same pattern is seen with Very Good diamonds being classified as Premium. This pattern is consistent with the ordinal nature of cut quality and indicates that the model captures the underlying structure of the data rather than producing arbitrary errors.
@@ -1618,19 +1653,6 @@ It should be highlighted that the model represents a clear improvement over rand
 In conclusion, the results show that Quadratic Discriminant Analysis provides a robust and informative classification approach, and that depth and table alone allow for a reasonably accurate and interpretable prediction of diamond cut quality, particularly for distinguishing higher-grade cuts.
 
 ```{r}
-# train 2/3, test 1/3
-lltrain <- sample(1:nrow(diamonds), round(0.67*nrow(diamonds), dig=0))
-dftrain <- diamonds[lltrain,]
-dftest <- diamonds[-lltrain,]
-```
-
-
-```{r}
-qda.fit <- qda(cut ~ depth + table, data = dftrain)
-qda.fit
-
-qda.fit$prior
-
 # Predicting Groups
 pred <- predict(qda.fit, newdata = dftest)
 
@@ -1668,182 +1690,3 @@ Q <- (n - ntilde*k)^2 / (n * (k - 1)); Q
 # p-value using chi-squared distribution with (k - 1) degrees of freedom
 pvalue <- 1 - pchisq(Q, df = k - 1); pvalue
 ```
-
-
-
-----------ALBA
-### Hotelling or MANOVA --> MANOVA (cal explicar per que)
-After identifying 4 clusters through PCA-based hierarchical clustering, we decided that this was the best clustering method. To assess whether the clusters are really meaningful, Multivariate Analysis of Variance (MANOVA) has been conducted. 
-
-Two complementary MANOVA strategies have been applied.
-- *MANOVA on original numerical variables*: logCarat, x, y, z, depth, table, and logPrice, using cluster membership as the grouping factor.
-- *MANOVA on PCA scores*, specifically, applying it to the first two principal component scores obtained from the PCA, which summarize the main latent dimensions of the data. The first component represents a size-value gradient, while the second captures geometric balance related to table and depth proportions. Using PCA scores as response variables avoids multicollinearity and directly tests whether clusters differ along the same dimensions used to construct them.
-
-For the first analysis, before applying MANOVA, the normality assumption must be considered. Normality was assessed using both statistical tests and graphical inspection. The results can be summarized as follows:
-- logCarat does not satisfy normality even after the logarithmic transformation, according to formal normality tests.
-- Depth fails the normality tests, however, its histogram and Q-Q plot show an approximately symmetric, bell-shaped distribution, so it can be considered approximately normal from a graphical perspective.
-- Table also fails the normality tests, although its distribution is fairly symmetric with only mild skewness.
-- logPrice, after logarithmic transformation, becomes much more symmetric; despite still failing formal normality tests, its graphical shape is reasonably close to normal.
-- x, y, and z do not strictly follow a normal distribution according to the tests, although they present unimodal distributions without extreme skewness or heavy tails.
-
-Overall, while strict univariate normality is not met for all variables, the deviations are generally mild. Since logCarat is not normal even with graphical assessment, we won't use it in the MANOVA analysis.
-
-But for this approach, we see that the homogeneity assumption is not fullfilled. SO CANNOT PROCEED, WE CHECK MANOVA FOR THE PCA SCORES TO SEE IF WE CAN DO IT?????????????????????
-
-```{r}
-# df using dfClustPCA4 (has price, not logPrice)
-df_manova <- dfClustPCA4[, c("x", "y", "z", "depth", "table", "price", "Cluster")]
-df_manova$logPrice <- log(df_manova$price)
-df_manova <- df_manova[, c("x", "y", "z", "depth", "table", "logPrice", "Cluster")]
-
-#check homogeneity
-library(biotools)
-
-# Homogeneity of covariance matrices obtained from multivariate normal data
-boxM(
-  df_manova[, c("x", "y", "z", "depth", "table", "logPrice")],
-  df_manova$Cluster
-) #pvalue < 0.05
-
-boxplot(x ~ Cluster, data = df_manova, main = "x by Cluster")
-boxplot(y ~ Cluster, data = df_manova, main = "y by Cluster")
-boxplot(z ~ Cluster, data = df_manova, main = "z by Cluster")
-boxplot(depth ~ Cluster, data = df_manova, main = "depth by Cluster")
-boxplot(table ~ Cluster, data = df_manova, main = "table by Cluster")
-boxplot(logPrice ~ Cluster, data = df_manova, main = "logPrice by Cluster")
-```
-
-For the second approach, we use PCA scores to perform MANOVA. For this, we also need to check the normality and homogeneity of the PCA scores:
-None of them are normal and there's no homogeneity!!!!!!
-```{r}
-# Extract the first two PCA individual coordinates
-df_manova_pca <- as.data.frame(diamonds.pca.sup$ind$coord[, 1:2])
-colnames(df_manova_pca) <- c("PC1", "PC2")
-
-# Add cluster membership
-df_manova_pca$Cluster <- dfClustPCA4$Cluster
-
-# normality
-for (i in 1:2) {
-  hist(df_manova_pca[, i], main = colnames(df_manova_pca)[i])
-  print(colnames(df_manova_pca)[i])
-  print(shapiro.test(df_manova_pca[, i]))
-  print(ks.test(df_manova_pca[, i], "pnorm",
-                mean = mean(df_manova_pca[, i]),
-                sd = sd(df_manova_pca[, i])))
-}
-# transformation??????? idk if we can transform PCA scores
-
-
-# homogeneity
-library(biotools)
-boxM(df_manova_pca[, c("PC1", "PC2")], df_manova_pca$Cluster)
-
-boxplot(PC1 ~ Cluster, data = df_manova_pca, main = "PC1 by Cluster")
-boxplot(PC2 ~ Cluster, data = df_manova_pca, main = "PC2 by Cluster")
-```
-
-```{r}
-# One-way MANOVA
-man_pca <- manova(cbind(PC1, PC2) ~ Cluster, data = df_manova_pca)
-summary(man_pca)
-summary.aov(man_pca)
-
-# Post-hoc comparisons
-TukeyHSD(aov(PC1 ~ Cluster, data = df_manova_pca))
-TukeyHSD(aov(PC2 ~ Cluster, data = df_manova_pca))
-```
-
-
-## 2.6. Discriminant analysis
-In DA, we will work with the same normal variables than in MANOVA.
-As data is not normal and not independent, we use QDA.
-
-```{r}
-df_da <- df_manova
-qda.fit <- qda(Cluster ~ x + y + z + depth + table + logPrice, data = df_da)
-qda.fit
-
-qda.fit$prior
-names(qda.fit)
-
-#Predicting Groups
-pred <- predict(qda.fit)
-names(pred)
-
-#Class Predictions 
-qda.fit$class
-
-#Posterior Probabilities 
-qda.fit$posterior
-
-#Contingency Table of Observed and Predicted Values
-tab<-table(df_da$Cluster,pred$class); tab
-
-#Correct Classification Rate (CCR)
-classrate<-sum(diag(tab))/sum(tab)
-classrate
-
-# Total CCR (alternative way)
-sum(diag(prop.table(tab)))
-
-#CCR across groups (over rows)
-diag(prop.table(tab, 1))
-
-#Prediction Accuracy p1^2+p^2
-pa<-qda.fit$prior[1]^2 + qda.fit$prior[2]^2;pa
-
-#Comparison of Original and Predicted Groups
-comp<-cbind(qda.fit$type,pred$class); comp
-
-
-# Stepwise Classification
-?stepclass
-
-qdastep <- stepclass(df_da[,1:6],df_da[,7],method="qda",direction="backward", criterion="CR") 
-# numerical variables, grouping, method, direction, criterion
-qdastep
-summary(qdastep)
-names(qdastep)
-
-qdastep$process
-qdastep$model
-qdastep$result.pm
-```
-
-Stepclass function indicates that best model is with y, depth, table, we assess if it's better than our full model:
-
-```{r}
-qda.fit.step <- qda(Cluster ~ y + depth + table, data = df_da)
-qda.fit.step
-
-qda.fit.step$prior
-names(qda.fit.step)
-
-#Predicting Groups
-pred_step <- predict(qda.fit.step)
-names(pred_step)
-
-#Class Predictions 
-qda.fit.step$class
-
-#Posterior Probabilities 
-qda.fit.step$posterior
-
-#Contingency Table of Observed and Predicted Values
-tab2<-table(df_da$Cluster,pred_step$class); tab2
-
-#Correct Classification Rate (CCR)
-classrate<-sum(diag(tab2))/sum(tab2)
-classrate
-
-# Total CCR (alternative way)
-sum(diag(prop.table(tab2)))
-
-#CCR across groups (over rows)
-diag(prop.table(tab2, 1))
-
-#Prediction Accuracy p1^2+p^2
-pa2<-qda.fit.step$prior[1]^2 + qda.fit.step$prior[2]^2;pa2
-```
-
