@@ -949,57 +949,40 @@ Additional plot with ggplot2 for better interpretability
 library(ggplot2)
 library(ggrepel)
 
-# ---------------------------
-# Active category coordinates
-# ---------------------------
 cat <- as.data.frame(res.mca$var$coord[, 1:2])
 colnames(cat) <- c("Dim1", "Dim2")
 cat$label <- rownames(cat)
 
-# ---------------------------
-# Supplementary qualitative modalities (logPrice_*)
-# ---------------------------
 supq <- NULL
 if (!is.null(res.mca$quali.sup) && !is.null(res.mca$quali.sup$coord)) {
   supq <- as.data.frame(res.mca$quali.sup$coord[, 1:2, drop = FALSE])
   colnames(supq) <- c("Dim1", "Dim2")
   supq$label <- rownames(supq)
 
-  # Keep only logPrice modalities (e.g., logPrice_b, logPrice_o, etc.)
   supq <- supq[grepl("^logPrice", supq$label), , drop = FALSE]
 }
 
-# % variance for axis labels
 pct <- round(res.mca$eig[1:2, 2], 2)
 
-# ---------------------------
-# Group labels by "family"
-# ---------------------------
 cat$group <- "other"
 
-# x, y, z, logCarat (your labels look like x_b, x_o, etc.)
 cat$group[grepl("^x_", cat$label) | cat$label == "x"] <- "x"
 cat$group[grepl("^y_", cat$label) | cat$label == "y"] <- "y"
 cat$group[grepl("^z_", cat$label) | cat$label == "z"] <- "z"
 cat$group[grepl("^logCarat", cat$label) | cat$label == "logCarat"] <- "logCarat"
 
-# cut / depth / table (these DO have prefixes in your plot)
 cat$group[grepl("^cut_", cat$label)]   <- "cut"
 cat$group[grepl("^table_", cat$label)] <- "table"
 cat$group[grepl("^depth_", cat$label)] <- "depth"
 cat$group[cat$label %in% levels(dfmca$color)]   <- "color"
 cat$group[cat$label %in% levels(dfmca$clarity)] <- "clarity"
 
+cat$lab_size <- ifelse(
+  cat$group %in% c("cut","depth","table","x","y","z","logCarat"),
+  4.8,  
+  3.8   
+)
 
-# ---------------------------
-# Label size (make key groups bigger)
-# ---------------------------
-cat$lab_size <- ifelse(cat$group %in% c("cut","depth","table","x","y","z","logCarat"), 4.2, 3.2)
-
-# ---------------------------
-# Color palette (soft green + blue, low clash)
-# xyz/logCarat same green; others green/blue shades
-# ---------------------------
 pal <- c(
   x        = "#1b7837",
   y        = "#1b7837",
@@ -1015,9 +998,6 @@ pal <- c(
   other    = "grey60"
 )
 
-# ---------------------------
-# Square limits (include supplementary if present)
-# ---------------------------
 all_dim1 <- cat$Dim1
 all_dim2 <- cat$Dim2
 if (!is.null(supq) && nrow(supq) > 0) {
@@ -1026,9 +1006,6 @@ if (!is.null(supq) && nrow(supq) > 0) {
 }
 m <- max(abs(c(all_dim1, all_dim2)))
 
-# ---------------------------
-# Plot (active categories)
-# ---------------------------
 p <- ggplot(cat, aes(Dim1, Dim2)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_vline(xintercept = 0, linetype = "dashed") +
@@ -1043,26 +1020,55 @@ p <- ggplot(cat, aes(Dim1, Dim2)) +
     show.legend = FALSE
   ) +
   scale_size_identity() +
-  coord_fixed(xlim = c(-m, m), ylim = c(-m, m)) +
+  coord_fixed(xlim = c(-m, m), ylim = c(-m, m), clip = "off") +
   scale_color_manual(values = pal) +
   labs(
     title = "Graph of the active categories",
     x = paste0("Dim 1 (", pct[1], "%)"),
     y = paste0("Dim 2 (", pct[2], "%)")
   ) +
-  theme_minimal() +
-  theme(legend.position = "none")
+  theme_minimal(base_size = 13) +
+theme(
+  plot.margin = margin(10, 10, 10, 45),
+  legend.position = "none",
 
-# ---------------------------
-# Add supplementary logPrice modalities (move labels up/down to improve readability)
-# ---------------------------
+  # Title
+  plot.title = element_text(
+    hjust = 0.5,
+    size = 18,
+    face = "bold"
+  ),
+
+  # Axis titles
+  axis.title.x = element_text(
+    size = 15,
+    face = "bold",
+    hjust = 1      
+  ),
+  axis.title.y = element_blank(),
+  
+
+  axis.text = element_text(size = 11)
+)
+p <- p +
+  annotate(
+    "text",
+    x = -m - 0.22*m,
+    y =  m + 0.02*m, 
+    label = paste0("Dim 2 (", pct[2], "%)"),
+    angle = 90,
+    hjust = 1,
+    vjust = 0,
+    size = 5,
+    fontface = "bold"
+  )
+
+
 if (!is.null(supq) && nrow(supq) > 0) {
-  # If you have exactly two modalities (e.g., _b and _o), separate them vertically
   supq$nudge_y <- 0
   if (any(grepl("_b$", supq$label))) supq$nudge_y[grepl("_b$", supq$label)] <-  0.28
   if (any(grepl("_o$", supq$label))) supq$nudge_y[grepl("_o$", supq$label)] <- -0.28
 
-  # If the suffix isn't _b/_o, just push all logPrice labels slightly upward
   if (all(supq$nudge_y == 0)) supq$nudge_y <- 0.22
 
   p <- p +
@@ -1076,7 +1082,7 @@ if (!is.null(supq) && nrow(supq) > 0) {
       aes(Dim1, Dim2, label = label),
       inherit.aes = FALSE,
       nudge_y = supq$nudge_y,
-      size = 4.2,
+      size = 4.6,
       color = "black",
       fontface = "italic",
       box.padding = 0.4,
@@ -1086,6 +1092,7 @@ if (!is.null(supq) && nrow(supq) > 0) {
       max.overlaps = Inf
     )
 }
+
 
 print(p)
 
