@@ -1042,8 +1042,8 @@ summary(res.mca, ncp=4)
 
 ### Eigenvalues (scree plot)
 res.mca$eig
-barplot(res.mca$eig[,1],main="Eigenvalues", names.arg=1:nrow(res.mca$eig))
-lines(res.mca$eig[,1], type = "o", col = "red", pch = 19, add=T)
+barplot(res.mca$eig[1:19], names.arg = 1:19, main = "Scree Plot", xlab = "Dimension", ylab = "Eigenvalue", col = "blue")
+lines(res.mca$eig[1:19], type = "o", col = "red", pch = 19, add=T)
 
 # Choose the dimensions that explain the most variability --> Until Dim.2
 ```
