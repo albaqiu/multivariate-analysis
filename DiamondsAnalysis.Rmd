@@ -45,7 +45,7 @@ library(kmed)
 library(biotools)
 ```
 
-## 1. Data preparation
+# 1. Data preparation
 
 The dataset has been imported using the \emph{read.csv()} function from the \emph{dplyr} library. The variable named X has been removed, as it corresponds to an index column rather than an explanatory variable. Additionally, the categorical variables cut, color, and clarity have been correctly converted into factors.
 
@@ -72,7 +72,7 @@ rownames(diamonds) <- seq_len(nrow(diamonds))
 summary(diamonds)
 ```
 
-## Exploratory data analysis
+## 1.1. Exploratory data analysis
 
 For each variable, we have checked duplicates, existence of zeros, existence of outliers, existence of missing values and we have applied transformations if needed.
 
@@ -472,7 +472,7 @@ diamondsOg <- diamonds[,c(1:10)]
 diamonds <- diamonds[,c(2:6,8:12)]
 ```
 
-## Correlations between numeric variables
+## 1.2. Correlations between numeric variables
 
 The numeric variables are generally highly correlated. The x, y, z, logPrice, and logCarat variables exhibit nearly perfect positive correlations, and their scatter plots form almost straight lines. In fact, the logarithmic transformations of price and carat further increase these correlations.
 
@@ -517,7 +517,7 @@ kmo <- function(x)
 kmo(numeric_vars)
 ```
 
-# Part 2: Multivariant analysis
+# 2. Multivariant analysis
 
 ## 2.1. Principal components analysis
 
@@ -586,11 +586,8 @@ ds_eu <- dist(scale(numeric_vars), method = "euclidean")
 dimaonds.mds.eu <- cmdscale(ds_eu, eig = TRUE, k = 2)
 dimaonds.mds.eu$GOF
 
-plot(1:length(dimaonds.mds.eu$eig), dimaonds.mds.eu$eig, 
-     type = "b",
-     xlab = "Dimension", 
-     ylab = "Eigenvalue",
-     main = "Scree Plot")
+barplot(dimaonds.mds.eu$eig[1:6], names.arg = 1:6, main = "Scree Plot (Euclidean distance)", xlab = "Dimension", ylab = "Eigenvalue", col = "blue")
+lines(dimaonds.mds.eu$eig, type = "o", col = "red", pch = 19, add=T)
 
 x <- dimaonds.mds.eu$points[,1]
 y <- dimaonds.mds.eu$points[,2]
@@ -614,11 +611,8 @@ diamonds.mds.gw <- cmdscale(ds_gw, eig = TRUE, k = 2)
 
 diamonds.mds.gw$GOF
 
-plot(1:length(diamonds.mds.gw$eig), diamonds.mds.gw$eig, 
-     type = "b",
-     xlab = "Dimension", 
-     ylab = "Eigenvalue",
-     main = "Scree Plot")
+barplot(diamonds.mds.gw$eig[1:8], names.arg = 1:8, main = "Scree Plot (Gower distance)", xlab = "Dimension", ylab = "Eigenvalue", col = "blue")
+lines(diamonds.mds.gw$eig, type = "o", col = "red", pch = 19, add=T)
 
 x <- diamonds.mds.gw$points[,1]
 y <- diamonds.mds.gw$points[,2]
@@ -657,7 +651,7 @@ text(x, y, labels = row.names(diamonds), cex=.7)
 ### Understanding Euclidean and Gower coordinates
 
 ```{r}
-#Euclidean coordinates
+# Euclidean coordinates
 mds_eu_coords <- as.data.frame(dimaonds.mds.eu$points)
 colnames(mds_eu_coords) <- c("Dim1", "Dim2")
 
@@ -672,7 +666,7 @@ mds_eu_coords$cut <- diamonds$cut
 mds_eu_coords$color <- diamonds$color
 mds_eu_coords$clarity <- diamonds$clarity
 
-#Gower coordinates
+# Gower coordinates
 mds_gw_coords <- as.data.frame(diamonds.mds.gw$points)
 colnames(mds_gw_coords) <- c("Dim1", "Dim2")
 
@@ -695,69 +689,68 @@ As expected, the variables x, y, z, logCarat, and logPrice display a clear colou
 In addition, a clear vertical gradient is observed for the depth and table variables, suggesting that the second coordinate is also related to the second PCA dimension and conveys information about diamond geometry. Specifically, diamonds with greater depth and more pointed shapes tend to appear in the upper part of the map, while shallower diamonds with larger table values are located toward the lower part of the configuration.
 
 ```{r}
-#logCarat
+# logCarat
 ggplot(mds_eu_coords, aes(Dim1, Dim2, color = logCarat)) +
   geom_point(size = 2, alpha = 0.8) +
   scale_color_gradient(low = "lightyellow", high = "darkred") +
-  labs(title = "Gower MDS: logCarat",
+  labs(title = "Euclidean MDS: logCarat",
        x = "Coordinate 1", y = "Coordinate 2") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
 # logPrice
 ggplot(mds_eu_coords, aes(Dim1, Dim2, color = logPrice)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightblue", high = "darkblue") +
-  labs(title = "Gower MDS: logPrice",
+  scale_color_gradient(low = "lightblue", high = "navy") +
+  labs(title = "Euclidean MDS: logPrice",
        x = "Coordinate 1", y = "Coordinate 2") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
-#depth
+# depth
 ggplot(mds_eu_coords, aes(Dim1, Dim2, color = depth)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightyellow", high = "darkred") +
-  labs(title = "Gower MDS: Depth",
+  scale_color_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(title = "Euclidean MDS: Depth",
        x = "Coordinate 1", y = "Coordinate 2", color = "Depth") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
-# table
+# table (purple monochrome, not similar to logCarat)
 ggplot(mds_eu_coords, aes(Dim1, Dim2, color = table)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightblue", high = "darkblue") +
-  labs(title = "Gower MDS: Table",
+  scale_color_gradient(low = "lavender", high = "purple4") +
+  labs(title = "Euclidean MDS: Table",
        x = "Coordinate 1", y = "Coordinate 2", color = "Table") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
-# xyz
+# x
 ggplot(mds_eu_coords, aes(Dim1, Dim2, color = x)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightgreen", high = "darkgreen") +
-  labs(title = "Gower MDS: x (length)",
+  scale_color_gradient(low = "lightcyan", high = "darkcyan") +
+  labs(title = "Euclidean MDS: x (length)",
        x = "Coordinate 1", y = "Coordinate 2", color = "x") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
+# y
 ggplot(mds_eu_coords, aes(Dim1, Dim2, color = y)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightpink", high = "darkred") +
-  labs(title = "Gower MDS: y (width)",
+  scale_color_gradient(low = "peachpuff", high = "saddlebrown") +
+  labs(title = "Euclidean MDS: y (width)",
        x = "Coordinate 1", y = "Coordinate 2", color = "y") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
+# z
 ggplot(mds_eu_coords, aes(Dim1, Dim2, color = z)) +
   geom_point(size = 2, alpha = 0.8) +
   scale_color_gradient(low = "lightgray", high = "black") +
-  labs(title = "Gower MDS: z (height)",
+  labs(title = "Euclidean MDS: z (height)",
        x = "Coordinate 1", y = "Coordinate 2", color = "z") +
-  theme_minimal()
-
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 In order to identify the relationship between the Gower coordinates and the variables, the same approach as before has been followed: both numerical and categorical variables have been projected onto the Gower-based configuration.
 
 The projections of logCarat, logPrice, x, y and z display a strong and coherent gradient along the first coordinate, suggesting that this dimension is closely related to the overall physical size and economic value of a diamond. In this configuration, the orientation is reversed with respect to previous representations, since diamonds located on the left side of the map exhibit higher values of these variables, whereas those on the right correspond to smaller and less valuable diamonds. This confirms that the first Gower dimension primarily reflects overall physical magnitude and price, in line with the first PCA component, which captured the joint variation of weight, size dimensions and market value.
 
-In contrast, the second Gower dimension is mainly associated with variables describing geometric proportions. Although the projection of depth does not show a sharply defined gradient, higher depth values tend to appear in the upper part of the map, while lower depths are more frequent in the lower region. Conversely, table exhibits an opposite pattern, with larger table values concentrating toward the lower side of the configuration and smaller table values toward the upper side. Together, these patterns indicate that the second dimension captures a trade-off between taller, more pointed diamonds and flatter, wider ones, which is consistent with the interpretation of the second PCA component.
-
-Together, these patterns indicate that the second dimension reflects variation in diamond geometry, distinguishing between more pointed diamonds with greater depth and shallower diamonds characterized by larger table values, in line with the interpretation of the second PCA component.
+In contrast, the second Gower dimension is mainly associated with variables describing geometric proportions. Although the projection of depth does not show a sharply defined gradient, higher depth values tend to appear in the upper part of the map, while lower depths are more frequent in the lower region. Conversely, table exhibits an opposite pattern, with larger table values concentrating toward the lower side of the configuration and smaller table values toward the upper side. Together, these patterns indicate that the second dimension reflects variation in diamond geometry, distinguishing between more pointed diamonds with greater depth and shallower diamonds characterized by larger table values, in line with the interpretation of the second PCA component.
 
 On the other hand, when the categorical variables are projected onto the Gower-based MDS configuration, the cut variable shows the strongest association with the separation of observations, particularly along the second coordinate. Diamonds with an Ideal cut concentrate in the upper region of the map, suggesting an association with more pointed geometric profiles, whereas Premium diamonds are mainly located in the lower region, indicating a closer relationship with flatter geometries. In contrast, the Very Good and Fair/Good categories appear more dispersed and occupy intermediate positions, reflecting a gradual transition rather than a sharp separation between cut levels.
 
@@ -766,60 +759,62 @@ The color and clarity variables exhibit a much weaker structure. Their categorie
 Finally, when relating these results to the four compact groups identified in the Gower-based MDS configuration, it can be seen that the clusters are mainly organized according to diamond size, price, and geometric proportions. Each cluster occupies a distinct quadrant of the map, reflecting different structural profiles. Specifically, the green cluster corresponds to small and inexpensive, more pointed diamonds; the orange cluster to small and inexpensive, shallower diamonds; the blue cluster to large and expensive, flatter diamonds; and the red cluster to large and expensive, more pointed diamonds. This indicates that the clustering structure arises from the joint effect of several numerical and categorical variables, rather than being explained by any single categorical attribute alone.
 
 ```{r}
-#logCarat
+# logCarat
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = logCarat)) +
   geom_point(size = 2, alpha = 0.8) +
   scale_color_gradient(low = "lightyellow", high = "darkred") +
   labs(title = "Gower MDS: logCarat",
        x = "Coordinate 1", y = "Coordinate 2") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
 # logPrice
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = logPrice)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  scale_color_gradient(low = "lightblue", high = "navy") +
   labs(title = "Gower MDS: logPrice",
        x = "Coordinate 1", y = "Coordinate 2") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
-#depth
+# depth
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = depth)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightyellow", high = "darkred") +
+  scale_color_gradient(low = "lightgreen", high = "darkgreen") +
   labs(title = "Gower MDS: Depth",
        x = "Coordinate 1", y = "Coordinate 2", color = "Depth") +
-  theme_minimal()
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 
-# table
+# table (purple, same as Euclidean)
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = table)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  scale_color_gradient(low = "lavender", high = "purple4") +
   labs(title = "Gower MDS: Table",
        x = "Coordinate 1", y = "Coordinate 2", color = "Table") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
-# xyz
+# x
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = x)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightgreen", high = "darkgreen") +
+  scale_color_gradient(low = "lightcyan", high = "darkcyan") +
   labs(title = "Gower MDS: x (length)",
        x = "Coordinate 1", y = "Coordinate 2", color = "x") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
+# y
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = y)) +
   geom_point(size = 2, alpha = 0.8) +
-  scale_color_gradient(low = "lightpink", high = "darkred") +
+  scale_color_gradient(low = "peachpuff", high = "saddlebrown") +
   labs(title = "Gower MDS: y (width)",
        x = "Coordinate 1", y = "Coordinate 2", color = "y") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
+# z
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = z)) +
   geom_point(size = 2, alpha = 0.8) +
   scale_color_gradient(low = "lightgray", high = "black") +
   labs(title = "Gower MDS: z (height)",
        x = "Coordinate 1", y = "Coordinate 2", color = "z") +
-  theme_minimal()
-
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
@@ -828,23 +823,22 @@ ggplot(mds_gw_coords, aes(Dim1, Dim2, color = cut)) +
   geom_point(size = 2, alpha = 0.8) +
   labs(title = "Gower MDS: Cut",
        x = "Coordinate 1", y = "Coordinate 2") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
-#color
+# color
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = color)) +
   geom_point(size = 2, alpha = 0.8) +
   labs(title = "Gower MDS: Color",
        x = "Coordinate 1", y = "Coordinate 2") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 
-#clarity
+# clarity
 ggplot(mds_gw_coords, aes(Dim1, Dim2, color = clarity)) +
   geom_point(size = 2, alpha = 0.8) +
   labs(title = "Gower MDS: Clarity",
        x = "Coordinate 1", y = "Coordinate 2") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
-
 
 In this context, MDS has proven to be a valuable complementary method to PCA, providing an alternative, distance-based perspective on the structure of the diamonds dataset. The strong consistency between the Euclidean MDS and PCA representations reinforces the robustness of the main dimensions identified using numerical variables, which are primarily related to overall size and price. In contrast, the Gower-based MDS reveals additional structure arising from the inclusion of categorical variables, leading to a clearer separation of observations. In particular, geometric differences become more apparent: diamonds with an Ideal cut tend to be associated with more pointed shapes, while Premium cuts are more closely linked to shallower geometries. These patterns contribute to well-defined groupings that are not captured by numerical information alone. Overall, MDS enhances the interpretability of the data and supports the understanding and validation of the clustering results when working with correlated variables and mixed data types.
 
