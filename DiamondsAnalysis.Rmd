@@ -1,6 +1,6 @@
 ---
 title: "Diamonds Data Frame Analysis"
-author: "Laia Jané, Elisa Müller, Berta Torrents and Runxiao Qiu"
+author: "Laia Jané, Elisa Müller, Runxiao Qiu and Berta Torrents"
 date: "December 2025"
 output:
   pdf_document:
@@ -64,6 +64,8 @@ summary(diamonds)
 Since the dataset contains a large number of observations $(53940)$, a random sample of $500$ observations has been selected to allow for a more manageable and focused analysis. It is worth noting that the means of the numerical variables and the proportions of observations in each category do not vary significantly.
 
 ```{r}
+summary(diamonds)
+
 n <- nrow(diamonds)
 indices <- sample(1:n, 500) # Take 500 random indices
 diamonds <- diamonds[indices,]
@@ -187,7 +189,7 @@ ks.test(diamonds$depth, "pnorm", mean=mean(diamonds$depth), sd=sd(diamonds$depth
 
 ### Table variable
 
-The table variable contains one severe outlier, which has been removed. After its removal, the distribution becomes almost symmetric, with a mild right skewness. Since the shape is already close to normal and a transformation would not provide a meaningful improvement, no transformation is applied. The Q-Q plot shows points lying close to a straight line without major deviations, which further suggests approximate normality. Although the variable is discrete, its wide range of values and its bell-shaped histogram support the assumption that normality can reasonably be assumed.
+The table variable contains one severe outlier, which has been removed. After its removal, the distribution becomes almost symmetric. Since the shape is already close to normal and a transformation would not provide a meaningful improvement, no transformation is applied. The Q-Q plot shows points lying close to a straight line without major deviations, which further suggests approximate normality. Although the variable is discrete, its wide range of values and its bell-shaped histogram support the assumption that normality can reasonably be assumed.
 
 Despite the low p-values obtained from the Shapiro-Wilk test and the Kolmogorov-Smirnov test, which lead to the rejection of the normality hypothesis, the variable has been considered normally distributed based on the graphical assessment.
 
@@ -387,9 +389,7 @@ ks.test(diamonds$z, "pnorm", mean=mean(diamonds$z), sd=sd(diamonds$z))
 
 ### Cut variable
 
-The cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for $37.4\%$ of the observations, while the Fair level represents only $1.8\%$ of the data. These sparse categories can be further grouped depending on the results of the multivariate analysis.
-
-Since Fair and Good are consecutive levels on the standard cut-quality scale and represent similar performance in terms of light return and symmetry, they have been combined into a single category (Fair/Good). This grouping preserves the ordinal logic of the cut grading system while ensuring more balanced category frequencies, leading to more robust and interpretable results.
+The cut variable shows no missing values. It is clearly unbalanced, with the Ideal level accounting for $37.4\%$ of the observations, while the Fair level represents only $1.8\%$ of the data. Since Fair and Good are consecutive levels on the standard cut-quality scale and represent similar performance in terms of light return and symmetry, they have been combined into a single category (Fair/Good). This grouping preserves the ordinal logic of the cut grading system while ensuring more balanced category frequencies, leading to more robust and interpretable results.
 
 ```{r}
 # Distribution
@@ -411,9 +411,7 @@ barplot(table(diamonds$cut), main="Diamond Cut Quality")
 
 ### Color variable
 
-The color variable shows no missing values and is relatively well balanced. Nevertheless, the most frequent grade is G, representing $12.6\%$ of the observations, while the least frequent grade is J, accounting for $3.4\%$, indicating that diamonds with a noticeable tint are less common in the dataset.
-
-To avoid categories with very low frequencies and to improve stability in the multivariate analysis, the light-tinted grades I and J have been grouped together. These grades are consecutive on the GIA color scale and represent similar coloration.
+The color variable shows no missing values and is relatively well balanced. Nevertheless, the most frequent grade is G, representing $12.6\%$ of the observations, while the least frequent grade is J, accounting for $3.4\%$, indicating that diamonds with a noticeable tint are less common in the dataset. To avoid categories with very low frequencies and to improve stability in the multivariate analysis, the light-tinted grades I and J have been grouped together. These grades are consecutive on the GIA color scale and represent similar coloration.
 
 ```{r}
 # Distribution
@@ -437,9 +435,7 @@ barplot(table(diamonds$color), main="Diamond Color")
 
 ### Clarity variable
 
-The clarity variable shows no missing values and is clearly unbalanced. The distribution is dominated by the SI1 and VS2 grades, indicating that the sample is mainly composed of slightly to very slightly included diamonds.
-
-Since some clarity levels, particularly I1 and IF, have very low frequencies, these sparse categories have been grouped to avoid levels with extremely few observations. The grouping has been performed by pairing each level with its closest neighboring grade on the GIA clarity scale: I1 has been grouped with SI2, and IF with VVS1. This transformation reduces sparsity, preserves the ordinal structure of the variable, and leads to more stable and interpretable results.
+The clarity variable shows no missing values and is clearly unbalanced. The distribution is dominated by the SI1 and VS2 grades, indicating that the sample is mainly composed of slightly to very slightly included diamonds. Since some clarity levels, particularly I1 and IF, have very low frequencies, these sparse categories have been grouped to avoid levels with extremely few observations. The grouping has been performed by pairing each level with its closest neighboring grade on the GIA clarity scale: I1 has been grouped with SI2, and IF with VVS1. This transformation reduces sparsity, preserves the ordinal structure of the variable, and leads to more stable and interpretable results.
 
 ```{r}
 # Distribution
@@ -474,9 +470,9 @@ diamonds <- diamonds[,c(2:6,8:12)]
 
 ## 1.2. Correlations between numeric variables
 
-The numeric variables are generally highly correlated. The x, y, z, logPrice, and logCarat variables exhibit nearly perfect positive correlations, and their scatter plots form almost straight lines. In fact, the logarithmic transformations of price and carat further increase these correlations.
+The numeric variables are generally highly correlated. The x, y, z, logPrice and logCarat variables exhibit nearly perfect positive correlations, and their scatter plots form almost straight lines. In fact, the logarithmic transformations of price and carat further increase these correlations.
 
-In contrast, the depth and table variables show weak correlations with the remaining variables, with depth being the only variable negatively correlated with all others. Their scatter plots display diffuse clouds of points without a clear pattern, although table and depth appear to be slightly negatively correlated.
+In contrast, the depth and table variables show weak correlations with the remaining variables, with depth being the only variable negatively correlated with all others. Their scatter plots display diffuse clouds of points without a clear pattern, although table and depth appear to be slightly negatively correlated. This shows a simple geometric relationship: diamonds with greater depth are more pointed and therefore less flat, which is reflected in smaller table values.
 
 As expected, the Bartlett test has returned a very low p-value, leading to the rejection of the null hypothesis that the correlation matrix is equal to the identity matrix.
 
@@ -684,9 +680,9 @@ mds_gw_coords$clarity <- diamonds$clarity
 
 To assess whether the Euclidean coordinates are related to the PCA dimensions, the numerical variables have been projected onto the Euclidean-based configuration.
 
-As expected, the variables x, y, z, logCarat, and logPrice display a clear colour gradient along the first coordinate. This reinforces the interpretation that this coordinate represents overall physical magnitude. The gradient ranges from lighter to darker tones, indicating that smaller and less expensive diamonds are located on the left side of the axis, whereas larger and more expensive diamonds are positioned on the right.
+As expected, the variables x, y, z, logCarat and logPrice display a clear colour gradient along the first coordinate. This reinforces the interpretation that this coordinate represents overall physical magnitude. The gradient ranges from lighter to darker tones, indicating that smaller and less expensive diamonds are located on the left side of the axis, whereas larger and more expensive diamonds are positioned on the right.
 
-In addition, a clear vertical gradient is observed for the depth and table variables, suggesting that the second coordinate is also related to the second PCA dimension and conveys information about diamond geometry. Specifically, diamonds with greater depth and more pointed shapes tend to appear in the upper part of the map, while shallower diamonds with larger table values are located toward the lower part of the configuration.
+In addition, a clear vertical gradient is observed for the depth and table variables, suggesting that the second coordinate is also related to the second PCA dimension and conveys information about diamond geometry. Specifically, diamonds with greater depth and more pointed shapes tend to appear in the upper part of the map, while shallower diamonds with larger table values are located toward the lower part.
 
 ```{r}
 # logCarat
@@ -959,7 +955,7 @@ plot.CA(color_clarity,axes = c(3,4))
 ```
 ## 2.4. Multiple correspondence analysis
 
-The MCA analysis has been applied using the \emph{MCA()} function from the \emph{FactoMineR} library on the original categorical variables and the categorized numerical variables. The objective of this method is to identify global patterns, associations, and similarities among the categories of different variables. By including the categorized numerical variables, the analysis is more complete than the results obtained from CA. Several strategies were tested to categorize the numeric variables, and the best results are those presented in this report, selecting the following for maximum interpretability.
+The MCA analysis has been applied using the \emph{MCA()} function from the \emph{FactoMineR} library on the original categorical variables and the categorized numerical variables. The objective of this method is to identify global patterns, associations and similarities among the categories of different variables. By including the categorized numerical variables, the analysis is more complete than the results obtained from CA. Several strategies were tested to categorize the numeric variables, and the best results are those presented in this report, selecting the following for maximum interpretability.
 
 Most of the numerical variables have been transformed into binary factors using the median ("above average" / "below average") to reduce dimensionality.  However, the table and depth variables have been categorized based on gemological criteria, as their interpretation depends on proportion ranges that determine whether a diamond is well-cut.
 
@@ -1114,9 +1110,9 @@ Considering the total information obtained from the cloud of categories, and als
 
 -   Dimension $1$: Physical Magnitude (and Price Component) Dimension $1$ separates diamonds primarily according to their physical scale. Variables such as x, y, z, and logCarat contribute strongly and in the same direction, and logPrice aligns closely as a supplementary variable. This indicates that this axis summarises a general size-value gradient: diamonds with higher coordinates are physically larger and tend to be more expensive, while those on the negative side are smaller, lighter, and typically less valuable
 
--   Dimension $2$: Geometric Balance Dimension $2$ is mainly shaped by the categories of table and cut, and depth is also significant. The plot shows a consistent vertical contrast across these three characteristics: the “Ideal” categories appear on the lower side of the axis, while the non-ideal or extreme categories tend to cluster on the upper side.
+-   Dimension $2$: Geometric Balance Dimension $2$ is mainly shaped by the categories of table and cut, and depth is also significant. The plot shows a consistent vertical contrast across these three characteristics: the "Ideal" categories appear on the lower side of the axis, while the non-ideal or extreme categories tend to cluster on the upper side.
 
-For table, the “Ideal” modality is located at the bottom, whereas “Not Ideal” appears clearly higher. For cut, the Ideal cut is also positioned in the lower region, while the remaining levels (Fair/Good, Premium, Very Good) lie in the upper half. A similar pattern occurs with depth: both Low and High depth categories are placed on the positive side of Dimension 2, while Ideal depth appears on the negative side.
+For table, the "Ideal" modality is located at the bottom, whereas "Not Ideal" appears clearly higher. For cut, the Ideal cut is also positioned in the lower region, while the remaining levels (Fair/Good, Premium, Very Good) lie in the upper half. A similar pattern occurs with depth: both Low and High depth categories are placed on the positive side of Dimension 2, while Ideal depth appears on the negative side.
 
 Taken together, these patterns show that Dimension 2 separates diamonds with ideal geometric proportions (Ideal table + Ideal cut + Ideal depth) from those with non-ideal or unbalanced shapes, which tend to be wider, flatter, or too tall relative to the ideal standard.
 
@@ -1728,13 +1724,13 @@ fviz_cluster(res.hcpc, repel = TRUE, show.clust.cent = TRUE, main = "Cluster Vis
 fviz_cluster(res.hcpc, show.clust.cent = TRUE, main = "Cluster Visualization on PCA Factor Map (Dim 1 vs Dim 2)", labelsize = 0)
 ```
 
-The PCA-based hierarchical clustering applied with four clusters reveals clearly differentiated diamond profiles in terms of quality and physical characteristics. A chi-square test indicates a highly significant association between cluster membership and all categorical variables (clarity, color, and cut) leading to the rejection of the null hypothesis of independence in every case, as evidenced by the corresponding p-values. Furthermore, the ANOVA results indicate highly significant differences across all major numerical variables. In particular, the strongest discriminatory power is observed for the dimensional variables (x,y,z), as well as for carat weight and price, for which the null hypothesis of equal means across clusters is decisively rejected with extremely small p-values. Depth and table also differ significantly across clusters, although with more moderate effect sizes. These results confirm that the clusters reflect fundamentally different diamond size, value, and proportion profiles.
+The PCA-based hierarchical clustering applied with four clusters reveals clearly differentiated diamond profiles in terms of quality and physical characteristics. A chi-square test indicates a highly significant association between cluster membership and all categorical variables (clarity, color and cut) leading to the rejection of the null hypothesis of independence in every case, as evidenced by the corresponding p-values. Furthermore, the ANOVA results indicate highly significant differences across all major numerical variables. In particular, the strongest discriminatory power is observed for the dimensional variables (x,y,z), as well as for carat weight and price, for which the null hypothesis of equal means across clusters is decisively rejected with extremely small p-values. Depth and table also differ significantly across clusters, although with more moderate effect sizes. These results confirm that the clusters reflect fundamentally different diamond size, value and proportion profiles.
 
 \textbf{- Cluster 1 (black): Small, high-clarity and clear diamonds with low price}
 
 This cluster accounts for $42.8\%$ of the sample. It is characterized by very high clarity grades, with a strong over-representation of IF/VVS1 and VVS2 diamonds. For instance, $77.8\%$ of IF/VVS1 diamonds belong to this cluster, largely exceeding their overall proportion in the dataset. Ideal cuts and color E are also significantly over-represented, whereas more tinted color categories such as I/J and lower clarity levels such as I1/SI2 are strongly under-represented. Overall, this cluster is mainly composed of colorless and high-clarity diamonds.
 
-Despite their superior clarity and cut, diamonds in this cluster exhibit significantly smaller physical dimensions (x, y and z), approximately $18$ units below the overall mean, and lower logCarat values, around $18.7$ units below the overall mean. The logPrice variable is also well below the overall mean, by approximately $18.2$ units. These diamonds tend to present slightly higher depth values and smaller table values, indicating more pointed stones with narrower top surfaces, which is consistent with their smaller overall size.
+Despite their superior clarity and cut, diamonds in this cluster exhibit significantly smaller physical dimensions (x, y and z) and lower logCarat values. The logPrice variable is also well below the overall mean. These diamonds tend to present slightly higher depth values and smaller table values, indicating more pointed stones with narrower top surfaces, which is consistent with their smaller overall size. 
 
 Therefore, this cluster is composed of small-sized diamonds with excellent cut, color, and clarity characteristics, whose market value remains limited mainly due to their reduced physical size rather than to quality-related attributes.
 
@@ -1742,13 +1738,13 @@ Therefore, this cluster is composed of small-sized diamonds with excellent cut, 
 
 This cluster accounts for $14.3\%$ of the sample and exhibits a distinctly cut-driven profile. Fair/Good cuts are significantly over-represented, whereas Ideal cuts are strongly under-represented. Diamonds with color grade F also appear more frequently than expected in this cluster.
 
-As expected, from a numerical perspective, this cluster is primarily distinguished by proportion-related variables rather than by size or price. Diamonds in this group display significantly higher table values (approximately $10.2$ units above the overall mean) and substantially lower depth values (about $12.5$ units below the overall mean), indicating flatter stones. No strong deviations are observed for carat weight, price, or the main dimensional measures (x, y and z).
+As expected, from a numerical perspective, this cluster is primarily distinguished by proportion-related variables rather than by size or price. Diamonds in this group display significantly higher table values and substantially lower depth values, indicating flatter stones. No strong deviations are observed for carat weight, price, or the main dimensional measures (x, y and z).
 
 Consequently, this cluster corresponds to diamonds with less optimal geometric proportions, typically associated with lower cut quality, but without extreme differences in overall size or price value.
 
 \textbf{- Cluster 3 (green): Medium-sized diamonds with moderate prices}
 
-This cluster accounts for $27.6\%$ of the sample. It contains diamonds that are moderately larger and more expensive than average, as indicated by significantly positive deviations in logCarat, logPrice, and all three physical dimensions (x, y and z). Depth values are also slightly above the overall mean, while table values are marginally lower. It should be highlighted that the numerical deviations are moderate, as they range between approximately $6$ and $8$ units above the overall mean.
+This cluster accounts for $27.6\%$ of the sample. It contains diamonds that are moderately larger and more expensive than average, as indicated by significantly positive deviations in logCarat, logPrice, and all three physical dimensions (x, y and z). Depth values are also slightly above the overall mean, while table values are marginally lower. It should be highlighted that the numerical deviations are moderate.
 
 From a qualitative perspective, this cluster shows an over-representation of lower clarity grades (I1/SI2) and an under-representation of very high clarity categories (IF/VVS1 and VVS2). Premium cuts are also under-represented, suggesting that value in this cluster is driven more by physical size than by clarity or cut quality.
 
@@ -1756,7 +1752,7 @@ Accordingly, this cluster represents medium-sized diamonds which, despite lower 
 
 \textbf{- Cluster 4 (blue): Large, lower-clarity and tinted diamonds with high price}
 
-This cluster accounts for $15.3\%$ of the sample and is clearly distinguished by the largest and most valuable diamonds in the dataset. All size-related variables (x, y, z and logCarat), together with logPrice, show very large positive deviations from the overall mean, ranging approximately from $14$ to $15.5$ units. In addition, the table variable also presents a mean value above the overall average.
+This cluster accounts for $15.3\%$ of the sample and is clearly distinguished by the largest and most valuable diamonds in the dataset. All size-related variables (x, y, z and logCarat), together with logPrice, show very large positive deviations from the overall mean. In addition, the table variable also presents a mean value above the overall average.
 
 From a qualitative perspective, this cluster is associated with more tinted diamonds, with a higher frequency of color grades I/J and H, as well as lower clarity levels (I1/SI2). In contrast, high-quality color and clarity categories (D, E, F and IF/VVS1) are strongly under-represented. Premium cuts are significantly over-represented, whereas Ideal cuts are under-represented.
 
@@ -1765,22 +1761,6 @@ This pattern indicates that diamonds in this cluster achieve their high prices p
 The spatial distribution of the clusters in the PCA factor map further supports the validity of the clustering solution. In the Figure, clusters $1$ (black), $3$ (green) and $4$ (blue) are located at along the first dimension, indicating a strong separation based on physical size and price. On the other hand, cluster $2$ (red) is mainly differentiated along the second dimension, reflecting differences in geometric proportions, clarity, and cut quality.
 
 In conclusion, the PCA-based hierarchical clustering proves to be particularly effective in this context. By performing clustering on the principal components rather than on the original correlated variables, the method focuses on the main sources of variability in the data and reduces redundancy. This leads to well-separated, stable, and interpretable clusters that reflect meaningful differences in diamond size, price and quality.
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-\textbf{- Cluster 1 (black): Small, low price diamonds}
-This cluster includes the smallest diamonds, with a low average carat (≈ 0.39), small dimensions (x, y ≈ 4.65), and the lowest mean price (≈ 1,020). From a categorical perspective, it is dominated by Ideal cut diamonds, with colors mainly in the E–G range. Clarity is centered on SI1 and VS2, although a substantial number of high-clarity stones (IF/VVS1) are also present. Overall, this cluster represents small diamonds with relatively good and balanced quality attributes.
-
-\textbf{- Cluster 2 (red): Medium-low diamonds}
-Diamonds in this cluster have intermediate size (carat ≈ 0.78; x, y ≈ 5.92) and moderate prices (≈ 3,300). They are characterized by lower depth and higher table values, indicating flatter proportions. Categorically, this group is mainly composed of Premium-cut diamonds, with F color most frequent and clarity largely concentrated in SI1 and VS2, with very few high-clarity stones. This cluster reflects a compromise where size increases at the expense of quality.
-
-\textbf{- Cluster 3 (green): Medium-high diamonds}
-This cluster groups slightly larger diamonds (carat ≈ 0.94; x, y ≈ 6.23) with higher prices than Cluster 2 (≈ 4,630). These diamonds show higher depth and lower table values, suggesting improved geometric balance. In categorical terms, Ideal cut is predominant, with G color most common. However, clarity is mainly SI1 and I1/SI2, indicating lower clarity on average than Cluster 1 despite better proportions.
-
-
-\textbf{- Cluster 4 (blue): Large, high-value diamonds}
-Diamonds in this cluster are the largest and most expensive, with the highest carat (≈ 1.65), the largest dimensions (x, y ≈ 7.56), and the highest mean price (≈ 11,100). This group is dominated by Premium cuts, poorer color grades (H–I/J), and lower clarity levels, mainly I1/SI2 and VS2. These results indicate that, for this cluster, diamond value is driven primarily by size rather than quality attributes.
-
-Overall, the four clusters describe a clear size-quality trade-off: smaller diamonds tend to concentrate better quality grades, whereas larger diamonds are associated with lower color and clarity but substantially higher prices.
 ```{r}
 table(res.hcpc$data.clust$clust)
 prop.table(table(res.hcpc$data.clust$clust))
@@ -1993,7 +1973,7 @@ Before developing the model, it is important to assess whether significant diffe
 
 First, it is important to assess the homogeneity of variances across the different cut levels for the two normally distributed variables. To this end, Box’s M test has been applied to evaluate the equality of variance-covariance matrices, using the \emph{boxM()} function.
 
-As the resulting p-value is significantly lower than the significance level $\alpha=0.05$, the null hypothesis of homogeneity of variances is rejected. Furthermore, an inspection of the boxplots reveals clear differences in the variance homogeneity across the depth and table variables.
+As the resulting p-value is significantly lower than the significance level $\alpha$, the null hypothesis of homogeneity of variances is rejected. Furthermore, an inspection of the boxplots reveals clear differences in the variance homogeneity across the depth and table variables.
 
 ```{r}
 # Homogeneity of covariance matrices obtained from multivariate normal data
